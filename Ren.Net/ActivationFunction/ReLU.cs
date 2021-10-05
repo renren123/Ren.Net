@@ -9,41 +9,29 @@ namespace Ren.Net.ActivationFunction
     {
         public override Torch Forward(Torch @in)
         {
-            switch (@in.Dimension)
+            foreach (var item in @in.Data)
             {
-                case 1: 
+                for (int i = 0; i < item.Length; i++)
+                {
+                    if(item[i] < 0)
                     {
-                        for (int i = 0; i < @in.Data1d.Length; i++)
-                        {
-                            if (@in.Data1d[i] < 0)
-                            {
-                                @in.Data1d[i] = 0;
-                            }
-                        }
+                        item[i] = 0;
                     }
-                    break;
-                default:
-                    throw new Exception("ReLU::Forward default");
+                }
             }
             return @in;
         }
         public override Torch Backup(Torch @out)
         {
-            switch (@out.Dimension)
+            foreach (var item in @out.Data)
             {
-                case 1:
+                for (int i = 0; i < item.Length; i++)
+                {
+                    if (item[i] < 0)
                     {
-                        for (int i = 0; i < @out.Data1d.Length; i++)
-                        {
-                            if (@out.Data1d[i] < 0)
-                            {
-                                @out.Data1d[i] = 0;
-                            }
-                        }
+                        item[i] = 0;
                     }
-                    break;
-                default:
-                    throw new Exception("ReLU::Backup default");
+                }
             }
             return @out;
         }

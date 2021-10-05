@@ -9,9 +9,10 @@ namespace Ren.Net.Fully.Network
     /// </summary>
     class NetLayer
     {
-        /// <summary>
-        /// 一层神经元 存储的结构
-        /// </summary>
-        public List<NetNeuron> FullyNeurns { set; get; }
+
+        public void Forward(NetLayer upperLayer)
+        {
+            
+        }
     }
 }

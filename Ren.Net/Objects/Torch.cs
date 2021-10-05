@@ -6,25 +6,28 @@ namespace Ren.Net.Objects
 {
     public class Torch
     {
-        public float[] Data1d { set; get; }
-        public float[,] Data2d { set; get; }
-        public float[,,] Data3d { set; get; }
-        public int Dimension =>
-            Data1d == null ? 1 :
-            Data2d == null ? 2 :
-            Data3d == null ? 3 : 0;
-
-        public Torch(float[] data)
+        /// <summary>
+        /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
+        /// </summary>
+        public List<float[]> Data { set; get; }
+        public int BatchSize => Data == null || Data.Count == 0 ? -1 : Data[0].Length;
+        public int LastNeuronNumber => Data == null || Data.Count == 0 ? -1 : Data.Count;
+        public Torch(List<float[]> data)
         {
-            this.Data1d = data;
+            this.Data = new List<float[]>(data);
         }
-        public Torch(float[,] data)
+        /// <summary>
+        /// 初始化 一个 torch
+        /// </summary>
+        /// <param name="neuronNumber">神经元的数量</param>
+        /// <param name="batch">一个 batch 的大小</param>
+        public Torch(int neuronNumber, int batch)
         {
-            this.Data2d = data;
-        }
-        public Torch(float[,,] data)
-        {
-            this.Data3d = data;
+            this.Data = new List<float[]>(neuronNumber);
+            for (int i = 0; i < neuronNumber; i++)
+            {
+                this.Data.Add(new float[batch]);
+            }
         }
     }
 }
