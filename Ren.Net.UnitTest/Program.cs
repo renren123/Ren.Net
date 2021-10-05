@@ -6,45 +6,29 @@ using Ren.Net.ActivationFunction;
 
 namespace Ren.Net.UnitTest
 {
-    public class Program : NetManager
+    public class Program
     {
-        Sequential layer1 = new Sequential(new List<NetModule>()
-            {
-                new Linear(10, 10),
-                new ReLU()
-            });
-
-        Sequential layer2 = new Sequential(new List<NetModule>()
-            {
-                new Linear(10, 10),
-                new ReLU()
-            });
-
-        Sequential layer3 = new Sequential(new List<NetModule>()
-            {
-                new Linear(10, 1),
-            });
-        public override Torch Forward(Torch @in)
-        {
-            Torch output = null;
-
-            output = layer1.Forward(@in);
-            output = layer2.Forward(output);
-            output = layer3.Forward(output);
-
-            return output;
-        }
-
-        public override Torch Backup(Torch @out)
-        {
-            return base.Backup(@out);
-        }
-
-
         static void Main(string[] args)
         {
-            Torch input = null;
+            Torch input = new Torch(10, 1);
             Torch output = null;
+
+            Sequential netWork = new Sequential(new List<NetModule>()
+            {
+                // layer1
+                new Linear(10, 10),
+                new ReLU(),
+
+                // layer2
+                new Linear(10, 10),
+                new ReLU(),
+                // layer3
+                new Linear(10, 1),
+            });
+
+            output = netWork.Forward(input);
+
+            Console.WriteLine(output.Data);
 
             Console.WriteLine("Hello World!");
 
