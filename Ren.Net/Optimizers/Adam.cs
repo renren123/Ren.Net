@@ -21,9 +21,15 @@ namespace Ren.Net.Optimizers
         public Adam(float learningRate) : base(learningRate)
         {
         }
-        
 
 
+        /// <summary>
+        /// int OutputIndex, int InputIndex 对应一条权重
+        /// </summary>
+        /// <param name="dw"></param>
+        /// <param name="OutputIndex"></param>
+        /// <param name="InputIndex"></param>
+        /// <returns></returns>
         public override float GetOptimizer(float dw, int OutputIndex, int InputIndex)
         {
             if(S == null)
@@ -43,13 +49,13 @@ namespace Ren.Net.Optimizers
                 }
             }
 
-            V[OutputIndex][InputIndex] = (float)(B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw);
-            S[OutputIndex][InputIndex] = (float)(B1 * S[OutputIndex][InputIndex] + (1 - B1) * dw * dw);
+            V[OutputIndex][InputIndex] = B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw;
+            S[OutputIndex][InputIndex] = B1 * S[OutputIndex][InputIndex] + (1 - B1) * dw * dw;
 
-            float Vcorrection = (float)(V[OutputIndex][InputIndex] / (1 - B1_Pow));
-            float Scorrection = (float)(S[OutputIndex][InputIndex] / (1 - B2_Pow));
+            float Vcorrection = V[OutputIndex][InputIndex] / (1 - B1_Pow);
+            float Scorrection = S[OutputIndex][InputIndex] / (1 - B2_Pow);
 
-            return (float)(LearningRate * Vcorrection / (Math.Sqrt(Scorrection) + E));
+            return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
         }
         public override void Step()
         {

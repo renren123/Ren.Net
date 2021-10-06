@@ -1,13 +1,12 @@
 ﻿using Ren.Net.Objects;
 using Ren.Net.Optimizers;
-using Ren.Net.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ren.Net.Fully.Network
+namespace Ren.Net.Networks
 {
     public class Linear : NetModule
     {
@@ -29,7 +28,9 @@ namespace Ren.Net.Fully.Network
         /// 权重单独保存在一个地图里面，方向是正向传播的方向，list 每个元素是当前 神经元素的个数，float[] 数组是上一层元素的个数
         /// </summary>
         public List<float[]> WI { set; get; }
-
+        /// <summary>
+        /// list 的数量是前一层的数量
+        /// </summary>
         public Torch X_In { set; get; }
         /// <summary>
         /// 
@@ -66,7 +67,7 @@ namespace Ren.Net.Fully.Network
             Optimizer.InputNumber = this.InputNumber;
             Optimizer.OutputNumber = this.OutputNumber;
 
-            Torch x_out = new Torch(OutputNumber, batchSize);
+            Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
 
             X_In = @in.Clone() as Torch;    // 保存输入
 
@@ -74,6 +75,12 @@ namespace Ren.Net.Fully.Network
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
+                    // ******************test********************
+                    // 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
+                    x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
+                    continue;
+                    // ******************test********************
+
                     for (int k = 0; k < batchSize; k++)
                     {
                         x_out.Data[i][k] += WI[i][j] * @in.Data[j][k];
@@ -82,6 +89,11 @@ namespace Ren.Net.Fully.Network
             }
             return x_out;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="out">list 是当前层神经元的数量</param>
+        /// <returns></returns>
         public override Torch Backup(Torch @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
         {
             int batchSize = @out.BatchSize;
@@ -90,14 +102,20 @@ namespace Ren.Net.Fully.Network
             {
                 throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
             }
-            Torch x_out = new Torch(InputNumber, @out.BatchSize);
+            Torch sensitive_out = new Torch(InputNumber, @out.BatchSize);   // list 的个数 表示上一层的神经元个数
             for (int i = 0; i < OutputNumber; i++)
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
+                    // ******************test********************
+                    // 损失值 上一层神经元 = (i,j) * 下一层神经元 i 
+                    sensitive_out.Data[j][0] += WI[i][j] * @out.Data[i][0];
+                    continue;
+                    // ******************test********************
+
                     for (int k = 0; k < batchSize; k++)
                     {
-                        x_out.Data[j][k] += WI[i][j] * @out.Data[i][k];
+                        sensitive_out.Data[j][k] += WI[i][j] * @out.Data[i][k];
                     }
                 }
             }
@@ -105,17 +123,24 @@ namespace Ren.Net.Fully.Network
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
+                    // ******************test********************
+                    float dwTemp = X_In.Data[j][0] * @out.Data[i][0];
+                    WI[i][j] -= Optimizer.GetOptimizer(dwTemp, i, j);       // list 的个数 表示当前层的神经元个数
+                    //WI[i][j] -= dwTemp * 0.001F;       // list 的个数 表示当前层的神经元个数
+                    continue;
+                    // ******************test********************
+
                     float[] dwArray = new float[batchSize];
                     for (int k = 0; k < batchSize; k++)
                     {
-                        dwArray[k] = X_In.Data[j][k] * x_out.Data[j][k];
+                        dwArray[k] = X_In.Data[j][k] * @out.Data[i][k];
                     }
                     float dwAverage = dwArray.Average();
 
                     WI[i][j] -= Optimizer.GetOptimizer(dwAverage, i, j);
                 }
             }
-            return x_out;
+            return sensitive_out;
         }
         /// <summary>
         /// 初始化权值，np.random.randn(n) * sqrt(2.0/n)，遵循 sumInput 个数的正太分布
@@ -124,7 +149,7 @@ namespace Ren.Net.Fully.Network
         /// <returns></returns>
         private float W_value_method(int sumInput)
         {
-            return 1F;
+            //return 1F;
 
             float y = (float)r.NextDouble();
             float x = (float)r.NextDouble();
