@@ -14,7 +14,7 @@ namespace Ren.Net.Util
         public static double B1 = 0.9;
         public static double B2 = 0.999;
         public static float f_derivative { set; get; }
-        public static double Study_rate { set; get; }
+        public static float Study_rate { set; get; } = 0.001F;
         private static List<List<float[,]>> lists;
         public static float[] ThreeListToOneDArray(List<float[,]> listR, List<float[,]> listG, List<float[,]> listB)
         {
@@ -262,7 +262,7 @@ namespace Ren.Net.Util
                 Console.WriteLine("AgentClass->GetStaticValue()");
                 return;
             }
-            Study_rate = (double)stack.Pop();
+            Study_rate = (float)stack.Pop();
             f_derivative = (float)stack.Pop();
             Mini_batchsize = (int)stack.Pop();
             mapCount = (int)stack.Pop();

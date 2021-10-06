@@ -23,6 +23,9 @@ namespace Ren.Net.Objects
         }
         public Torch Backup(Torch @out)
         {
+            Adam.B1_pow *= Util.AgentClass.B1;
+            Adam.B2_pow *= Util.AgentClass.B2;
+
             for (int i = Nets.Count - 1; i >= 0; i--)
             {
                 var net = Nets[i];

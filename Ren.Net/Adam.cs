@@ -20,7 +20,7 @@ namespace Ren.Net
         public static double V_pow = 1;
         private static double u = 0.9;
         private static double v = 0.999;
-        private static double e = Math.Pow(1, -8);
+        public static float E { set; get; } = 0.00000001F;
 
         public float Vgamma { set; get; }
         public float Sgamma { set; get; }
@@ -113,19 +113,6 @@ namespace Ren.Net
             set
             {
                 v = value;
-            }
-        }
-
-        public static double E
-        {
-            get
-            {
-                return e;
-            }
-
-            set
-            {
-                e = value;
             }
         }
     }
