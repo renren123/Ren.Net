@@ -18,8 +18,10 @@ namespace Ren.Net.Loss
             {
                 var batchSize = output.Data[i].Length;
                 float[] temp = new float[batchSize];
+
                 for (int j = 0; j < batchSize; j++)
                 {
+                    // temp[j] = label.Data[i][j] - output.Data[i][j];
                     temp[j] = output.Data[i][j] - label.Data[i][j];
                 }
                 result.Data.Add(temp);

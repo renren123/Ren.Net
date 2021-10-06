@@ -19,6 +19,10 @@ namespace Ren.Net.Optimizers
         {
             throw new NotImplementedException();
         }
+        public virtual void Step()
+        {
+            throw new NotImplementedException();
+        }
         public virtual object Clone()
         {
             throw new NotImplementedException();

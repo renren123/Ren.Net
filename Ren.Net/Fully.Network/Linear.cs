@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Ren.Net.Fully.Network
 {
@@ -30,7 +31,6 @@ namespace Ren.Net.Fully.Network
         public List<float[]> WI { set; get; }
 
         public Torch X_In { set; get; }
-        public float StudyRate { set; get; } = 0.0001F;
         /// <summary>
         /// 
         /// </summary>
@@ -43,12 +43,14 @@ namespace Ren.Net.Fully.Network
 
             WI = new List<float[]>(outputNumber);
 
+            int sumInput = outputNumber * inputNumber;
+
             for (int i = 0; i < outputNumber; i++)
             {
                 float[] wiTemp = new float[inputNumber];
                 for (int j = 0; j < inputNumber; j++)
                 {
-                    wiTemp[j] = W_value_method(outputNumber);
+                    wiTemp[j] = W_value_method(sumInput);
                 }
                 WI.Add(wiTemp);
             }
@@ -88,7 +90,6 @@ namespace Ren.Net.Fully.Network
             {
                 throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
             }
-
             Torch x_out = new Torch(InputNumber, @out.BatchSize);
             for (int i = 0; i < OutputNumber; i++)
             {
@@ -100,7 +101,6 @@ namespace Ren.Net.Fully.Network
                     }
                 }
             }
-
             for (int i = 0; i < OutputNumber; i++)
             {
                 for (int j = 0; j < InputNumber; j++)
@@ -124,6 +124,8 @@ namespace Ren.Net.Fully.Network
         /// <returns></returns>
         private float W_value_method(int sumInput)
         {
+            return 1F;
+
             float y = (float)r.NextDouble();
             float x = (float)r.NextDouble();
             float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));

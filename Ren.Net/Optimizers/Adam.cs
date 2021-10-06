@@ -6,12 +6,14 @@ namespace Ren.Net.Optimizers
 {
     public class Adam : Optimizer
     {
+        private float B1_Pow { set; get; } = 0.9F;
+        private float B2_Pow { set; get; } = 0.999F;
+
         public float E { get; } = 0.00000001F;
         public float B1 { get; } = 0.9F;
         public float B2 { get; } = 0.999F;
 
-        private float B1_Pow { set; get; } = 1F;
-        private float B2_Pow { set; get; } = 1F;
+        
 
         public List<float[]> V { set; get; }
         public List<float[]> S { set; get; }
@@ -40,8 +42,6 @@ namespace Ren.Net.Optimizers
                     V.Add(new float[InputNumber]);
                 }
             }
-            B1_Pow *= B1;
-            B2_Pow *= B2;
 
             V[OutputIndex][InputIndex] = (float)(B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw);
             S[OutputIndex][InputIndex] = (float)(B1 * S[OutputIndex][InputIndex] + (1 - B1) * dw * dw);
@@ -50,6 +50,11 @@ namespace Ren.Net.Optimizers
             float Scorrection = (float)(S[OutputIndex][InputIndex] / (1 - B2_Pow));
 
             return (float)(LearningRate * Vcorrection / (Math.Sqrt(Scorrection) + E));
+        }
+        public override void Step()
+        {
+            B1_Pow *= B1;
+            B2_Pow *= B2;
         }
         public override object Clone()
         {
