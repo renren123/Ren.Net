@@ -4,6 +4,7 @@ using System;
 using Ren.Net.Fully.Network;
 using Ren.Net.ActivationFunction;
 using Ren.Net.Loss;
+using Ren.Net.Optimizers;
 
 namespace Ren.Net.UnitTest
 {
@@ -11,19 +12,6 @@ namespace Ren.Net.UnitTest
     {
         static void Main(string[] args)
         {
-            // 模拟 函数 y = x + 1
-            Torch input = new Torch() 
-            {
-                Data = new List<float[]>(1)
-            };
-            input.Data.Add(new float[] { 1 });
-
-            Torch label = new Torch()
-            {
-                Data = new List<float[]>(1)
-            };
-            label.Data.Add(new float[] { 2 });
-
             Torch output = null;
 
             Sequential netWork = new Sequential(new List<NetModule>()
@@ -37,26 +25,46 @@ namespace Ren.Net.UnitTest
                 // layer3
                 new Linear(10, 1),
             });
+            netWork.Optimizer = new Adam(learningRate: 0.001F);
+
             MSELoss loss = new MSELoss();
 
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
-                output = netWork.Forward(input);
+                var (input, label) = GetTorch();
 
-                Console.WriteLine(output.Data[0][0]);
+                output = netWork.Forward(input);
 
                 var sensitive = loss.CaculateLoss(label, output);
 
+                Console.WriteLine(sensitive.Data[0][0]);
+
                 netWork.Backup(sensitive);
             }
-
-            
-
-            Console.WriteLine(output.Data);
-
-            Console.WriteLine("Hello World!");
+            Console.WriteLine("END");
 
             Console.ReadKey();
+        }
+        /// <summary>
+        /// 模拟 函数 y = x + 1
+        /// </summary>
+        /// <returns></returns>
+        static (Torch input, Torch label) GetTorch()
+        {
+            int x = new Random().Next(1, 100);
+            Torch input = new Torch()
+            {
+                Data = new List<float[]>(1)
+            };
+            input.Data.Add(new float[] { x });
+
+            Torch label = new Torch()
+            {
+                Data = new List<float[]>(1)
+            };
+            label.Data.Add(new float[] { x + 1 });
+
+            return (input, label);
         }
     }
 }

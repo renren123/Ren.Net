@@ -1,0 +1,81 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Ren.Net.Optimizers
+{
+    public class Adam : Optimizer
+    {
+        public float E { get; } = 0.00000001F;
+        public float B1 { get; } = 0.9F;
+        public float B2 { get; } = 0.999F;
+
+        private float B1_Pow { set; get; } = 1F;
+        private float B2_Pow { set; get; } = 1F;
+
+        public List<float[]> V { set; get; }
+        public List<float[]> S { set; get; }
+
+        public Adam(float learningRate) : base(learningRate)
+        {
+        }
+        
+
+
+        public override float GetOptimizer(float dw, int OutputIndex, int InputIndex)
+        {
+            if(S == null)
+            {
+                S = new List<float[]>(OutputNumber);
+                for (int i = 0; i < OutputNumber; i++)
+                {
+                    S.Add(new float[InputNumber]);
+                }
+            }
+            if(V == null)
+            {
+                V = new List<float[]>(OutputNumber);
+                for (int i = 0; i < OutputNumber; i++)
+                {
+                    V.Add(new float[InputNumber]);
+                }
+            }
+            B1_Pow *= B1;
+            B2_Pow *= B2;
+
+            V[OutputIndex][InputIndex] = (float)(B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw);
+            S[OutputIndex][InputIndex] = (float)(B1 * S[OutputIndex][InputIndex] + (1 - B1) * dw * dw);
+
+            float Vcorrection = (float)(V[OutputIndex][InputIndex] / (1 - B1_Pow));
+            float Scorrection = (float)(S[OutputIndex][InputIndex] / (1 - B2_Pow));
+
+            return (float)(LearningRate * Vcorrection / (Math.Sqrt(Scorrection) + E));
+        }
+        public override object Clone()
+        {
+            if(OutputNumber == -1)
+            {
+                return new Adam(this.LearningRate);
+            }
+            Adam adam = new Adam(this.LearningRate)
+            {
+                S = new List<float[]>(OutputNumber),
+                V = new List<float[]>(OutputNumber)
+            };
+            for (int i = 0; i < OutputNumber; i++)
+            {
+                float[] tempS = new float[InputNumber];
+                float[] tempV = new float[InputNumber];
+
+                for (int j = 0; j < InputNumber; j++)
+                {
+                    tempS[i] = this.S[i][j];
+                    tempV[i] = this.V[i][j];
+                }
+                adam.S.Add(tempS);
+                adam.V.Add(tempV);
+            }
+            return adam;
+        }
+    }
+}

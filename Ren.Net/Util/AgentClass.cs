@@ -14,7 +14,7 @@ namespace Ren.Net.Util
         public static double B1 = 0.9;
         public static double B2 = 0.999;
         public static float f_derivative { set; get; }
-        public static float Study_rate { set; get; } = 0.001F;
+        public static float Study_rate { set; get; } = 0.0001F;
         private static List<List<float[,]>> lists;
         public static float[] ThreeListToOneDArray(List<float[,]> listR, List<float[,]> listG, List<float[,]> listB)
         {
