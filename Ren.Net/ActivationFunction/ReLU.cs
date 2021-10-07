@@ -7,8 +7,11 @@ namespace Ren.Net.ActivationFunction
 {
     public class ReLU : NetModule
     {
+        private Torch X_IN;
         public override Torch Forward(Torch @in)
         {
+            X_IN = @in.Clone() as Torch;
+
             foreach (var item in @in.Data)
             {
                 for (int i = 0; i < item.Length; i++)
@@ -23,13 +26,13 @@ namespace Ren.Net.ActivationFunction
         }
         public override Torch Backup(Torch @out)
         {
-            foreach (var item in @out.Data)
+            for (int i = 0; i < X_IN.Data.Count; i++)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int j = 0; j < X_IN.Data[i].Length; j++)
                 {
-                    if (item[i] < 0)
+                    if(X_IN.Data[i][j] < 0)
                     {
-                        item[i] = 0;
+                        @out.Data[i][j] = 0;
                     }
                 }
             }

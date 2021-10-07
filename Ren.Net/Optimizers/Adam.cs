@@ -24,7 +24,7 @@ namespace Ren.Net.Optimizers
 
 
         /// <summary>
-        /// int OutputIndex, int InputIndex 对应一条权重
+        /// int OutputIndex, int InputIndex 对应一条权重, 原理：https://www.jianshu.com/p/aebcaf8af76e
         /// </summary>
         /// <param name="dw"></param>
         /// <param name="OutputIndex"></param>
@@ -50,7 +50,7 @@ namespace Ren.Net.Optimizers
             }
 
             V[OutputIndex][InputIndex] = B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw;
-            S[OutputIndex][InputIndex] = B1 * S[OutputIndex][InputIndex] + (1 - B1) * dw * dw;
+            S[OutputIndex][InputIndex] = B2 * S[OutputIndex][InputIndex] + (1 - B2) * dw * dw;
 
             float Vcorrection = V[OutputIndex][InputIndex] / (1 - B1_Pow);
             float Scorrection = S[OutputIndex][InputIndex] / (1 - B2_Pow);

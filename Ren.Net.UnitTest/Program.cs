@@ -26,11 +26,11 @@ namespace Ren.Net.UnitTest
                 // layer3
                 new Linear(10, 1),
             });
-            netWork.Optimizer = new Adam(learningRate: 0.001F);
+            netWork.Optimizer = new Adam(learningRate: 0.00001F);
 
             MSELoss loss = new MSELoss();
 
-            int epoch = 50000;
+            int epoch = 500000;
 
             for (int i = 0; i < epoch; i++)
             {
@@ -44,7 +44,7 @@ namespace Ren.Net.UnitTest
                 var sensitive = loss.CaculateLoss(label, output);
 
                 if (i % 100 == 0)
-                    Console.WriteLine(sensitive.Data[0][0]);
+                    Console.WriteLine($"aim: {label.Data[0][0]} out: {output.Data[0][0]} loss: {sensitive.Data[0][0]}" );
 
                 netWork.Backup(sensitive);
 
@@ -69,7 +69,7 @@ namespace Ren.Net.UnitTest
         /// <returns></returns>
         static (Torch input, Torch label) GetTorch()
         {
-            int x = new Random().Next(1, 1000);
+            int x = new Random().Next(1, 100);
             Torch input = new Torch()
             {
                 Data = new List<float[]>(1)

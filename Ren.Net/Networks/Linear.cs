@@ -44,14 +44,14 @@ namespace Ren.Net.Networks
 
             WI = new List<float[]>(outputNumber);
 
-            int sumInput = outputNumber * inputNumber;
+            int sumInput = outputNumber + inputNumber;
 
             for (int i = 0; i < outputNumber; i++)
             {
                 float[] wiTemp = new float[inputNumber];
                 for (int j = 0; j < inputNumber; j++)
                 {
-                    wiTemp[j] = W_value_method(sumInput);
+                    wiTemp[j] = W_value_method(sumInput / 2);
                 }
                 WI.Add(wiTemp);
             }
@@ -149,12 +149,24 @@ namespace Ren.Net.Networks
         /// <returns></returns>
         private float W_value_method(int sumInput)
         {
-            //return 1F;
+            // return 1F;
+
+            //float x = (float)r.NextDouble();
+            //float number = (Math.Abs(x) / 1) * (2.0F / sumInput);
 
             float y = (float)r.NextDouble();
             float x = (float)r.NextDouble();
             float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));
             number *= (float)Math.Sqrt(2.0 / sumInput);
+            number = Math.Abs(number);
+            number *= (2.0F / sumInput);
+
+            //float y = (float)r.NextDouble();
+            //float x = (float)r.NextDouble();
+            //float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));
+            //number *= (float)Math.Sqrt(2.0 / sumInput);
+            //number = Math.Abs(number);
+
             return number;
         }
     }
