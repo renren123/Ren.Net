@@ -13,15 +13,10 @@ namespace Ren.Net.Optimizers
         public float B1 { get; } = 0.9F;
         public float B2 { get; } = 0.999F;
 
-        
-
         public List<float[]> V { set; get; }
         public List<float[]> S { set; get; }
 
-        public Adam(float learningRate) : base(learningRate)
-        {
-        }
-
+        public Adam(float learningRate) : base(learningRate) { }
 
         /// <summary>
         /// int OutputIndex, int InputIndex 对应一条权重, 原理：https://www.jianshu.com/p/aebcaf8af76e

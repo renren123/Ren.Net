@@ -44,5 +44,21 @@ namespace Ren.Net.Objects
                 Nets[i].Optimizer.Step();
             }
         }
+
+        public virtual void ADDGradient(float epsilon)
+        {
+            foreach (var item in Nets)
+            {
+                item.ADDGradient(epsilon);
+            }
+        }
+
+        public virtual void ReduceGradient(float epsilon)
+        {
+            foreach (var item in Nets)
+            {
+                item.ReduceGradient(epsilon);
+            }
+        }
     }
 }

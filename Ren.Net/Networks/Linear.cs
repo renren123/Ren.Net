@@ -170,5 +170,27 @@ namespace Ren.Net.Networks
 
             return number;
         }
+
+        public override void ADDGradient(float epsilon)
+        {
+            foreach (var item in WI)
+            {
+                for (int i = 0; i < item.Length; i++)
+                {
+                    item[i] += epsilon;
+                }
+            }
+        }
+
+        public override void ReduceGradient(float epsilon)
+        {
+            foreach (var item in WI)
+            {
+                for (int i = 0; i < item.Length; i++)
+                {
+                    item[i] -= epsilon;
+                }
+            }
+        }
     }
 }

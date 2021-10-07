@@ -17,5 +17,13 @@ namespace Ren.Net.Objects
         {
             return null;
         }
+
+        public virtual void ADDGradient(float epsilon)
+        {
+        }
+
+        public virtual void ReduceGradient(float epsilon)
+        {
+        }
     }
 }

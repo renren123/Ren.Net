@@ -18,10 +18,10 @@ namespace Ren.Net.UnitTest
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 2),
+                new Linear(1, 200),
                 new ReLU(),
                 // layer2
-                new Linear(2, 2),
+                new Linear(200, 2),
                 new ReLU(),
                 // layer3
                 new Linear(2, 1),
@@ -50,6 +50,25 @@ namespace Ren.Net.UnitTest
 
                 netWork.OptimizerStep();
             }
+
+            float epsilon = 0.0001F;
+            netWork.ADDGradient(epsilon);
+            var (testInput, testLabel) = GetTorch();
+            var addResult = netWork.Forward(testInput);
+            netWork.ReduceGradient(epsilon * 2);
+            var reduceResult = netWork.Forward(testInput);
+
+            float checkResult = Math.Abs(addResult.Data[0][0] - reduceResult.Data[0][0]);
+
+            if(checkResult >= 0.0001F)
+            {
+                Console.WriteLine($"checkout error {checkResult}");
+            }
+            else
+            {
+                Console.WriteLine($"checkout success {checkResult}");
+            }
+
             Console.WriteLine("END");
 
             Console.ReadKey();
@@ -69,16 +88,17 @@ namespace Ren.Net.UnitTest
         /// <returns></returns>
         static (Torch input, Torch label) GetTorch()
         {
+            int batchSize = 1;
             int x = new Random().Next(1, 3);
             Torch input = new Torch()
             {
-                Data = new List<float[]>(1)
+                Data = new List<float[]>(batchSize)
             };
             input.Data.Add(new float[] { x });
 
             Torch label = new Torch()
             {
-                Data = new List<float[]>(1)
+                Data = new List<float[]>(batchSize)
             };
             label.Data.Add(new float[] { x + 1 });
 
