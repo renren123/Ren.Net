@@ -7,7 +7,7 @@ using Ren.Net.Loss;
 using Ren.Net.Optimizers;
 using System.Threading.Tasks;
 
-namespace Ren.Net.UnitTest
+namespace Ren.Net.Test
 {
     public class Program
     {
@@ -51,6 +51,16 @@ namespace Ren.Net.UnitTest
                 netWork.OptimizerStep();
             }
 
+            // Gradient Check 
+            GradientCheck(netWork);
+
+            Console.WriteLine("END");
+
+            Console.ReadKey();
+        }
+
+        static void GradientCheck(Sequential netWork)
+        {
             float epsilon = 0.0001F;
             netWork.ADDGradient(epsilon);
             var (testInput, testLabel) = GetTorch();
@@ -58,9 +68,11 @@ namespace Ren.Net.UnitTest
             netWork.ReduceGradient(epsilon * 2);
             var reduceResult = netWork.Forward(testInput);
 
+            float expected_gradient = (reduceResult.Data[0][0] - addResult.Data[0][0]) / (2 * epsilon);
+
             float checkResult = Math.Abs(addResult.Data[0][0] - reduceResult.Data[0][0]);
 
-            if(checkResult >= 0.0001F)
+            if (checkResult >= 0.0001F)
             {
                 Console.WriteLine($"checkout error {checkResult}");
             }
@@ -68,12 +80,9 @@ namespace Ren.Net.UnitTest
             {
                 Console.WriteLine($"checkout success {checkResult}");
             }
-
-            Console.WriteLine("END");
-
-            Console.ReadKey();
         }
-        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+
+       private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             Console.Error.WriteLine($"Fatal error: {e.Exception}");
             //MiniDump.TryDump("error.dmp");
@@ -81,6 +90,8 @@ namespace Ren.Net.UnitTest
             //BasicExecutor.Execute(MainProcer.Stop);
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
         }
+
+       
 
         /// <summary>
         /// 模拟 函数 y = x + 1
