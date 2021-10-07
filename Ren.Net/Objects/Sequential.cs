@@ -34,9 +34,7 @@ namespace Ren.Net.Objects
             {
                 var net = Nets[i];
                 @out = net.Backup(@out);
-                net.Optimizer.Step();
             }
-
             return @out;
         }
         public void OptimizerStep()

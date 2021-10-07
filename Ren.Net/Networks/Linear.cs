@@ -75,11 +75,11 @@ namespace Ren.Net.Networks
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
-                    // ******************test********************
-                    // 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
-                    x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
-                    continue;
-                    // ******************test********************
+                    //// ******************test********************
+                    //// 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
+                    //x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
+                    //continue;
+                    //// ******************test********************
 
                     for (int k = 0; k < batchSize; k++)
                     {
@@ -107,11 +107,11 @@ namespace Ren.Net.Networks
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
-                    // ******************test********************
-                    // 损失值 上一层神经元 = (i,j) * 下一层神经元 i 
-                    sensitive_out.Data[j][0] += WI[i][j] * @out.Data[i][0];
-                    continue;
-                    // ******************test********************
+                    //// ******************test********************
+                    //// 损失值 上一层神经元 = (i,j) * 下一层神经元 i 
+                    //sensitive_out.Data[j][0] += WI[i][j] * @out.Data[i][0];
+                    //continue;
+                    //// ******************test********************
 
                     for (int k = 0; k < batchSize; k++)
                     {
@@ -123,12 +123,13 @@ namespace Ren.Net.Networks
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
-                    // ******************test********************
-                    float dwTemp = X_In.Data[j][0] * @out.Data[i][0];
-                    WI[i][j] -= Optimizer.GetOptimizer(dwTemp, i, j);       // list 的个数 表示当前层的神经元个数
-                    //WI[i][j] -= dwTemp * 0.001F;       // list 的个数 表示当前层的神经元个数
-                    continue;
-                    // ******************test********************
+                    //// ******************test********************
+                    //float dwTemp = X_In.Data[j][0] * @out.Data[i][0];
+                    //float deltWI = Optimizer.GetOptimizer(dwTemp, i, j);
+                    //WI[i][j] -= deltWI;      // list 的个数 表示当前层的神经元个数
+                    //// WI[i][j] -= dwTemp * 0.001F;       // list 的个数 表示当前层的神经元个数
+                    //continue;
+                    //// ******************test********************
 
                     float[] dwArray = new float[batchSize];
                     for (int k = 0; k < batchSize; k++)

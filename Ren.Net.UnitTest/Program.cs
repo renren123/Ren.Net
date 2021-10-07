@@ -18,19 +18,19 @@ namespace Ren.Net.UnitTest
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10),
+                new Linear(1, 2),
                 new ReLU(),
                 // layer2
-                new Linear(10, 10),
+                new Linear(2, 2),
                 new ReLU(),
                 // layer3
-                new Linear(10, 1),
+                new Linear(2, 1),
             });
-            netWork.Optimizer = new Adam(learningRate: 0.00001F);
+            netWork.Optimizer = new Adam(learningRate: 0.001F);
 
             MSELoss loss = new MSELoss();
 
-            int epoch = 500000;
+            int epoch = 50000;
 
             for (int i = 0; i < epoch; i++)
             {
@@ -69,7 +69,7 @@ namespace Ren.Net.UnitTest
         /// <returns></returns>
         static (Torch input, Torch label) GetTorch()
         {
-            int x = new Random().Next(1, 100);
+            int x = new Random().Next(1, 3);
             Torch input = new Torch()
             {
                 Data = new List<float[]>(1)

@@ -55,6 +55,10 @@ namespace Ren.Net.Optimizers
             float Vcorrection = V[OutputIndex][InputIndex] / (1 - B1_Pow);
             float Scorrection = S[OutputIndex][InputIndex] / (1 - B2_Pow);
 
+            float temp1 = ((float)Math.Sqrt(Scorrection) + E);
+            float temp2 = LearningRate * Vcorrection;
+            float temp3 = temp2 / temp1;
+
             return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
         }
         public override void Step()
