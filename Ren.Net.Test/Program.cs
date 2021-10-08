@@ -18,10 +18,10 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 200),
+                new Linear(1, 2),
                 new ReLU(),
                 // layer2
-                new Linear(200, 2),
+                new Linear(2, 2),
                 new ReLU(),
                 // layer3
                 new Linear(2, 1),
@@ -52,7 +52,7 @@ namespace Ren.Net.Test
             }
 
             // Gradient Check 
-            GradientCheck(netWork);
+            // GradientCheck(netWork);
 
             Console.WriteLine("END");
 

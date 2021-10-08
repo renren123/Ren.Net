@@ -148,7 +148,7 @@ namespace Ren.Net.Networks
         /// </summary>
         /// <param name="sumInput">输入个数</param>
         /// <returns></returns>
-        private float W_value_method(int sumInput)
+        public virtual float W_value_method(int sumInput)
         {
             // return 1F;
 

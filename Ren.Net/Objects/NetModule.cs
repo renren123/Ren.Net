@@ -10,20 +10,22 @@ namespace Ren.Net.Objects
         public Optimizer Optimizer { set; get; }
         public virtual Torch Forward(Torch @in) 
         {
-            return null;
+            throw new NotImplementedException();
         }
 
         public virtual Torch Backup(Torch @out)
         {
-            return null;
+            throw new NotImplementedException();
         }
 
         public virtual void ADDGradient(float epsilon)
         {
+            throw new NotImplementedException();
         }
 
         public virtual void ReduceGradient(float epsilon)
         {
+            throw new NotImplementedException();
         }
     }
 }
