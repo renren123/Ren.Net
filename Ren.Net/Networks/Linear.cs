@@ -1,6 +1,8 @@
 ﻿using Ren.Net.Objects;
 using Ren.Net.Optimizers;
+using Serilog;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +12,7 @@ namespace Ren.Net.Networks
 {
     public class Linear : NetModule
     {
+        public static Dictionary<string, int> RecordDic = new Dictionary<string, int>();
         private readonly Random r = new Random(DateTime.UtcNow.Millisecond);
         /// <summary>
         /// 输入层神经元个数
@@ -51,7 +54,7 @@ namespace Ren.Net.Networks
                 float[] wiTemp = new float[inputNumber];
                 for (int j = 0; j < inputNumber; j++)
                 {
-                    wiTemp[j] = W_value_method(sumInput / 2);
+                    wiTemp[j] = W_value_method(sumInput);
                 }
                 WI.Add(wiTemp);
             }
@@ -139,8 +142,25 @@ namespace Ren.Net.Networks
                     float dwAverage = dwArray.Average();
 
                     WI[i][j] -= Optimizer.GetOptimizer(dwAverage, i, j);
+
+                    // ******************test********************
+                    lock (RecordDic)
+                    {
+                        string key = i + "_" + j;
+                        if(!RecordDic.ContainsKey(key))
+                        {
+                            RecordDic[key] = 1;
+                        }
+                        else
+                        {
+                            RecordDic[key] += 1;
+                        }
+                    }
+                    // ******************test********************
                 }
             }
+            PrintWI();
+
             return sensitive_out;
         }
         /// <summary>
@@ -191,6 +211,16 @@ namespace Ren.Net.Networks
                     item[i] -= epsilon;
                 }
             }
+        }
+        private void PrintWI()
+        {
+            List<string> lines = new List<string>();
+
+            for (int i = 0; i < WI.Count; i++)
+            {
+                lines.Add(string.Join(" ", WI[i]));
+            }
+            Log.Debug("WI: " + lines.Count + "\t" + string.Join(" | ", lines));
         }
     }
 }

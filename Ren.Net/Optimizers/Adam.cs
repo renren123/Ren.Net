@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -53,6 +54,8 @@ namespace Ren.Net.Optimizers
             float temp1 = ((float)Math.Sqrt(Scorrection) + E);
             float temp2 = LearningRate * Vcorrection;
             float temp3 = temp2 / temp1;
+
+            // Log.Debug("I: " + OutputIndex + " J: "+ InputIndex + " Gradient: " + temp3 + "\tVcorrection: " + Vcorrection + "\tScorrection: "+ Scorrection);
 
             return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
         }

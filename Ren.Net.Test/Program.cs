@@ -6,14 +6,43 @@ using Ren.Net.ActivationFunction;
 using Ren.Net.Loss;
 using Ren.Net.Optimizers;
 using System.Threading.Tasks;
+using System.IO;
+using System.Reflection;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace Ren.Net.Test
 {
     public class Program
     {
+        private static void InitNetLogging()
+        {
+            var executingDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var logPath = Path.Combine(executingDir, "log", "net.log");
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Debug)
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Debug)
+                .Enrich.WithThreadId()
+                .WriteTo.Async(a => a.File(logPath,
+                    LogEventLevel.Verbose,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] [{ThreadId:00}] {Message:lj}{NewLine}{Exception}",
+                    fileSizeLimitBytes: 31457280,
+                    rollOnFileSizeLimit: true,
+                    rollingInterval: RollingInterval.Day,
+                    shared: true,
+                    retainedFileCountLimit: 30))
+                .WriteTo.Console(LogEventLevel.Information,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                .CreateLogger();
+        }
         static void Main(string[] args)
         {
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+            InitNetLogging();
 
             Sequential netWork = new Sequential(new List<NetModule>()
             {
@@ -21,16 +50,16 @@ namespace Ren.Net.Test
                 new Linear(1, 2),
                 new ReLU(),
                 // layer2
-                new Linear(2, 2),
-                new ReLU(),
-                // layer3
+                //new Linear(2, 2),
+                //new ReLU(),
+                //// layer3
                 new Linear(2, 1),
             });
-            netWork.Optimizer = new Adam(learningRate: 0.001F);
+            netWork.Optimizer = new Adam(learningRate: 0.01F);
 
             MSELoss loss = new MSELoss();
 
-            int epoch = 50000;
+            int epoch = 500000;
 
             for (int i = 0; i < epoch; i++)
             {
