@@ -31,6 +31,7 @@ namespace Ren.Net.Networks
         /// 权重单独保存在一个地图里面，方向是正向传播的方向，list 每个元素是当前 神经元素的个数，float[] 数组是上一层元素的个数
         /// </summary>
         public List<float[]> WI { set; get; }
+        public List<float> WB { set; get; }
         /// <summary>
         /// list 的数量是前一层的数量
         /// </summary>
@@ -46,6 +47,7 @@ namespace Ren.Net.Networks
             this.OutputNumber = outputNumber;
 
             WI = new List<float[]>(outputNumber);
+            WB = new List<float>(outputNumber);
 
             int sumInput = outputNumber + inputNumber;
 
@@ -57,6 +59,7 @@ namespace Ren.Net.Networks
                     wiTemp[j] = W_value_method(sumInput);
                 }
                 WI.Add(wiTemp);
+                WB.Add(1);
             }
         }
         public override Torch Forward(Torch @in)
@@ -88,6 +91,11 @@ namespace Ren.Net.Networks
                     {
                         x_out.Data[i][k] += WI[i][j] * @in.Data[j][k];
                     }
+                }
+                // 更新偏置项
+                for (int k = 0; k < batchSize; k++)
+                {
+                    x_out.Data[i][k] += WB[k];
                 }
             }
             return x_out;
@@ -160,6 +168,13 @@ namespace Ren.Net.Networks
                 }
             }
             PrintWI();
+
+            for (int i = 0; i < @out.Data.Count; i++)
+            {
+                float dw = @out.Data[i].Average();
+
+                WB[i] -= Optimizer.GetOptimizer(dw, i);
+            }
 
             return sensitive_out;
         }

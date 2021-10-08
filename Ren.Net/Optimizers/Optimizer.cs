@@ -19,6 +19,10 @@ namespace Ren.Net.Optimizers
         {
             throw new NotImplementedException();
         }
+        public virtual float GetOptimizer(float dw, int OutputIndex)
+        {
+            throw new NotImplementedException();
+        }
         public virtual void Step()
         {
             throw new NotImplementedException();

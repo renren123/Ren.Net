@@ -129,7 +129,7 @@ namespace Ren.Net.Test
         static (Torch input, Torch label) GetTorch()
         {
             int batchSize = 1;
-            int x = new Random().Next(1, 3);
+            int x = new Random().Next(1, 100);
             Torch input = new Torch()
             {
                 Data = new List<float[]>(batchSize)

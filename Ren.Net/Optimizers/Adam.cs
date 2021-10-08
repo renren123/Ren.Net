@@ -17,6 +17,9 @@ namespace Ren.Net.Optimizers
         public List<float[]> V { set; get; }
         public List<float[]> S { set; get; }
 
+        public List<float> WB_V { set; get; }
+        public List<float> WB_S { set; get; }
+
         public Adam(float learningRate) : base(learningRate) { }
 
         /// <summary>
@@ -59,6 +62,34 @@ namespace Ren.Net.Optimizers
 
             return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
         }
+        public override float GetOptimizer(float dw, int OutputIndex)
+        {
+            if(WB_S == null)
+            {
+                WB_S = new List<float>(OutputNumber);
+                for (int i = 0; i < OutputNumber; i++)
+                {
+                    WB_S.Add(0F);
+                }
+            }
+            if (WB_V == null)
+            {
+                WB_V = new List<float>(OutputNumber);
+                for (int i = 0; i < OutputNumber; i++)
+                {
+                    WB_V.Add(0F);
+                }
+            }
+            WB_V[OutputIndex] = B1 * WB_V[OutputIndex] + (1 - B1) * dw;
+            WB_S[OutputIndex] = B2 * WB_S[OutputIndex] + (1 - B2) * dw * dw;
+
+            float Vcorrection = WB_V[OutputIndex] / (1 - B1_Pow);
+            float Scorrection = WB_S[OutputIndex] / (1 - B2_Pow);
+
+            return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
+        }
+
+
         public override void Step()
         {
             B1_Pow *= B1;
