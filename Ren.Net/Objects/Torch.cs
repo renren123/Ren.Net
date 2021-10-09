@@ -16,6 +16,7 @@ namespace Ren.Net.Objects
         public int Column => Data == null || Data.RowCount == 0 ? -1 : Data.ColumnCount;
         public int Row => Data == null || Data.RowCount == 0 ? -1 : Data.RowCount;
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
+        private static VectorBuilder<float> VBuild { get; } = Vector<float>.Build;
         public Torch() { }
         public Torch(float[,] data)
         {
@@ -34,7 +35,10 @@ namespace Ren.Net.Objects
         {
             Data = MBuild.Dense(neuronNumber, batch, 0F);
         }
-
+        public Torch(int neuronNumber, int batch, Func<int, int, float> init)
+        {
+            Data = MBuild.Dense(neuronNumber, batch, init);
+        }
         public object Clone()
         {
             return new Torch(Data.Clone());
@@ -55,6 +59,56 @@ namespace Ren.Net.Objects
         {
             return Data.Row(i).Average();
         }
+        public Torch AddOneColumnWithValue(int length, float value)
+        {
+            Vector<float> vector = VBuild.Dense(length, value);
+            var data = this.Data.InsertColumn(Column, vector);
+            return new Torch(data);
+        }
+        public Torch AddOneRowWithValue(int length, float value)
+        {
+            Vector<float> vector = VBuild.Dense(length, value);
+            var data = this.Data.InsertRow(Row, vector);
+            return new Torch(data);
+        }
+        public Torch RemoveLastOneColumn()
+        {
+            var data = this.Data.RemoveColumn(Column - 1);
+            return new Torch(data);
+        }
+        public Torch RemoveLastOneRow()
+        {
+            var data = this.Data.RemoveRow(Row - 1);
+            return new Torch(data);
+        }
+        /// <summary>
+        /// 增加一列，加到最后
+        /// </summary>
+        /// <param name="column"></param>
+        public void AddColumn(float[] column)
+        {
+            Vector<float> vector = VBuild.Dense(column);
+            this.Data = this.Data.InsertColumn(Column, vector);
+        }
+        public void AddRow(float[] column)
+        {
+            Vector<float> vector = VBuild.Dense(column);
+            this.Data = this.Data.InsertRow(Row, vector);
+        }
+        public void InsertColumn(int columnIndex, float[] column)
+        {
+            Vector<float> vector = VBuild.Dense(column);
+            this.Data.InsertColumn(columnIndex, vector);
+        }
+        /// <summary>
+        /// 矩阵转置
+        /// </summary>
+        /// <returns></returns>
+        public Torch Transpose()
+        {
+            return new Torch(this.Data.Transpose());
+        }
+
         /// <summary>
         /// torch 索引器
         /// </summary>
@@ -71,6 +125,10 @@ namespace Ren.Net.Objects
             {
                 this.Data[i, j] = value;
             }
+        }
+        public override string ToString()
+        {
+            return this.Data.ToMatrixString();
         }
     }
 }

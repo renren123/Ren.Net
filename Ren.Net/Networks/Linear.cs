@@ -47,17 +47,24 @@ namespace Ren.Net.Networks
         {
             this.InputNumber = inputNumber;
             this.OutputNumber = outputNumber;
-            WI = new Torch(outputNumber, inputNumber);
-            WB = new List<float>(outputNumber);
-
             int sumInput = outputNumber + inputNumber;
+            WI = new Torch(outputNumber, inputNumber + 1, (int i, int j)=>
+            {
+                if ( j == inputNumber)
+                {
+                    return 1F;
+                }
+                else
+                {
+                    return W_value_method(sumInput);
+                }
+            });
+            Log.Information("\r\n" + WI.ToString());
+
+            WB = new List<float>(outputNumber);
 
             for (int i = 0; i < outputNumber; i++)
             {
-                for (int j = 0; j < inputNumber; j++)
-                {
-                    WI[i, j] = W_value_method(sumInput);
-                }
                 WB.Add(1);
             }
         }
@@ -69,44 +76,39 @@ namespace Ren.Net.Networks
             {
                 throw new Exception("Linear::Forward, batchSize is -1 or neuronNumber is -1");
             }
-            Optimizer.InputNumber = this.InputNumber;
+            Optimizer.InputNumber = this.InputNumber + 1;
             Optimizer.OutputNumber = this.OutputNumber;
-
-            //Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
-
             X_In = @in.Clone() as Torch;    // 保存输入
 
-            Torch x_out = WI * @in;
+            //#region old
+            //Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
 
             //for (int i = 0; i < OutputNumber; i++)
             //{
             //    for (int j = 0; j < InputNumber; j++)
             //    {
-            //        //// ******************test********************
-            //        //// 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
-            //        //x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
-            //        //continue;
-            //        //// ******************test********************
-
             //        for (int k = 0; k < batchSize; k++)
             //        {
-            //            x_out.Data[i][k] += WI[i][j] * @in.Data[j][k];
+            //            x_out[i, k] += WI[i, j] * @in[j, k];
             //        }
             //    }
+            //}
+
+            //for (int i = 0; i < OutputNumber; i++)
+            //{
             //    // 更新偏置项
             //    for (int k = 0; k < batchSize; k++)
             //    {
-            //        x_out.Data[i][k] += WB[k];
+            //        x_out[i, k] += WB[k];
             //    }
             //}
-            for (int i = 0; i < OutputNumber; i++)
-            {
-                // 更新偏置项
-                for (int k = 0; k < batchSize; k++)
-                {
-                    x_out[i, k] += WB[k];
-                }
-            }
+            //#endregion
+
+            #region new
+            @in = @in.AddOneRowWithValue(batchSize, 1F);
+            Torch x_out = WI * @in;
+            #endregion
+
             return x_out;
         }
         /// <summary>
@@ -123,34 +125,36 @@ namespace Ren.Net.Networks
                 throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
             }
             Torch sensitive_out = new Torch(InputNumber, batchSize);   // list 的个数 表示上一层的神经元个数
+
+            //Log.Information("WI: \r\n" + WI);
+            //Log.Information("@out: \r\n" + @out);
             for (int i = 0; i < OutputNumber; i++)
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
-                    //// ******************test********************
-                    //// 损失值 上一层神经元 = (i,j) * 下一层神经元 i 
-                    //sensitive_out.Data[j][0] += WI[i][j] * @out.Data[i][0];
-                    //continue;
-                    //// ******************test********************
-
                     for (int k = 0; k < batchSize; k++)
                     {
                         sensitive_out[j, k] += WI[i, j] * @out[i, k];
                     }
                 }
             }
+
+            Torch sensitive_out_temp =WI.Transpose() * @out;
+
+            //Log.Information("sensitive_out: \r\n" + sensitive_out);
+            //Log.Information("sensitive_out_temp: \r\n" + sensitive_out_temp);   // 返回时把最后一行减掉
+            //Log.Information("X_In: \r\n" + X_In);
+
+            Optimizer OptimizerTemp = Optimizer.Clone() as Optimizer;
+
+            float[,] dwold = new float[OutputNumber, InputNumber];
+
+            var WI_temp = WI.Clone() as Torch;
+
             for (int i = 0; i < OutputNumber; i++)
             {
                 for (int j = 0; j < InputNumber; j++)
                 {
-                    //// ******************test********************
-                    //float dwTemp = X_In.Data[j][0] * @out.Data[i][0];
-                    //float deltWI = Optimizer.GetOptimizer(dwTemp, i, j);
-                    //WI[i][j] -= deltWI;      // list 的个数 表示当前层的神经元个数
-                    //// WI[i][j] -= dwTemp * 0.001F;       // list 的个数 表示当前层的神经元个数
-                    //continue;
-                    //// ******************test********************
-
                     float[] dwArray = new float[batchSize];
                     for (int k = 0; k < batchSize; k++)
                     {
@@ -160,29 +164,37 @@ namespace Ren.Net.Networks
 
                     WI[i, j] -= Optimizer.GetOptimizer(dwAverage, i, j);
 
-                    // ******************test********************
-                    lock (RecordDic)
-                    {
-                        string key = i + "_" + j;
-                        if(!RecordDic.ContainsKey(key))
-                        {
-                            RecordDic[key] = 1;
-                        }
-                        else
-                        {
-                            RecordDic[key] += 1;
-                        }
-                    }
-                    // ******************test********************
+                    dwold[i, j] = dwAverage;
                 }
             }
-            //PrintWI();
 
+            X_In = X_In.AddOneRowWithValue(batchSize, 1F);
+            var dwTemp = @out * X_In.Transpose();
+            
+
+            //for (int i = 0; i < dwTemp.Row; i++)
+            //{
+            //    for (int j = 0; j < dwTemp.Column; j++)
+            //    {
+            //        WI_temp[i, j] -= 
+            //    }
+            //}
+
+            for (int i = 0; i < OutputNumber; i++)
+            {
+                for (int j = 0; j < InputNumber + 1; j++)
+                {
+                    WI_temp[i, j] -= OptimizerTemp.GetOptimizer(dwTemp[i, j], i, j);
+                }
+            }
+
+            // Log.Information("WI_temp\r\n" + WI_temp);
+
+            // 更新 WB
             for (int i = 0; i < @out.Row; i++)
             {
                 float dw = @out.RowAverage(i);
-
-                WB[i] -= Optimizer.GetOptimizer(dw, i);
+                WI[i, InputNumber] -= Optimizer.GetOptimizer(dw, i);
             }
 
             //for (int i = 0; i < @out.Row; i++)
@@ -191,6 +203,9 @@ namespace Ren.Net.Networks
 
             //    WB[i] -= Optimizer.GetOptimizer(dw, i);
             //}
+            // Log.Information("WI\r\n" + WI);
+
+            sensitive_out_temp = sensitive_out_temp.RemoveLastOneRow();
 
             return sensitive_out;
         }

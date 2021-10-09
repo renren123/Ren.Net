@@ -16,6 +16,7 @@ namespace Ren.Net.Objects
         }
         public Torch Forward(Torch @in)
         {
+            // @in = 
             for (int i = 0; i < Nets.Count; i++)
             {
                 var net = Nets[i];

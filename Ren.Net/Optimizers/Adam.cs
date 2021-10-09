@@ -103,9 +103,15 @@ namespace Ren.Net.Optimizers
             }
             Adam adam = new Adam(this.LearningRate)
             {
-                S = new List<float[]>(OutputNumber),
-                V = new List<float[]>(OutputNumber)
+                OutputNumber = this.OutputNumber,
+                InputNumber = this.InputNumber
             };
+            if(this.S == null || this.V == null)
+            {
+                return adam;
+            }
+            adam.S = new List<float[]>(OutputNumber);
+            adam.V = new List<float[]>(OutputNumber);
             for (int i = 0; i < OutputNumber; i++)
             {
                 float[] tempS = new float[InputNumber];
@@ -113,8 +119,8 @@ namespace Ren.Net.Optimizers
 
                 for (int j = 0; j < InputNumber; j++)
                 {
-                    tempS[i] = this.S[i][j];
-                    tempV[i] = this.V[i][j];
+                    tempS[j] = this.S[i][j];
+                    tempV[j] = this.V[i][j];
                 }
                 adam.S.Add(tempS);
                 adam.V.Add(tempV);
