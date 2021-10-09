@@ -30,7 +30,9 @@ namespace Ren.Net.Networks
         /// <summary>
         /// 权重单独保存在一个地图里面，方向是正向传播的方向，list 每个元素是当前 神经元素的个数，float[] 数组是上一层元素的个数
         /// </summary>
-        public List<float[]> WI { set; get; }
+        //public List<float[]> WI { set; get; }
+
+        public Torch WI { set; get; }
         public List<float> WB { set; get; }
         /// <summary>
         /// list 的数量是前一层的数量
@@ -45,26 +47,23 @@ namespace Ren.Net.Networks
         {
             this.InputNumber = inputNumber;
             this.OutputNumber = outputNumber;
-
-            WI = new List<float[]>(outputNumber);
+            WI = new Torch(outputNumber, inputNumber);
             WB = new List<float>(outputNumber);
 
             int sumInput = outputNumber + inputNumber;
 
             for (int i = 0; i < outputNumber; i++)
             {
-                float[] wiTemp = new float[inputNumber];
                 for (int j = 0; j < inputNumber; j++)
                 {
-                    wiTemp[j] = W_value_method(sumInput);
+                    WI[i, j] = W_value_method(sumInput);
                 }
-                WI.Add(wiTemp);
                 WB.Add(1);
             }
         }
         public override Torch Forward(Torch @in)
         {
-            int batchSize = @in.BatchSize;          // batch 的大小
+            int batchSize = @in.Column;          // batch 的大小
 
             if (batchSize == -1)
             {
@@ -73,29 +72,39 @@ namespace Ren.Net.Networks
             Optimizer.InputNumber = this.InputNumber;
             Optimizer.OutputNumber = this.OutputNumber;
 
-            Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
+            //Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
 
             X_In = @in.Clone() as Torch;    // 保存输入
 
+            Torch x_out = WI * @in;
+
+            //for (int i = 0; i < OutputNumber; i++)
+            //{
+            //    for (int j = 0; j < InputNumber; j++)
+            //    {
+            //        //// ******************test********************
+            //        //// 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
+            //        //x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
+            //        //continue;
+            //        //// ******************test********************
+
+            //        for (int k = 0; k < batchSize; k++)
+            //        {
+            //            x_out.Data[i][k] += WI[i][j] * @in.Data[j][k];
+            //        }
+            //    }
+            //    // 更新偏置项
+            //    for (int k = 0; k < batchSize; k++)
+            //    {
+            //        x_out.Data[i][k] += WB[k];
+            //    }
+            //}
             for (int i = 0; i < OutputNumber; i++)
             {
-                for (int j = 0; j < InputNumber; j++)
-                {
-                    //// ******************test********************
-                    //// 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
-                    //x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
-                    //continue;
-                    //// ******************test********************
-
-                    for (int k = 0; k < batchSize; k++)
-                    {
-                        x_out.Data[i][k] += WI[i][j] * @in.Data[j][k];
-                    }
-                }
                 // 更新偏置项
                 for (int k = 0; k < batchSize; k++)
                 {
-                    x_out.Data[i][k] += WB[k];
+                    x_out[i, k] += WB[k];
                 }
             }
             return x_out;
@@ -107,13 +116,13 @@ namespace Ren.Net.Networks
         /// <returns></returns>
         public override Torch Backup(Torch @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
         {
-            int batchSize = @out.BatchSize;
+            int batchSize = @out.Column;
 
             if (batchSize == -1)
             {
                 throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
             }
-            Torch sensitive_out = new Torch(InputNumber, @out.BatchSize);   // list 的个数 表示上一层的神经元个数
+            Torch sensitive_out = new Torch(InputNumber, batchSize);   // list 的个数 表示上一层的神经元个数
             for (int i = 0; i < OutputNumber; i++)
             {
                 for (int j = 0; j < InputNumber; j++)
@@ -126,7 +135,7 @@ namespace Ren.Net.Networks
 
                     for (int k = 0; k < batchSize; k++)
                     {
-                        sensitive_out.Data[j][k] += WI[i][j] * @out.Data[i][k];
+                        sensitive_out[j, k] += WI[i, j] * @out[i, k];
                     }
                 }
             }
@@ -145,11 +154,11 @@ namespace Ren.Net.Networks
                     float[] dwArray = new float[batchSize];
                     for (int k = 0; k < batchSize; k++)
                     {
-                        dwArray[k] = X_In.Data[j][k] * @out.Data[i][k];
+                        dwArray[k] = X_In[j, k] * @out[i, k];
                     }
                     float dwAverage = dwArray.Average();
 
-                    WI[i][j] -= Optimizer.GetOptimizer(dwAverage, i, j);
+                    WI[i, j] -= Optimizer.GetOptimizer(dwAverage, i, j);
 
                     // ******************test********************
                     lock (RecordDic)
@@ -167,14 +176,21 @@ namespace Ren.Net.Networks
                     // ******************test********************
                 }
             }
-            PrintWI();
+            //PrintWI();
 
-            for (int i = 0; i < @out.Data.Count; i++)
+            for (int i = 0; i < @out.Row; i++)
             {
-                float dw = @out.Data[i].Average();
+                float dw = @out.RowAverage(i);
 
                 WB[i] -= Optimizer.GetOptimizer(dw, i);
             }
+
+            //for (int i = 0; i < @out.Row; i++)
+            //{
+            //    float dw = @out.Data[i].Average();
+
+            //    WB[i] -= Optimizer.GetOptimizer(dw, i);
+            //}
 
             return sensitive_out;
         }
@@ -206,36 +222,36 @@ namespace Ren.Net.Networks
             return number;
         }
 
-        public override void ADDGradient(float epsilon)
-        {
-            foreach (var item in WI)
-            {
-                for (int i = 0; i < item.Length; i++)
-                {
-                    item[i] += epsilon;
-                }
-            }
-        }
+        //public override void ADDGradient(float epsilon)
+        //{
+        //    foreach (var item in WI)
+        //    {
+        //        for (int i = 0; i < item.Length; i++)
+        //        {
+        //            item[i] += epsilon;
+        //        }
+        //    }
+        //}
 
-        public override void ReduceGradient(float epsilon)
-        {
-            foreach (var item in WI)
-            {
-                for (int i = 0; i < item.Length; i++)
-                {
-                    item[i] -= epsilon;
-                }
-            }
-        }
-        private void PrintWI()
-        {
-            List<string> lines = new List<string>();
+        //public override void ReduceGradient(float epsilon)
+        //{
+        //    foreach (var item in WI)
+        //    {
+        //        for (int i = 0; i < item.Length; i++)
+        //        {
+        //            item[i] -= epsilon;
+        //        }
+        //    }
+        //}
+        //private void PrintWI()
+        //{
+        //    List<string> lines = new List<string>();
 
-            for (int i = 0; i < WI.Count; i++)
-            {
-                lines.Add(string.Join(" ", WI[i]));
-            }
-            Log.Debug("WI: " + lines.Count + "\t" + string.Join(" | ", lines));
-        }
+        //    for (int i = 0; i < WI.Count; i++)
+        //    {
+        //        lines.Add(string.Join(" ", WI[i]));
+        //    }
+        //    Log.Debug("WI: " + lines.Count + "\t" + string.Join(" | ", lines));
+        //}
     }
 }

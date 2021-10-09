@@ -1,5 +1,7 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Ren.Net.Objects
@@ -8,14 +10,20 @@ namespace Ren.Net.Objects
     {
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
+        /// 行数 是神经元的数量，列数是 batchsize 的数量
         /// </summary>
-        public List<float[]> Data { set; get; }
-        public int BatchSize => Data == null || Data.Count == 0 ? -1 : Data[0].Length;
-        public int LastNeuronNumber => Data == null || Data.Count == 0 ? -1 : Data.Count;
+        private Matrix<float> Data { set; get; }
+        public int Column => Data == null || Data.RowCount == 0 ? -1 : Data.ColumnCount;
+        public int Row => Data == null || Data.RowCount == 0 ? -1 : Data.RowCount;
+        private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
         public Torch() { }
-        public Torch(List<float[]> data)
+        public Torch(float[,] data)
         {
-            this.Data = new List<float[]>(data);
+            this.Data = MBuild.DenseOfArray(data);
+        }
+        private Torch(Matrix<float> data)
+        {
+            this.Data = data;
         }
         /// <summary>
         /// 初始化 一个 torch
@@ -24,30 +32,45 @@ namespace Ren.Net.Objects
         /// <param name="batch">一个 batch 的大小</param>
         public Torch(int neuronNumber, int batch)
         {
-            this.Data = new List<float[]>(neuronNumber);
-            for (int i = 0; i < neuronNumber; i++)
-            {
-                this.Data.Add(new float[batch]);
-            }
+            Data = MBuild.Dense(neuronNumber, batch, 0F);
         }
 
         public object Clone()
         {
-            Torch torch = new Torch()
+            return new Torch(Data.Clone());
+        }
+        public static Torch operator *(Torch lhs, Torch rhs)
+        {
+            return new Torch(lhs.Data * rhs.Data);
+        }
+        public static Torch operator +(Torch lhs, Torch rhs)
+        {
+            return new Torch(lhs.Data + rhs.Data);
+        }
+        public static Torch operator -(Torch lhs, Torch rhs)
+        {
+            return new Torch(lhs.Data - rhs.Data);
+        }
+        public float RowAverage(int i)
+        {
+            return Data.Row(i).Average();
+        }
+        /// <summary>
+        /// torch 索引器
+        /// </summary>
+        /// <param name="i">行数</param>
+        /// <param name="j">列数</param>
+        /// <returns></returns>
+        public float this[int i, int j]
+        {
+            get
             {
-                Data = new List<float[]>(this.Data.Count)
-            };
-            foreach (var item in this.Data)
-            {
-                float[] temp = new float[item.Length];
-
-                for (int i = 0; i < item.Length; i++)
-                {
-                    temp[i] = item[i];
-                }
-                torch.Data.Add(temp);
+                return this.Data[i, j];
             }
-            return torch;
+            set
+            {
+                this.Data[i, j] = value;
+            }
         }
     }
 }

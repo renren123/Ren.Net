@@ -12,13 +12,13 @@ namespace Ren.Net.ActivationFunction
         {
             X_IN = @in.Clone() as Torch;
 
-            foreach (var item in @in.Data)
+            for (int i = 0; i < @in.Row; i++)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int j = 0; j < @in.Column; j++)
                 {
-                    if(item[i] < 0)
+                    if(@in[i, j] < 0)
                     {
-                        item[i] = 0;
+                        @in[i, j] = 0;
                     }
                 }
             }
@@ -26,13 +26,13 @@ namespace Ren.Net.ActivationFunction
         }
         public override Torch Backup(Torch @out)
         {
-            for (int i = 0; i < X_IN.Data.Count; i++)
+            for (int i = 0; i < X_IN.Row; i++)
             {
-                for (int j = 0; j < X_IN.Data[i].Length; j++)
+                for (int j = 0; j < X_IN.Column; j++)
                 {
-                    if(X_IN.Data[i][j] < 0)
+                    if (X_IN[i, j] < 0)
                     {
-                        @out.Data[i][j] = 0;
+                        @out[i, j] = 0;
                     }
                 }
             }
