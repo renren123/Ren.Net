@@ -20,6 +20,11 @@ namespace Ren.Net.Objects
         {
             
         }
+        /// <summary>
+        /// 输入 行是神经元的个数，列是 batchsize
+        /// </summary>
+        /// <param name="in"></param>
+        /// <returns></returns>
         public virtual Torch Forward(Torch @in) 
         {
             throw new NotImplementedException();

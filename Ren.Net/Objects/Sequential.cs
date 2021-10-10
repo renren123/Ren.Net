@@ -51,6 +51,11 @@ namespace Ren.Net.Objects
             IsInit = true;
             Log.Debug("net inited");
         }
+        /// <summary>
+        /// 向下 找激活函数，然后分配 激活函数中的权限初始化 对象给 网络节点
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         private WIOptimizer GetNextWeightsDelegate(int index)
         {
             for (int i = index + 1; i < Nets.Count; i++)
@@ -63,6 +68,11 @@ namespace Ren.Net.Objects
             }
             return null;
         }
+        /// <summary>
+        /// 输入 行是神经元的个数，列是 batchsize
+        /// </summary>
+        /// <param name="in"></param>
+        /// <returns></returns>
         public Torch Forward(Torch @in)
         {
             Init();

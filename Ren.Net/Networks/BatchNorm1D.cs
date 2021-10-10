@@ -19,7 +19,7 @@ namespace Ren.Net.Networks
         /// 对应Sigmab
         /// </summary>
         private float RunningVar { set; get; }
-        private float[] x_hat;
+        private float[] x_hat { set; get; }
         private float UbAverage { set; get; }
         private float SigmmaAverage { set; get; }
         public float Ub { set; get; }
@@ -34,16 +34,156 @@ namespace Ren.Net.Networks
         //public float Vbata { set; get; }
         //public float Sbata { set; get; }
 
-        public BatchNorm1D()
+
+
+        private Torch X_IN { set; get; }
+        private Torch X_Hat { set; get; }
+        /// <summary>
+        /// 输入层神经元个数
+        /// </summary>
+        private int InputNumber { set; get; }
+        private float[] UB { set; get; }
+        private float[] SIGMAB { set; get; }
+        private float[] RMean { set; get; }
+        private float[] RVar { set; get; }
+
+        private Torch GammaBata { set; get; }
+
+        public BatchNorm1D(int inputNumber)
         {
-            //Vgamma = Sgamma = Vbata = Sbata = 0;
+            this.InputNumber = inputNumber;
+            GammaBata = new Torch(inputNumber, 2, 1F);
         }
 
         public override void Init()
         {
             base.Init();
         }
+        public override Torch Forward(Torch @in)
+        {
+            X_IN = @in.Clone() as Torch;
+            if (IsTrain)
+            {
+                X_Hat = new Torch(@in.Row, @in.Column);
+                UB = new float[InputNumber];
+                SIGMAB = new float[InputNumber];
+                float[] sigmabTemp = new float[InputNumber];
 
+                if (RMean == null)
+                {
+                    RMean = new float[InputNumber];
+                }
+                if(RVar == null)
+                {
+                    RVar = new float[InputNumber];
+                }
+
+                for (int i = 0; i < UB.Length; i++)
+                {
+                    UB[i] = @in.ColumnAverage(i);
+                    SIGMAB[i] = @in.ColumnVariance(i);
+                    sigmabTemp[i] = (float)Math.Sqrt(SIGMAB[i] + Adam.E);
+                }
+                for (int i = 0; i < @in.Row; i++)
+                {
+                    for (int j = 0; j < @in.Column; j++)
+                    {
+                        X_Hat[i, j] = (@in[i, j] - UB[i]) / sigmabTemp[i];
+                        @in[i, j] = GammaBata[i, 0] * X_Hat[i, j] + GammaBata[i, 1];
+                    }
+                }
+                return @in;
+            }
+            else
+            {
+                float[] scale = new float[InputNumber];
+                for (int i = 0; i < InputNumber; i++)
+                {
+                    scale[i] = GammaBata[i, 0] / (float)Math.Sqrt(RVar[i] + Adam.E);
+                    @in[i, 0] = @in[i, 0] * scale[i] + (GammaBata[i, 1] - RMean[i] * scale[i]);
+                }
+            }
+            return @in;
+        }
+        public override Torch Backup(Torch @out)
+        {
+            int batchSize = @out.Column;
+            // 处理 一个 batch
+            Torch dx_hat = new Torch(@out.Row, @out.Column);
+            Torch dx = new Torch(@out.Row, @out.Column);
+            float[] dsigmab = new float[InputNumber];
+            float[] dub = new float[InputNumber];
+            // 第一行 是 gamma  第二行 Bata
+            Torch dgammaBata = new Torch(InputNumber, 2, 0F);
+
+            //float[] dgamma = new float[InputNumber];
+            //float[] dbata = new float[InputNumber];
+            float[] dx_hat_sum = new float[InputNumber];
+
+            for (int i = 0; i < @out.Row; i++)
+            {
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    dx_hat[i, j] = @out[i, j] * GammaBata[i, 0];
+                }
+            }
+
+            for (int i = 0; i < InputNumber; i++)
+            {
+                float sum = 0F;
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    sum += dx_hat[i, j] * (X_IN[i, j] - UB[i]);
+                }
+                dx_hat_sum[i] = sum;
+            }
+            for (int i = 0; i < dsigmab.Length; i++)
+            {
+                dsigmab[i] = dx_hat_sum[i] * (-0.5F) * (float)Math.Pow((SIGMAB[i] + Adam.E), -1.5);
+            }
+            float[] dub_temp_1 = new float[InputNumber];
+            for (int i = 0; i < InputNumber; i++)
+            {
+                float sum = 0F;
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    sum += (float)(dx_hat[i, j] * ((-1) / Math.Sqrt(SIGMAB[i] + Adam.E)));
+                }
+                dub_temp_1[i] = sum;
+            }
+            float[] dub_temp_2 = new float[InputNumber];
+            for (int i = 0; i < InputNumber; i++)
+            {
+                float sum = 0F;
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    sum += (-2) * (X_IN[i, j] - Ub);
+                }
+                dub_temp_2[i] = sum;
+            }
+            for (int i = 0; i < InputNumber; i++)
+            {
+                dub[i] = dub_temp_1[i] + dsigmab[i] * dub_temp_2[i] / batchSize;
+            }
+            for (int i = 0; i < InputNumber; i++)
+            {
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    dx[i, j] = (float)(dx_hat[i, j] / Math.Sqrt(Sigmab + Adam.E) + dsigmab[i] * 2 * (X_IN[i, j] - UB[i]) / batchSize + dub[i] / batchSize);
+                }
+            }
+            for (int i = 0; i < InputNumber; i++)
+            {
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    dgammaBata[i, 0] += @out[i, j] * X_Hat[i, j];
+                    dgammaBata[i, 1] += @out[i, j];
+                }
+            }
+
+            GammaBata -= Optimizer.GetOptimizer(dgammaBata);
+            return dx;
+        }
         //得到输出
         /// <summary>
         /// 前向传播

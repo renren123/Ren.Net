@@ -35,6 +35,10 @@ namespace Ren.Net.Objects
         {
             Data = MBuild.Dense(neuronNumber, batch, 0F);
         }
+        public Torch(int neuronNumber, int batch, float value)
+        {
+            Data = MBuild.Dense(neuronNumber, batch, value);
+        }
         public Torch(int neuronNumber, int batch, Func<int, int, float> init)
         {
             Data = MBuild.Dense(neuronNumber, batch, init);
@@ -47,6 +51,32 @@ namespace Ren.Net.Objects
         public float RowAverage(int i)
         {
             return Data.Row(i).Average();
+        }
+        public float ColumnAverage(int j)
+        {
+            return Data.Column(j).Average();
+        }
+        public float RowVariance(int index)
+        {
+            var row = Data.Row(index);
+            float sum = 0F;
+            float average = row.Average();
+            for (int i = 0; i < row.Count; i++)
+            {
+                sum += (row[i] - average) * (row[i] - average);
+            }
+            return sum / row.Count;
+        }
+        public float ColumnVariance(int index)
+        {
+            var column = Data.Column(index);
+            float sum = 0F;
+            float average = column.Average();
+            for (int i = 0; i < column.Count; i++)
+            {
+                sum += (column[i] - average) * (column[i] - average);
+            }
+            return sum / column.Count;
         }
         public Torch AddOneColumnWithValue(int length, float value)
         {

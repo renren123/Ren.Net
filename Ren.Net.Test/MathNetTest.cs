@@ -71,6 +71,7 @@ namespace Ren.Net.Test
             Matrix<float> matrix2 = mb.DenseOfArray(testData2);
 
             Vector<float> vector = vb.Dense(new float[] { 100F, 100F});
+            // vector Variance
 
             var sqrtTest = Matrix<float>.Sqrt(matrix2);
             var dotTest = Matrix<float>.op_DotMultiply(matrix2, matrix2);
