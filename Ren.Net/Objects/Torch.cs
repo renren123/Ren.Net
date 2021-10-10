@@ -17,7 +17,6 @@ namespace Ren.Net.Objects
         public int Row => Data == null || Data.RowCount == 0 ? -1 : Data.RowCount;
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
         private static VectorBuilder<float> VBuild { get; } = Vector<float>.Build;
-        public Torch() { }
         public Torch(float[,] data)
         {
             this.Data = MBuild.DenseOfArray(data);
@@ -129,6 +128,34 @@ namespace Ren.Net.Objects
         public override string ToString()
         {
             return this.Data.ToMatrixString();
+        }
+        public override bool Equals(object obj)
+        {
+            if (!(obj is Torch))
+            {
+                return false;
+            }
+            Torch torch = obj as Torch;
+
+            if (torch.Row != this.Row || torch.Column != this.Column)
+            {
+                return false;
+            }
+            for (int i = 0; i < torch.Row; i++)
+            {
+                for (int j = 0; j < torch.Column; j++)
+                {
+                    if(torch[i, j] != this[i, j])
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        public override int GetHashCode()
+        {
+            return Data.GetHashCode();
         }
     }
 }

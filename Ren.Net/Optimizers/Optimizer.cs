@@ -14,15 +14,15 @@ namespace Ren.Net.Optimizers
         {
             this.LearningRate = learningRate;
         }
-
+        public virtual void Init()
+        {
+            throw new NotImplementedException();
+        }
         public virtual float GetOptimizer(float dw,int OutputIndex, int InputIndex)
         {
             throw new NotImplementedException();
         }
-        public virtual float GetOptimizer(float dw, int OutputIndex)
-        {
-            throw new NotImplementedException();
-        }
+        
         public virtual void Step()
         {
             throw new NotImplementedException();

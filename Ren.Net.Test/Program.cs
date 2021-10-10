@@ -36,7 +36,9 @@ namespace Ren.Net.Test
                     shared: true,
                     retainedFileCountLimit: 30))
                 .WriteTo.Console(LogEventLevel.Information,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                    outputTemplate: "{Timestamp:HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                    // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                
                 .CreateLogger();
         }
         static void Main(string[] args)
@@ -48,19 +50,21 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 100),
+                new Linear(1, 10),
                 new ReLU(),
                 // layer2
-                new Linear(100, 100),
-                new ReLU(),
+                //new Linear(10, 10),
+                //new ReLU(),
                 //// layer3
-                new Linear(100, 1),
+                new Linear(10, 1),
             });
-            netWork.Optimizer = new Adam(learningRate: 0.01F);
+
+            Log.Information("net: \r\n" + netWork.ToString());
+            netWork.Optimizer = new Adam(learningRate: 0.001F);
 
             MSELoss loss = new MSELoss();
 
-            int epoch = 5000;
+            int epoch = 10000;
 
             long startTime = Stopwatch.GetTimestamp();
 
@@ -76,7 +80,7 @@ namespace Ren.Net.Test
                 var sensitive = loss.CaculateLoss(label, output);
 
                 if (i % 100 == 0)
-                    Console.WriteLine($"aim: {label[0,0]} out: {output[0,0]} loss: {sensitive[0,0]}" );
+                    Log.Information($"aim: {label[0,0]} out: {output[0,0]} loss: {sensitive[0,0]}" );
 
                 netWork.Backup(sensitive);
 
@@ -89,7 +93,9 @@ namespace Ren.Net.Test
             // Gradient Check 
             // GradientCheck(netWork);
 
-            Console.WriteLine("END");
+            Log.Debug("END");
+            Log.Information("END");
+            Log.Error("END");
 
             Console.ReadKey();
         }
@@ -117,17 +123,12 @@ namespace Ren.Net.Test
         //    }
         //}
 
-       private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             Console.Error.WriteLine($"Fatal error: {e.Exception}");
-            //MiniDump.TryDump("error.dmp");
-
-            //BasicExecutor.Execute(MainProcer.Stop);
+            Log.Error(e.ToString());
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
         }
-
-       
-
         /// <summary>
         /// 模拟 函数 y = x + 1
         /// </summary>

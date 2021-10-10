@@ -8,22 +8,20 @@ namespace Ren.Net.Objects
     public class NetModule
     {
         public Optimizer Optimizer { set; get; }
+        public delegate float WeightsDelegate(int sumInput);
+
+        public WeightsDelegate GetWI { set; get; }
+
+        public virtual void Init()
+        {
+            
+        }
         public virtual Torch Forward(Torch @in) 
         {
             throw new NotImplementedException();
         }
 
         public virtual Torch Backup(Torch @out)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void ADDGradient(float epsilon)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual void ReduceGradient(float epsilon)
         {
             throw new NotImplementedException();
         }

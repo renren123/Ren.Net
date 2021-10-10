@@ -16,12 +16,26 @@ namespace Ren.Net.Optimizers
 
         public List<float[]> V { set; get; }
         public List<float[]> S { set; get; }
-
-        public List<float> WB_V { set; get; }
-        public List<float> WB_S { set; get; }
-
         public Adam(float learningRate) : base(learningRate) { }
-
+        public override void Init()
+        {
+            if (S == null)
+            {
+                S = new List<float[]>(OutputNumber);
+                for (int i = 0; i < OutputNumber; i++)
+                {
+                    S.Add(new float[InputNumber]);
+                }
+            }
+            if (V == null)
+            {
+                V = new List<float[]>(OutputNumber);
+                for (int i = 0; i < OutputNumber; i++)
+                {
+                    V.Add(new float[InputNumber]);
+                }
+            }
+        }
         /// <summary>
         /// int OutputIndex, int InputIndex 对应一条权重, 原理：https://www.jianshu.com/p/aebcaf8af76e
         /// </summary>
@@ -31,60 +45,11 @@ namespace Ren.Net.Optimizers
         /// <returns></returns>
         public override float GetOptimizer(float dw, int OutputIndex, int InputIndex)
         {
-            if(S == null)
-            {
-                S = new List<float[]>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    S.Add(new float[InputNumber]);
-                }
-            }
-            if(V == null)
-            {
-                V = new List<float[]>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    V.Add(new float[InputNumber]);
-                }
-            }
-
             V[OutputIndex][InputIndex] = B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw;
             S[OutputIndex][InputIndex] = B2 * S[OutputIndex][InputIndex] + (1 - B2) * dw * dw;
 
             float Vcorrection = V[OutputIndex][InputIndex] / (1 - B1_Pow);
             float Scorrection = S[OutputIndex][InputIndex] / (1 - B2_Pow);
-
-            float temp1 = ((float)Math.Sqrt(Scorrection) + E);
-            float temp2 = LearningRate * Vcorrection;
-            float temp3 = temp2 / temp1;
-
-            // Log.Debug("I: " + OutputIndex + " J: "+ InputIndex + " Gradient: " + temp3 + "\tVcorrection: " + Vcorrection + "\tScorrection: "+ Scorrection);
-
-            return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
-        }
-        public override float GetOptimizer(float dw, int OutputIndex)
-        {
-            if(WB_S == null)
-            {
-                WB_S = new List<float>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    WB_S.Add(0F);
-                }
-            }
-            if (WB_V == null)
-            {
-                WB_V = new List<float>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    WB_V.Add(0F);
-                }
-            }
-            WB_V[OutputIndex] = B1 * WB_V[OutputIndex] + (1 - B1) * dw;
-            WB_S[OutputIndex] = B2 * WB_S[OutputIndex] + (1 - B2) * dw * dw;
-
-            float Vcorrection = WB_V[OutputIndex] / (1 - B1_Pow);
-            float Scorrection = WB_S[OutputIndex] / (1 - B2_Pow);
 
             return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
         }
