@@ -99,16 +99,6 @@ namespace Ren.Net.Networks
 
             WI -= Optimizer.GetOptimizer(dwTemp);
 
-            //// 更显 WI
-            //Parallel.For(0, OutputNumber, (xp) =>
-            //{
-            //    int i = xp;
-            //    for (int j = 0; j < InputNumber + 1; j++)
-            //    {
-            //        WI[i, j] -= Optimizer.GetOptimizer(dwTemp[i, j], i, j);
-            //    }
-            //});
-
             sensitive_out = sensitive_out.RemoveLastOneRow();
 
             return sensitive_out;
