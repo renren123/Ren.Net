@@ -96,15 +96,18 @@ namespace Ren.Net.Networks
             X_In = X_In.AddOneRowWithValue(batchSize, 1F);
 
             var dwTemp = @out * X_In.Transpose();
-            // 更显 WI
-            Parallel.For(0, OutputNumber, (xp) =>
-            {
-                int i = xp;
-                for (int j = 0; j < InputNumber + 1; j++)
-                {
-                    WI[i, j] -= Optimizer.GetOptimizer(dwTemp[i, j], i, j);
-                }
-            });
+
+            WI -= Optimizer.GetOptimizer(dwTemp);
+
+            //// 更显 WI
+            //Parallel.For(0, OutputNumber, (xp) =>
+            //{
+            //    int i = xp;
+            //    for (int j = 0; j < InputNumber + 1; j++)
+            //    {
+            //        WI[i, j] -= Optimizer.GetOptimizer(dwTemp[i, j], i, j);
+            //    }
+            //});
 
             sensitive_out = sensitive_out.RemoveLastOneRow();
 

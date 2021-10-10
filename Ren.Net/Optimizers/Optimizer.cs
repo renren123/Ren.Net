@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Ren.Net.Objects;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -19,11 +20,17 @@ namespace Ren.Net.Optimizers
         {
             throw new NotImplementedException();
         }
-        public virtual float GetOptimizer(float dw,int OutputIndex, int InputIndex)
+        //public virtual float GetOptimizer(float dw,int OutputIndex, int InputIndex)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        public virtual Torch GetOptimizer(Torch dw)
         {
             throw new NotImplementedException();
         }
-        
+
+
         public virtual void Step()
         {
             throw new NotImplementedException();

@@ -50,9 +50,9 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10),
+                new Linear(1, 100),
                 new ReLU(),
-                // layer2
+                //// layer2
                 //new Linear(1000, 1000),
                 //new ReLU(),
                 //new Linear(1000, 1000),
@@ -66,7 +66,7 @@ namespace Ren.Net.Test
                 //new Linear(1000, 1000),
                 //new ReLU(),
                 //// layer3
-                new Linear(10, 1),
+                new Linear(100, 1),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.0001F);
@@ -125,8 +125,8 @@ namespace Ren.Net.Test
             int a = new Random().Next(1, 100);
             int b = new Random().Next(1, 100);
 
-            Torch input = new Torch(new float[,] { { a } });
-            Torch label = new Torch(new float[,] { { a + 1 } });
+            Torch input = new Torch(new float[,] { { a , b } });
+            Torch label = new Torch(new float[,] { { a + 1, b + 1 } });
             return (input, label);
         }
     }

@@ -43,18 +43,7 @@ namespace Ren.Net.Objects
         {
             return new Torch(Data.Clone());
         }
-        public static Torch operator *(Torch lhs, Torch rhs)
-        {
-            return new Torch(lhs.Data * rhs.Data);
-        }
-        public static Torch operator +(Torch lhs, Torch rhs)
-        {
-            return new Torch(lhs.Data + rhs.Data);
-        }
-        public static Torch operator -(Torch lhs, Torch rhs)
-        {
-            return new Torch(lhs.Data - rhs.Data);
-        }
+        
         public float RowAverage(int i)
         {
             return Data.Row(i).Average();
@@ -122,23 +111,34 @@ namespace Ren.Net.Objects
         {
             return this.Data.RowSums().Sum() / (Row * Column);
         }
-
         /// <summary>
-        /// torch 索引器
+        /// 矩阵点乘，对应位相乘
         /// </summary>
-        /// <param name="i">行数</param>
-        /// <param name="j">列数</param>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
         /// <returns></returns>
-        public float this[int i, int j]
+        public static Torch DotMultiply(Torch a, Torch b)
         {
-            get
-            {
-                return this.Data[i, j];
-            }
-            set
-            {
-                this.Data[i, j] = value;
-            }
+            return new Torch(Matrix<float>.op_DotMultiply(a.Data, b.Data));
+        }
+        /// <summary>
+        /// 开方
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns></returns>
+        public static Torch Sqrt(Torch a)
+        {
+            return new Torch(Matrix<float>.Sqrt(a.Data));
+        }
+        /// <summary>
+        /// 点除，对应位相除
+        /// </summary>
+        /// <param name="dividend"></param>
+        /// <param name="divisor"></param>
+        /// <returns></returns>
+        public static Torch DotDivide(Torch dividend, Torch divisor)
+        {
+            return new Torch(Matrix<float>.op_DotDivide(dividend.Data, divisor.Data));
         }
         public override string ToString()
         {
@@ -171,6 +171,53 @@ namespace Ren.Net.Objects
         public override int GetHashCode()
         {
             return Data.GetHashCode();
+        }
+
+        /// <summary>
+        /// torch 索引器
+        /// </summary>
+        /// <param name="i">行数</param>
+        /// <param name="j">列数</param>
+        /// <returns></returns>
+        public float this[int i, int j]
+        {
+            get
+            {
+                return this.Data[i, j];
+            }
+            set
+            {
+                this.Data[i, j] = value;
+            }
+        }
+        public static Torch operator *(Torch lhs, Torch rhs)
+        {
+            return new Torch(lhs.Data * rhs.Data);
+        }
+        public static Torch operator *(float lhs, Torch rhs)
+        {
+            return new Torch(lhs * rhs.Data);
+        }
+        public static Torch operator *(Torch lhs, float rhs)
+        {
+            return new Torch(lhs.Data * rhs);
+        }
+        public static Torch operator /(Torch lhs, float rhs)
+        {
+            return new Torch(lhs.Data / rhs);
+        }
+
+        public static Torch operator +(Torch lhs, Torch rhs)
+        {
+            return new Torch(lhs.Data + rhs.Data);
+        }
+        public static Torch operator +(Torch lhs, float rhs)
+        {
+            return new Torch(lhs.Data + rhs);
+        }
+        public static Torch operator -(Torch lhs, Torch rhs)
+        {
+            return new Torch(lhs.Data - rhs.Data);
         }
     }
 }
