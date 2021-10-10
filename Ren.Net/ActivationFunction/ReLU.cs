@@ -1,22 +1,18 @@
 ﻿using Ren.Net.Objects;
+using Ren.Net.Optimizers;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ren.Net.ActivationFunction
 {
+    [Serializable]
     public class ReLU : NetModule
     {
-        private readonly Random r = new Random(DateTime.UtcNow.Millisecond);
         private Torch X_IN;
-
         public ReLU()
         {
-            this.GetWI = W_value_method;
-        }
-
-        public override void Init()
-        {
+            this.WIOptimizer = new ReLUWIOptimizer();
         }
         public override Torch Forward(Torch @in)
         {
@@ -47,28 +43,6 @@ namespace Ren.Net.ActivationFunction
                 }
             }
             return @out;
-        }
-        private float W_value_method(int sumInput)
-        {
-            // return 1F;
-
-            //float x = (float)r.NextDouble();
-            //float number = (Math.Abs(x) / 1) * (2.0F / sumInput);
-
-            float y = (float)r.NextDouble();
-            float x = (float)r.NextDouble();
-            float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));
-            number *= (float)Math.Sqrt(2.0 / sumInput);
-            number = Math.Abs(number);
-            number *= (2.0F / sumInput);
-
-            //float y = (float)r.NextDouble();
-            //float x = (float)r.NextDouble();
-            //float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));
-            //number *= (float)Math.Sqrt(2.0 / sumInput);
-            //number = Math.Abs(number);
-
-            return number;
         }
         public override string ToString()
         {

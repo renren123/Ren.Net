@@ -2,19 +2,30 @@
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using static Ren.Net.Objects.NetModule;
 
 namespace Ren.Net.Objects
 {
+    [Serializable]
     public class Sequential
     {
         private bool IsInit { set; get; } = false;
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
+        
         public Sequential(List<NetModule> nets)
         {
             Nets = new List<NetModule>(nets);
+        }
+        public Sequential(Sequential sequential)
+        {
+            Nets = sequential.Nets;
+            IsInit = sequential.IsInit;
+            Optimizer = sequential.Optimizer;
         }
         /// <summary>
         /// 初始化
@@ -32,12 +43,12 @@ namespace Ren.Net.Objects
                 var net = Nets[i];
                 net.Optimizer = this.Optimizer.Clone() as Optimizer;
                 // net 的GetWI 找下一个 GetWI 赋值的激活函数
-                if (net.GetWI == null)
+                if (net.WIOptimizer == null)
                 {
-                    net.GetWI = GetNextWeightsDelegate(i);
-                    if(net.GetWI == null && i != 0) // 如果没找到 就从头找 第一个
+                    net.WIOptimizer = GetNextWeightsDelegate(i);
+                    if(net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
                     {
-                        net.GetWI = GetNextWeightsDelegate(0);
+                        net.WIOptimizer = GetNextWeightsDelegate(0);
                     }
                 }
                 net.Init();
@@ -46,14 +57,14 @@ namespace Ren.Net.Objects
             IsInit = true;
             Log.Debug("net inited");
         }
-        private WeightsDelegate GetNextWeightsDelegate(int index)
+        private WIOptimizer GetNextWeightsDelegate(int index)
         {
             for (int i = index + 1; i < Nets.Count; i++)
             {
                 var net = Nets[i];
-                if(net.GetWI != null)
+                if(net.WIOptimizer != null)
                 {
-                    return net.GetWI;
+                    return net.WIOptimizer;
                 }
             }
             return null;
@@ -94,6 +105,51 @@ namespace Ren.Net.Objects
                 builder.AppendLine($"{i}、{net}");
             }
             return builder.ToString();
+        }
+        public static void Save(Sequential sequential, string fileName = null)
+        {
+            if (fileName == null)
+            {
+                fileName =Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "file.name");
+            }
+            FileStream fs = new FileStream(fileName, FileMode.Create);
+            try
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(fs, sequential);
+            }
+            catch(Exception ew)
+            {
+                Log.Error(ew.ToString());
+            }
+            finally
+            {
+                fs.Close();
+            }
+        }
+        public static Sequential Load(string fileName = null)
+        {
+            if(fileName == null)
+            {
+                fileName = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "file.name");
+            }
+            Sequential sequential = null;
+            
+            FileStream fs = new FileStream(fileName, FileMode.Open);
+            try
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                sequential = formatter.Deserialize(fs) as Sequential;
+            }
+            catch (Exception ew)
+            {
+                Log.Error(ew.ToString());
+            }
+            finally
+            {
+                fs.Close();
+            }
+            return sequential;
         }
     }
 }

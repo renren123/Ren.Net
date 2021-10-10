@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Ren.Net.Objects
 {
+    [Serializable]
     public class Torch : ICloneable
     {
         /// <summary>

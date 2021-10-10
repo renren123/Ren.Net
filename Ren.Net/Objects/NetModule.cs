@@ -5,13 +5,11 @@ using System.Text;
 
 namespace Ren.Net.Objects
 {
+    [Serializable]
     public class NetModule
     {
         public Optimizer Optimizer { set; get; }
-        public delegate float WeightsDelegate(int sumInput);
-
-        public WeightsDelegate GetWI { set; get; }
-
+        public WIOptimizer WIOptimizer { set; get; }
         public virtual void Init()
         {
             

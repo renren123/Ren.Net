@@ -4,6 +4,7 @@ using System.Text;
 
 namespace Ren.Net.Optimizers
 {
+    [Serializable]
     public class Optimizer : ICloneable
     {
         public float LearningRate { set; get; }

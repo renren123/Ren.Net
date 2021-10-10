@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace Ren.Net.Networks
 {
+    [Serializable]
     public class Linear : NetModule
     {
         /// <summary>
@@ -51,7 +52,7 @@ namespace Ren.Net.Networks
                 }
                 else
                 {
-                    return GetWI(sumInput);
+                    return WIOptimizer.GetWI(sumInput);
                 }
             });
             

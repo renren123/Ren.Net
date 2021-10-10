@@ -50,21 +50,34 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10),
+                new Linear(1, 1000),
                 new ReLU(),
                 // layer2
-                //new Linear(10, 10),
-                //new ReLU(),
+                new Linear(1000, 1000),
+                new ReLU(),
+                new Linear(1000, 1000),
+                new ReLU(),
+                new Linear(1000, 1000),
+                new ReLU(),
+                new Linear(1000, 1000),
+                new ReLU(),
+                new Linear(1000, 1000),
+                new ReLU(),
+                new Linear(1000, 1000),
+                new ReLU(),
                 //// layer3
-                new Linear(10, 1),
+                new Linear(1000, 1),
             });
 
+            netWork.Optimizer = new Adam(learningRate: 0.0001F);
+
+
+            // Sequential netWork = Sequential.Load();
             Log.Information("net: \r\n" + netWork.ToString());
-            netWork.Optimizer = new Adam(learningRate: 0.001F);
 
             MSELoss loss = new MSELoss();
 
-            int epoch = 10000;
+            int epoch = 100000;
 
             long startTime = Stopwatch.GetTimestamp();
 
@@ -79,9 +92,10 @@ namespace Ren.Net.Test
                 Torch output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
-                if (i % 500 == 0)
+                if (i % 100 == 0)
                 {
                     Log.Information($"loss: {sensitive.GetItem()}");
+                    Sequential.Save(netWork);
                 }
 
                 netWork.Backup(sensitive);
@@ -111,8 +125,8 @@ namespace Ren.Net.Test
             int a = new Random().Next(1, 100);
             int b = new Random().Next(1, 100);
 
-            Torch input = new Torch(new float[,] { { a , b} });
-            Torch label = new Torch(new float[,] { { a + 1, b + 1 } });
+            Torch input = new Torch(new float[,] { { a } });
+            Torch label = new Torch(new float[,] { { a + 1 } });
             return (input, label);
         }
     }

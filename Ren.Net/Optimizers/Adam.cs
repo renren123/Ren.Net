@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Ren.Net.Optimizers
 {
+    [Serializable]
     public class Adam : Optimizer
     {
         private float B1_Pow { set; get; } = 0.9F;
