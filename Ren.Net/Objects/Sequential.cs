@@ -16,6 +16,9 @@ namespace Ren.Net.Objects
         {
             Nets = new List<NetModule>(nets);
         }
+        /// <summary>
+        /// 初始化
+        /// </summary>
         private void Init()
         {
             Log.Debug("net initing");
@@ -28,10 +31,11 @@ namespace Ren.Net.Objects
             {
                 var net = Nets[i];
                 net.Optimizer = this.Optimizer.Clone() as Optimizer;
+                // net 的GetWI 找下一个 GetWI 赋值的激活函数
                 if (net.GetWI == null)
                 {
                     net.GetWI = GetNextWeightsDelegate(i);
-                    if(net.GetWI == null && i != 0)
+                    if(net.GetWI == null && i != 0) // 如果没找到 就从头找 第一个
                     {
                         net.GetWI = GetNextWeightsDelegate(0);
                     }

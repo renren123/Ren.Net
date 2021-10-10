@@ -79,8 +79,10 @@ namespace Ren.Net.Test
                 Torch output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
-                if (i % 100 == 0)
-                    Log.Information($"aim: {label[0,0]} out: {output[0,0]} loss: {sensitive[0,0]}" );
+                if (i % 500 == 0)
+                {
+                    Log.Information($"loss: {sensitive.GetItem()}");
+                }
 
                 netWork.Backup(sensitive);
 
@@ -90,39 +92,10 @@ namespace Ren.Net.Test
 
             Log.Information("ms: " + ((endTime - startTime) * 1000.0 / Stopwatch.Frequency));
 
-            // Gradient Check 
-            // GradientCheck(netWork);
-
-            Log.Debug("END");
             Log.Information("END");
-            Log.Error("END");
 
             Console.ReadKey();
         }
-
-        //static void GradientCheck(Sequential netWork)
-        //{
-        //    float epsilon = 0.0001F;
-        //    netWork.ADDGradient(epsilon);
-        //    var (testInput, testLabel) = GetTorch();
-        //    var addResult = netWork.Forward(testInput);
-        //    netWork.ReduceGradient(epsilon * 2);
-        //    var reduceResult = netWork.Forward(testInput);
-
-        //    float expected_gradient = (reduceResult.Data[0][0] - addResult.Data[0][0]) / (2 * epsilon);
-
-        //    float checkResult = Math.Abs(addResult.Data[0][0] - reduceResult.Data[0][0]);
-
-        //    if (checkResult >= 0.0001F)
-        //    {
-        //        Console.WriteLine($"checkout error {checkResult}");
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine($"checkout success {checkResult}");
-        //    }
-        //}
-
         private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             Console.Error.WriteLine($"Fatal error: {e.Exception}");
@@ -135,10 +108,11 @@ namespace Ren.Net.Test
         /// <returns></returns>
         static (Torch input, Torch label) GetTorch()
         {
-            int x = new Random().Next(1, 100);
-            Torch input = new Torch(new float[,] { { x } });
+            int a = new Random().Next(1, 100);
+            int b = new Random().Next(1, 100);
 
-            Torch label = new Torch(new float[,] { { x + 1 } });
+            Torch input = new Torch(new float[,] { { a , b} });
+            Torch label = new Torch(new float[,] { { a + 1, b + 1 } });
             return (input, label);
         }
     }

@@ -107,6 +107,14 @@ namespace Ren.Net.Objects
         {
             return new Torch(this.Data.Transpose());
         }
+        /// <summary>
+        /// 获取具体数值（待确定 pytorch 是不是同样的作用）
+        /// </summary>
+        /// <returns></returns>
+        public float GetItem()
+        {
+            return this.Data.RowSums().Sum() / (Row * Column);
+        }
 
         /// <summary>
         /// torch 索引器
