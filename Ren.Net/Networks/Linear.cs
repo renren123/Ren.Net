@@ -22,6 +22,9 @@ namespace Ren.Net.Networks
         /// 输出层神经元个数
         /// </summary>
         public int OutputNumber { set; get; }
+        /// <summary>
+        /// 权重数组
+        /// </summary>
         public Torch WI { set; get; }
         /// <summary>
         /// list 的数量是前一层的数量
@@ -30,7 +33,7 @@ namespace Ren.Net.Networks
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="inputSize"></param>
+        /// <param name="inputSize">输入层 神经元数量</param>
         /// <param name="outputSize">当前层 神经元的数量</param>
         public Linear(int inputNumber, int outputNumber)
         {
@@ -66,47 +69,16 @@ namespace Ren.Net.Networks
             {
                 throw new Exception("Linear::Forward, batchSize is -1 or neuronNumber is -1");
             }
-            X_In = @in.Clone() as Torch;    // 保存输入
-            //Optimizer.InputNumber = this.InputNumber + 1;
-            //Optimizer.OutputNumber = this.OutputNumber;
+            X_In = @in.Clone() as Torch;    // 保存输入，用于反向传播时更新 WI 的大小
 
-            //OptimizerTemp = Optimizer.Clone() as Adam;
-
-            //#region old
-            //Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
-
-            //for (int i = 0; i < OutputNumber; i++)
-            //{
-            //    for (int j = 0; j < InputNumber; j++)
-            //    {
-            //        for (int k = 0; k < batchSize; k++)
-            //        {
-            //            x_out[i, k] += WI[i, j] * @in[j, k];
-            //        }
-            //    }
-            //}
-            //for (int i = 0; i < OutputNumber; i++)
-            //{
-            //    for (int k = 0; k < batchSize; k++)
-            //    {
-            //        x_out[i, k] += WI[i, InputNumber];
-            //    }
-            //}
-            //#endregion
-
-            #region new
             @in = @in.AddOneRowWithValue(batchSize, 1F);
-            Torch x_out = WI * @in;
-            #endregion
 
-            //if(!x_out.Equals(x_out_temp))
-            //{
-            //    Log.Error("Forward is not equal\rn" + x_out + "\r\n\r\n ********************* \r\n\r\n" + x_out_temp);
-            //}
+            Torch x_out = WI * @in;
+
             return x_out;
         }
         /// <summary>
-        /// 
+        /// 反向传播
         /// </summary>
         /// <param name="out">list 是当前层神经元的数量</param>
         /// <returns></returns>
@@ -118,50 +90,13 @@ namespace Ren.Net.Networks
             {
                 throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
             }
-            //Torch sensitive_out = new Torch(InputNumber, batchSize);   // list 的个数 表示上一层的神经元个数
-
-            //for (int i = 0; i < OutputNumber; i++)
-            //{
-            //    for (int j = 0; j < InputNumber; j++)
-            //    {
-            //        for (int k = 0; k < batchSize; k++)
-            //        {
-            //            sensitive_out[j, k] += WI[i, j] * @out[i, k];
-            //        }
-            //    }
-            //}
 
             Torch sensitive_out =WI.Transpose() * @out;
 
-            //float[,] dwold = new float[OutputNumber, InputNumber];
-
-            //var WI_temp = WI.Clone() as Torch;
-
-            //for (int i = 0; i < OutputNumber; i++)
-            //{
-            //    for (int j = 0; j < InputNumber; j++)
-            //    {
-            //        float[] dwArray = new float[batchSize];
-            //        for (int k = 0; k < batchSize; k++)
-            //        {
-            //            dwArray[k] = X_In[j, k] * @out[i, k];
-            //        }
-            //        float dwAverage = dwArray.Average();
-
-            //        WI[i, j] -= Optimizer.GetOptimizer(dwAverage, i, j);
-
-            //        dwold[i, j] = dwAverage;
-            //    }
-            //}
-
             X_In = X_In.AddOneRowWithValue(batchSize, 1F);
+
             var dwTemp = @out * X_In.Transpose();
-
-            //Torch dwOptimizer = new Torch(OutputNumber, InputNumber + 1, (int i, int j) =>
-            //    Optimizer.GetOptimizer(dwTemp[i, j], i, j));
-            //WI -= dwOptimizer;
-
-
+            // 更显 WI
             Parallel.For(0, OutputNumber, (xp) =>
             {
                 int i = xp;
@@ -170,31 +105,6 @@ namespace Ren.Net.Networks
                     WI[i, j] -= Optimizer.GetOptimizer(dwTemp[i, j], i, j);
                 }
             });
-
-            //for (int i = 0; i < OutputNumber; i++)
-            //{
-            //    for (int j = 0; j < InputNumber + 1; j++)
-            //    {
-            //        WI[i, j] -= Optimizer.GetOptimizer(dwTemp[i, j], i, j);
-            //    }
-            //}
-
-            // Log.Information("WI_temp\r\n" + WI_temp);
-
-            // 更新 WB
-            //for (int i = 0; i < @out.Row; i++)
-            //{
-            //    float dw = @out.RowAverage(i);
-            //    WI[i, InputNumber] -= Optimizer.GetOptimizer(dw, i);
-            //}
-
-            //for (int i = 0; i < @out.Row; i++)
-            //{
-            //    float dw = @out.RowAverage(i);
-
-            //    WB[i] -= Optimizer.GetOptimizer(dw, i);
-            //}
-            // Log.Information("WI\r\n" + WI);
 
             sensitive_out = sensitive_out.RemoveLastOneRow();
 

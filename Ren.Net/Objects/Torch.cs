@@ -65,6 +65,12 @@ namespace Ren.Net.Objects
             var data = this.Data.InsertColumn(Column, vector);
             return new Torch(data);
         }
+        /// <summary>
+        /// 增加一行 赋值为 value
+        /// </summary>
+        /// <param name="length"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public Torch AddOneRowWithValue(int length, float value)
         {
             Vector<float> vector = VBuild.Dense(length, value);

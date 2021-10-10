@@ -50,23 +50,23 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 1000),
+                new Linear(1, 10),
                 new ReLU(),
                 // layer2
-                new Linear(1000, 1000),
-                new ReLU(),
-                new Linear(1000, 1000),
-                new ReLU(),
-                new Linear(1000, 1000),
-                new ReLU(),
-                new Linear(1000, 1000),
-                new ReLU(),
-                new Linear(1000, 1000),
-                new ReLU(),
-                new Linear(1000, 1000),
-                new ReLU(),
+                //new Linear(1000, 1000),
+                //new ReLU(),
+                //new Linear(1000, 1000),
+                //new ReLU(),
+                //new Linear(1000, 1000),
+                //new ReLU(),
+                //new Linear(1000, 1000),
+                //new ReLU(),
+                //new Linear(1000, 1000),
+                //new ReLU(),
+                //new Linear(1000, 1000),
+                //new ReLU(),
                 //// layer3
-                new Linear(1000, 1),
+                new Linear(10, 1),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.0001F);
@@ -92,7 +92,7 @@ namespace Ren.Net.Test
                 Torch output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
-                if (i % 100 == 0)
+                if (i % 500 == 0)
                 {
                     Log.Information($"loss: {sensitive.GetItem()}");
                     Sequential.Save(netWork);

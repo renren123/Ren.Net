@@ -21,12 +21,6 @@ namespace Ren.Net.Objects
         {
             Nets = new List<NetModule>(nets);
         }
-        public Sequential(Sequential sequential)
-        {
-            Nets = sequential.Nets;
-            IsInit = sequential.IsInit;
-            Optimizer = sequential.Optimizer;
-        }
         /// <summary>
         /// 初始化
         /// </summary>
