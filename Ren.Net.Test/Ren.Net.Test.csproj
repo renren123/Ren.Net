@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <StartupObject>Ren.Net.Test.Program</StartupObject>
+    <StartupObject>Ren.Net.Test.GpuTest</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ren.Gpu\Ren.Gpu.csproj" />
     <ProjectReference Include="..\Ren.Net\Ren.Net.csproj" />
   </ItemGroup>
 

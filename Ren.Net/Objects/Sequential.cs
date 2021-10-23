@@ -73,7 +73,7 @@ namespace Ren.Net.Objects
         /// </summary>
         /// <param name="in"></param>
         /// <returns></returns>
-        public Torch Forward(Torch @in)
+        public Tensor Forward(Tensor @in)
         {
             Init();
             for (int i = 0; i < Nets.Count; i++)
@@ -83,7 +83,7 @@ namespace Ren.Net.Objects
             }
             return @in;
         }
-        public Torch Backup(Torch @out)
+        public Tensor Backup(Tensor @out)
         {
             for (int i = Nets.Count - 1; i >= 0; i--)
             {

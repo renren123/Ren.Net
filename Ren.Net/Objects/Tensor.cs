@@ -7,7 +7,7 @@ using System.Text;
 namespace Ren.Net.Objects
 {
     [Serializable]
-    public class Torch : ICloneable
+    public class Tensor : ICloneable
     {
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
@@ -18,11 +18,11 @@ namespace Ren.Net.Objects
         public int Row => Data == null || Data.RowCount == 0 ? -1 : Data.RowCount;
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
         private static VectorBuilder<float> VBuild { get; } = Vector<float>.Build;
-        public Torch(float[,] data)
+        public Tensor(float[,] data)
         {
             this.Data = MBuild.DenseOfArray(data);
         }
-        private Torch(Matrix<float> data)
+        private Tensor(Matrix<float> data)
         {
             this.Data = data;
         }
@@ -31,21 +31,21 @@ namespace Ren.Net.Objects
         /// </summary>
         /// <param name="neuronNumber">神经元的数量</param>
         /// <param name="batch">一个 batch 的大小</param>
-        public Torch(int neuronNumber, int batch)
+        public Tensor(int neuronNumber, int batch)
         {
             Data = MBuild.Dense(neuronNumber, batch, 0F);
         }
-        public Torch(int neuronNumber, int batch, float value)
+        public Tensor(int neuronNumber, int batch, float value)
         {
             Data = MBuild.Dense(neuronNumber, batch, value);
         }
-        public Torch(int neuronNumber, int batch, Func<int, int, float> init)
+        public Tensor(int neuronNumber, int batch, Func<int, int, float> init)
         {
             Data = MBuild.Dense(neuronNumber, batch, init);
         }
         public object Clone()
         {
-            return new Torch(Data.Clone());
+            return new Tensor(Data.Clone());
         }
         
         public float RowAverage(int i)
@@ -78,11 +78,11 @@ namespace Ren.Net.Objects
             }
             return sum / column.Count;
         }
-        public Torch AddOneColumnWithValue(int length, float value)
+        public Tensor AddOneColumnWithValue(int length, float value)
         {
             Vector<float> vector = VBuild.Dense(length, value);
             var data = this.Data.InsertColumn(Column, vector);
-            return new Torch(data);
+            return new Tensor(data);
         }
         /// <summary>
         /// 增加一行 赋值为 value
@@ -90,21 +90,21 @@ namespace Ren.Net.Objects
         /// <param name="length"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Torch AddOneRowWithValue(int length, float value)
+        public Tensor AddOneRowWithValue(int length, float value)
         {
             Vector<float> vector = VBuild.Dense(length, value);
             var data = this.Data.InsertRow(Row, vector);
-            return new Torch(data);
+            return new Tensor(data);
         }
-        public Torch RemoveLastOneColumn()
+        public Tensor RemoveLastOneColumn()
         {
             var data = this.Data.RemoveColumn(Column - 1);
-            return new Torch(data);
+            return new Tensor(data);
         }
-        public Torch RemoveLastOneRow()
+        public Tensor RemoveLastOneRow()
         {
             var data = this.Data.RemoveRow(Row - 1);
-            return new Torch(data);
+            return new Tensor(data);
         }
         /// <summary>
         /// 增加一列，加到最后
@@ -129,9 +129,9 @@ namespace Ren.Net.Objects
         /// 矩阵转置
         /// </summary>
         /// <returns></returns>
-        public Torch Transpose()
+        public Tensor Transpose()
         {
-            return new Torch(this.Data.Transpose());
+            return new Tensor(this.Data.Transpose());
         }
         /// <summary>
         /// 获取具体数值（待确定 pytorch 是不是同样的作用）
@@ -147,18 +147,18 @@ namespace Ren.Net.Objects
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static Torch DotMultiply(Torch a, Torch b)
+        public static Tensor DotMultiply(Tensor a, Tensor b)
         {
-            return new Torch(Matrix<float>.op_DotMultiply(a.Data, b.Data));
+            return new Tensor(Matrix<float>.op_DotMultiply(a.Data, b.Data));
         }
         /// <summary>
         /// 开方
         /// </summary>
         /// <param name="a"></param>
         /// <returns></returns>
-        public static Torch Sqrt(Torch a)
+        public static Tensor Sqrt(Tensor a)
         {
-            return new Torch(Matrix<float>.Sqrt(a.Data));
+            return new Tensor(Matrix<float>.Sqrt(a.Data));
         }
         /// <summary>
         /// 点除，对应位相除
@@ -166,9 +166,9 @@ namespace Ren.Net.Objects
         /// <param name="dividend"></param>
         /// <param name="divisor"></param>
         /// <returns></returns>
-        public static Torch DotDivide(Torch dividend, Torch divisor)
+        public static Tensor DotDivide(Tensor dividend, Tensor divisor)
         {
-            return new Torch(Matrix<float>.op_DotDivide(dividend.Data, divisor.Data));
+            return new Tensor(Matrix<float>.op_DotDivide(dividend.Data, divisor.Data));
         }
         public override string ToString()
         {
@@ -176,11 +176,11 @@ namespace Ren.Net.Objects
         }
         public override bool Equals(object obj)
         {
-            if (!(obj is Torch))
+            if (!(obj is Tensor))
             {
                 return false;
             }
-            Torch torch = obj as Torch;
+            Tensor torch = obj as Tensor;
 
             if (torch.Row != this.Row || torch.Column != this.Column)
             {
@@ -220,34 +220,34 @@ namespace Ren.Net.Objects
                 this.Data[i, j] = value;
             }
         }
-        public static Torch operator *(Torch lhs, Torch rhs)
+        public static Tensor operator *(Tensor lhs, Tensor rhs)
         {
-            return new Torch(lhs.Data * rhs.Data);
+            return new Tensor(lhs.Data * rhs.Data);
         }
-        public static Torch operator *(float lhs, Torch rhs)
+        public static Tensor operator *(float lhs, Tensor rhs)
         {
-            return new Torch(lhs * rhs.Data);
+            return new Tensor(lhs * rhs.Data);
         }
-        public static Torch operator *(Torch lhs, float rhs)
+        public static Tensor operator *(Tensor lhs, float rhs)
         {
-            return new Torch(lhs.Data * rhs);
+            return new Tensor(lhs.Data * rhs);
         }
-        public static Torch operator /(Torch lhs, float rhs)
+        public static Tensor operator /(Tensor lhs, float rhs)
         {
-            return new Torch(lhs.Data / rhs);
+            return new Tensor(lhs.Data / rhs);
         }
 
-        public static Torch operator +(Torch lhs, Torch rhs)
+        public static Tensor operator +(Tensor lhs, Tensor rhs)
         {
-            return new Torch(lhs.Data + rhs.Data);
+            return new Tensor(lhs.Data + rhs.Data);
         }
-        public static Torch operator +(Torch lhs, float rhs)
+        public static Tensor operator +(Tensor lhs, float rhs)
         {
-            return new Torch(lhs.Data + rhs);
+            return new Tensor(lhs.Data + rhs);
         }
-        public static Torch operator -(Torch lhs, Torch rhs)
+        public static Tensor operator -(Tensor lhs, Tensor rhs)
         {
-            return new Torch(lhs.Data - rhs.Data);
+            return new Tensor(lhs.Data - rhs.Data);
         }
     }
 }

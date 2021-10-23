@@ -20,25 +20,25 @@ namespace Ren.Net.Optimizers
         private float B1_Pow { set; get; } = B1;
         private float B2_Pow { set; get; } = B2;
 
-        public Torch VTorch { set; get; }
-        public Torch STorch { set; get; }
+        public Tensor VTorch { set; get; }
+        public Tensor STorch { set; get; }
         public Adam(float learningRate) : base(learningRate) { }
         public override void Init()
         {
-            VTorch = new Torch(OutputNumber, InputNumber);
-            STorch = new Torch(OutputNumber, InputNumber);
+            VTorch = new Tensor(OutputNumber, InputNumber);
+            STorch = new Tensor(OutputNumber, InputNumber);
         }
-        public override Torch GetOptimizer(Torch dw)
+        public override Tensor GetOptimizer(Tensor dw)
         {
             VTorch = B1 * VTorch + (1 - B1) * dw;
-            STorch = B2 * STorch + (1 - B2) * Torch.DotMultiply(dw, dw);
+            STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiply(dw, dw);
 
-            Torch Vcorrection = VTorch / (1 - B1_Pow);
-            Torch Scorrection = STorch / (1 - B2_Pow);
-            Torch dividend = LearningRate * Vcorrection;
-            Torch divisor = Torch.Sqrt(Scorrection) + E;
+            Tensor Vcorrection = VTorch / (1 - B1_Pow);
+            Tensor Scorrection = STorch / (1 - B2_Pow);
+            Tensor dividend = LearningRate * Vcorrection;
+            Tensor divisor = Tensor.Sqrt(Scorrection) + E;
 
-            return Torch.DotDivide(dividend, divisor);
+            return Tensor.DotDivide(dividend, divisor);
         }
 
         public override void Step()
@@ -55,8 +55,8 @@ namespace Ren.Net.Optimizers
             };
             if(VTorch != null)
             {
-                adam.VTorch = this.VTorch.Clone() as Torch;
-                adam.STorch = this.STorch.Clone() as Torch;
+                adam.VTorch = this.VTorch.Clone() as Tensor;
+                adam.STorch = this.STorch.Clone() as Tensor;
             }
             return adam;
         }

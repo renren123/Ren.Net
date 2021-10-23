@@ -25,7 +25,7 @@ namespace Ren.Net.Optimizers
         //    throw new NotImplementedException();
         //}
 
-        public virtual Torch GetOptimizer(Torch dw)
+        public virtual Tensor GetOptimizer(Tensor dw)
         {
             throw new NotImplementedException();
         }

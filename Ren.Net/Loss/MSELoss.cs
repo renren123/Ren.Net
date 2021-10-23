@@ -7,7 +7,7 @@ namespace Ren.Net.Loss
 {
     public class MSELoss
     {
-        public Torch CaculateLoss(Torch label, Torch output)
+        public Tensor CaculateLoss(Tensor label, Tensor output)
         {
             return output - label;
         }

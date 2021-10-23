@@ -25,12 +25,12 @@ namespace Ren.Net.Objects
         /// </summary>
         /// <param name="in"></param>
         /// <returns></returns>
-        public virtual Torch Forward(Torch @in) 
+        public virtual Tensor Forward(Tensor @in) 
         {
             throw new NotImplementedException();
         }
 
-        public virtual Torch Backup(Torch @out)
+        public virtual Tensor Backup(Tensor @out)
         {
             throw new NotImplementedException();
         }

@@ -25,11 +25,11 @@ namespace Ren.Net.Networks
         /// <summary>
         /// 权重数组
         /// </summary>
-        public Torch WI { set; get; }
+        public Tensor WI { set; get; }
         /// <summary>
         /// list 的数量是前一层的数量
         /// </summary>
-        public Torch X_In { set; get; }
+        public Tensor X_In { set; get; }
         /// <summary>
         /// 
         /// </summary>
@@ -47,7 +47,7 @@ namespace Ren.Net.Networks
             Optimizer.Init();
 
             int sumInput = OutputNumber + InputNumber;
-            WI = new Torch(OutputNumber, InputNumber + 1, (int i, int j) =>
+            WI = new Tensor(OutputNumber, InputNumber + 1, (int i, int j) =>
             {
                 if (j == InputNumber)
                 {
@@ -61,7 +61,7 @@ namespace Ren.Net.Networks
             
             Log.Debug($"Linear inited [{InputNumber}, {OutputNumber}]");
         }
-        public override Torch Forward(Torch @in)
+        public override Tensor Forward(Tensor @in)
         {
             int batchSize = @in.Column;          // batch 的大小
 
@@ -69,11 +69,11 @@ namespace Ren.Net.Networks
             {
                 throw new Exception("Linear::Forward, batchSize is -1 or neuronNumber is -1");
             }
-            X_In = @in.Clone() as Torch;    // 保存输入，用于反向传播时更新 WI 的大小
+            X_In = @in.Clone() as Tensor;    // 保存输入，用于反向传播时更新 WI 的大小
 
             @in = @in.AddOneRowWithValue(batchSize, 1F);
 
-            Torch x_out = WI * @in;
+            Tensor x_out = WI * @in;
 
             return x_out;
         }
@@ -82,7 +82,7 @@ namespace Ren.Net.Networks
         /// </summary>
         /// <param name="out">list 是当前层神经元的数量</param>
         /// <returns></returns>
-        public override Torch Backup(Torch @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
+        public override Tensor Backup(Tensor @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
         {
             int batchSize = @out.Column;
 
@@ -91,7 +91,7 @@ namespace Ren.Net.Networks
                 throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
             }
 
-            Torch sensitive_out =WI.Transpose() * @out;
+            Tensor sensitive_out =WI.Transpose() * @out;
 
             X_In = X_In.AddOneRowWithValue(batchSize, 1F);
 

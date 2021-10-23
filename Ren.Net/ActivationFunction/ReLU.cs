@@ -9,14 +9,14 @@ namespace Ren.Net.ActivationFunction
     [Serializable]
     public class ReLU : NetModule
     {
-        private Torch X_IN;
+        private Tensor X_IN;
         public ReLU()
         {
             this.WIOptimizer = new ReLUWIOptimizer();
         }
-        public override Torch Forward(Torch @in)
+        public override Tensor Forward(Tensor @in)
         {
-            X_IN = @in.Clone() as Torch;
+            X_IN = @in.Clone() as Tensor;
 
             for (int i = 0; i < @in.Row; i++)
             {
@@ -30,7 +30,7 @@ namespace Ren.Net.ActivationFunction
             }
             return @in;
         }
-        public override Torch Backup(Torch @out)
+        public override Tensor Backup(Tensor @out)
         {
             for (int i = 0; i < X_IN.Row; i++)
             {

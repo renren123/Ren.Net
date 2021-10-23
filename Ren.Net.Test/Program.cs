@@ -53,9 +53,9 @@ namespace Ren.Net.Test
                 new Linear(1, 100),
                 new ReLU(),
                 //// layer2
-                //new Linear(1000, 1000),
+                //new Linear(10, 10),
                 //new ReLU(),
-                //new Linear(1000, 1000),
+                //new Linear(10, 10),
                 //new ReLU(),
                 //new Linear(1000, 1000),
                 //new ReLU(),
@@ -89,7 +89,7 @@ namespace Ren.Net.Test
                 }
                 var (input, label) = GetTorch();
 
-                Torch output = netWork.Forward(input);
+                Tensor output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
                 if (i % 500 == 0)
@@ -120,13 +120,13 @@ namespace Ren.Net.Test
         /// 模拟 函数 y = x + 1
         /// </summary>
         /// <returns></returns>
-        static (Torch input, Torch label) GetTorch()
+        static (Tensor input, Tensor label) GetTorch()
         {
             int a = new Random().Next(1, 100);
             int b = new Random().Next(1, 100);
 
-            Torch input = new Torch(new float[,] { { a , b } });
-            Torch label = new Torch(new float[,] { { a + 1, b + 1 } });
+            Tensor input = new Tensor(new float[,] { { a  } });
+            Tensor label = new Tensor(new float[,] { { a * a} });
             return (input, label);
         }
     }

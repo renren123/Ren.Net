@@ -36,8 +36,8 @@ namespace Ren.Net.Networks
 
 
 
-        private Torch X_IN { set; get; }
-        private Torch X_Hat { set; get; }
+        private Tensor X_IN { set; get; }
+        private Tensor X_Hat { set; get; }
         /// <summary>
         /// 输入层神经元个数
         /// </summary>
@@ -47,24 +47,24 @@ namespace Ren.Net.Networks
         private float[] RMean { set; get; }
         private float[] RVar { set; get; }
 
-        private Torch GammaBata { set; get; }
+        private Tensor GammaBata { set; get; }
 
         public BatchNorm1D(int inputNumber)
         {
             this.InputNumber = inputNumber;
-            GammaBata = new Torch(inputNumber, 2, 1F);
+            GammaBata = new Tensor(inputNumber, 2, 1F);
         }
 
         public override void Init()
         {
             base.Init();
         }
-        public override Torch Forward(Torch @in)
+        public override Tensor Forward(Tensor @in)
         {
-            X_IN = @in.Clone() as Torch;
+            X_IN = @in.Clone() as Tensor;
             if (IsTrain)
             {
-                X_Hat = new Torch(@in.Row, @in.Column);
+                X_Hat = new Tensor(@in.Row, @in.Column);
                 UB = new float[InputNumber];
                 SIGMAB = new float[InputNumber];
                 float[] sigmabTemp = new float[InputNumber];
@@ -105,16 +105,16 @@ namespace Ren.Net.Networks
             }
             return @in;
         }
-        public override Torch Backup(Torch @out)
+        public override Tensor Backup(Tensor @out)
         {
             int batchSize = @out.Column;
             // 处理 一个 batch
-            Torch dx_hat = new Torch(@out.Row, @out.Column);
-            Torch dx = new Torch(@out.Row, @out.Column);
+            Tensor dx_hat = new Tensor(@out.Row, @out.Column);
+            Tensor dx = new Tensor(@out.Row, @out.Column);
             float[] dsigmab = new float[InputNumber];
             float[] dub = new float[InputNumber];
             // 第一行 是 gamma  第二行 Bata
-            Torch dgammaBata = new Torch(InputNumber, 2, 0F);
+            Tensor dgammaBata = new Tensor(InputNumber, 2, 0F);
 
             //float[] dgamma = new float[InputNumber];
             //float[] dbata = new float[InputNumber];
