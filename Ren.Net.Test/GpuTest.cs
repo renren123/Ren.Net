@@ -14,7 +14,7 @@ namespace Ren.Net.Test
         {
             while (true)
             {
-                GpuNet test = new GpuNet();
+                GpuNetBase test = new GpuNetBase();
 
                 
                 test.Test();

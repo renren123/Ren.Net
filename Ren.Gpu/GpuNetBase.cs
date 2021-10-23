@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Ren.Gpu
 {
-    public class GpuNet
+    public class GpuNetBase
     {
         /// <summary>
         /// Main entry point

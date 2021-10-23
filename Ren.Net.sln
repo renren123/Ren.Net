@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ren.Net.UnitTest", "Ren.Net
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ren.Gpu", "Ren.Gpu\Ren.Gpu.csproj", "{6E0C895B-C620-4D0D-B3D8-2AEA063400F4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ren.Device", "Ren.Device\Ren.Device.csproj", "{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{6E0C895B-C620-4D0D-B3D8-2AEA063400F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E0C895B-C620-4D0D-B3D8-2AEA063400F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E0C895B-C620-4D0D-B3D8-2AEA063400F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
