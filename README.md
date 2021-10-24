@@ -5,5 +5,8 @@ mathnet 分支中，网络使用 mathnet-numerics 科学计算库使能矩阵计
 
 master 分支则是正常使用 遍历的方式 实现前向传播和反向传播
 
-mathnet-numerics 地址：
+# mathnet-numerics 地址：
 https://github.com/mathnet/mathnet-numerics
+
+# CUDA 加速
+https://github.com/m4rs-mt/ILGPU
