@@ -8,9 +8,9 @@ using System.Text;
 namespace Ren.Net.Objects
 {
     [Serializable]
-    public class Tensor : ICloneable
+    public class Tensor : ICloneable, IDisposable
     {
-        public DeviceTpye Device { set; get; } = DeviceTpye.CPU;
+        public DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
         /// 行数 是神经元的数量，列数是 batchsize 的数量
@@ -46,7 +46,7 @@ namespace Ren.Net.Objects
             switch (Device)
             {
                 case DeviceTpye.CPU:
-                    deviceData = new MatrixNet(neuronNumber, batch);
+                    deviceData = new MatrixNet(neuronNumber, batch, 0F);
                     break;
                 case DeviceTpye.CUDA:
                     deviceData = new ILGPUNet(neuronNumber, batch);
@@ -226,6 +226,11 @@ namespace Ren.Net.Objects
         public override int GetHashCode()
         {
             return deviceData.GetHashCode();
+        }
+
+        public void Dispose()
+        {
+            this.deviceData.Dispose();
         }
 
         /// <summary>

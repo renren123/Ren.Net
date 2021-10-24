@@ -77,8 +77,9 @@ namespace Ren.Net.Networks
             // ********************** Test **********************
             X_In = @in.AddOneRowWithValue(batchSize, 1F);    // 保存输入，用于反向传播时更新 WI 的大小
             Tensor x_out = WI * X_In;
-            // ********************** Test **********************
+            // ********************** Test *********************
 
+            @in.Dispose();
             return x_out;
         }
         /// <summary>
@@ -103,11 +104,13 @@ namespace Ren.Net.Networks
 
             var dwTemp = @out * X_In.Transpose();
 
+            @out.Dispose();
+
             WI -= Optimizer.GetOptimizer(dwTemp);
 
-            sensitive_out = sensitive_out.RemoveLastOneRow();
-
-            return sensitive_out;
+            Tensor sensitiveOut = sensitive_out.RemoveLastOneRow();
+            sensitive_out.Dispose();
+            return sensitiveOut;
         }
         public override string ToString()
         {

@@ -8,6 +8,9 @@ using System.Linq;
 
 namespace Ren.Device
 {
+    /// <summary>
+    /// index.X;  index.Y; 意思是当前数组中的一个点，aView.IntExtent.Y 是数组的大小
+    /// </summary>
     [Serializable]
     public class ILGPUNet : DataInterface
     {
@@ -21,7 +24,6 @@ namespace Ren.Device
 
         [NonSerialized]
         private MemoryBuffer2D<float, Stride2D.DenseX> Data;
-
 
         /// <summary>
         /// 矩阵相乘
@@ -142,8 +144,54 @@ namespace Ren.Device
                 ArrayView2D<float, Stride2D.DenseX>,
                 ArrayView2D<float, Stride2D.DenseX>>(
                 MatrixReluAcceleratedKernel);
+        /// <summary>
+        /// 拷贝数据
+        /// </summary>
+        private static Action<Index2D,
+            ArrayView2D<float, Stride2D.DenseX>,
+            ArrayView2D<float, Stride2D.DenseX>> CopyKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                ArrayView2D<float, Stride2D.DenseX>,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                MatrixCopyAcceleratedKernel);
+        /// <summary>
+        /// 拷贝数据
+        /// </summary>
+        private static Action<Index2D,
+            ArrayView2D<float, Stride2D.DenseX>,
+            ArrayView2D<float, Stride2D.DenseX>> TransposeKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                ArrayView2D<float, Stride2D.DenseX>,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                MatrixTransposeAcceleratedKernel);
+        /// <summary>
+        /// 移除一行
+        /// </summary>
+        private static Action<Index2D,
+            ArrayView2D<float, Stride2D.DenseX>,
+            int,
+            ArrayView2D<float, Stride2D.DenseX>> RemoveOneRowKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                ArrayView2D<float, Stride2D.DenseX>,
+                int,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                MatrixRemoveOneRowAcceleratedKernel);
+        /// <summary>
+        /// 增加一行
+        /// </summary>
+        private static Action<Index2D,
+            ArrayView2D<float, Stride2D.DenseX>,
+            int,
+            float,
+            ArrayView2D<float, Stride2D.DenseX>> AddOneRowKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                ArrayView2D<float, Stride2D.DenseX>,
+                int,
+                float,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                MatrixAddOneRowAcceleratedKernel);
 
-
+        
 
 
         static void MatrixMultiplyAcceleratedKernel(
@@ -161,7 +209,6 @@ namespace Ren.Device
 
             cView[index] = sum;
         }
-        
         static void MatrixDotMultiplyAcceleratedKernel(
             Index2D index,
             ArrayView2D<float, Stride2D.DenseX> aView,
@@ -227,6 +274,7 @@ namespace Ren.Device
            
            bView[index] = (float)Math.Sqrt(aView[index]);
         }
+        #region Data Function，功能操作
         static void MatrixReluAcceleratedKernel(
             Index2D index,
             ArrayView2D<float, Stride2D.DenseX> aView,
@@ -239,36 +287,79 @@ namespace Ren.Device
             }
         }
 
-
-
-        public ILGPUNet()
+        static void MatrixCopyAcceleratedKernel(
+            Index2D index,
+            ArrayView2D<float, Stride2D.DenseX> aView,
+            ArrayView2D<float, Stride2D.DenseX> bView)
         {
+            bView[index] = aView[index];
         }
+        static void MatrixTransposeAcceleratedKernel(
+            Index2D index,
+            ArrayView2D<float, Stride2D.DenseX> aView,
+            ArrayView2D<float, Stride2D.DenseX> bView)
+        {
+            var x = index.X;
+            var y = index.Y;
 
-        public ILGPUNet(float[,] data)
-        {
-            var m = data.GetLength(0);
-            var ka = data.GetLength(1);
-            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, ka));
-            Data.CopyFromCPU(data);
+            bView[new Index2D(x, y)] = aView[new Index2D(y, x)];
         }
-        public ILGPUNet(int m, int n, int value)
+        static void MatrixRemoveOneRowAcceleratedKernel(
+            Index2D index,
+            ArrayView2D<float, Stride2D.DenseX> aView,
+            int rowIndex,
+            ArrayView2D<float, Stride2D.DenseX> bView)
         {
-            float[,] data = new float[m, n];
-            for (int i = 0; i < m; i++)
+            var x = index.X;
+            var y = index.Y;
+            if (x < rowIndex)
             {
-                for (int j = 0; j < n; j++)
-                {
-                    data[i, j] = value;
-                }
+                bView[index] = aView[index];
             }
-            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, n));
-            Data.CopyFromCPU(data);
+            else if (x > rowIndex)// 所有行往前移动一行
+            {
+                bView[new Index2D(x - 1, y)] = aView[new Index2D(x - 1, y)];
+            }
         }
+        static void MatrixAddOneRowAcceleratedKernel(
+            Index2D index,
+            ArrayView2D<float, Stride2D.DenseX> aView,
+            int rowIndex,
+            float value,
+            ArrayView2D<float, Stride2D.DenseX> bView)
+        {
+            var x = index.X;
+            var y = index.Y;
+            if (x < rowIndex)
+            {
+                bView[index] = aView[index];
+            }
+            else if (x > rowIndex)// 所有行往后移动一行
+            {
+                bView[new Index2D(x - 1, y)] = aView[new Index2D(x - 1, y)];
+            }
+            else // 特定行进行赋值
+            {
+                bView[new Index2D(x, y)] = value;
+            }
+        }
+        #endregion
+
+
+
+
         private ILGPUNet(MemoryBuffer2D<float, Stride2D.DenseX> data)
         {
             this.Data?.Dispose();
             this.Data = data;
+        }
+        public ILGPUNet(float[,] data)
+        {
+            var m = data.GetLength(0);
+            var ka = data.GetLength(1);
+
+            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, ka));
+            Data.CopyFromCPU(data);
         }
         public ILGPUNet(int m, int n, float value = 0F)
         {
@@ -283,7 +374,7 @@ namespace Ren.Device
                     }
                 }
             }
-            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(data.GetLength(0), data.GetLength(1)));
+            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, n));
             Data.CopyFromCPU(data);
         }
         public ILGPUNet(int m, int n, Func<int, int, float> init)
@@ -296,8 +387,7 @@ namespace Ren.Device
                     data[i, j] = init(i, j);
                 }
             }
-
-            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(data.GetLength(0), data.GetLength(1)));
+            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, n));
             Data.CopyFromCPU(data);
         }
         public object Clone()
@@ -306,10 +396,15 @@ namespace Ren.Device
             copy.CopyFrom(Data);
             return new ILGPUNet(copy);
         }
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
         public float RowAverage(int index)
         {
-            return Data.View.SubView(new Index2D(index, 0), new Index2D(index, Column)).BaseView.GetAsArray().Average();
+            throw new NotImplementedException();
+            // return Data.View.SubView(new Index2D(index, 0), new Index2D(index, Column)).BaseView.GetAsArray().Average();
         }
 
         public float ColumnAverage(int index)
@@ -334,21 +429,11 @@ namespace Ren.Device
 
         public DataInterface AddOneRowWithValue(int length, float value)
         {
-            float[,] result = new float[Row + 1, Column];
-            var copy = Data.GetAsArray2D();
-
-            for (int i = 0; i < Row; i++)
-            {
-                for (int j = 0; j < Column; j++)
-                {
-                    result[i, j] = copy[i, j];
-                }
-            }
-            for (int i = 0; i < Column; i++)
-            {
-                result[Row, i] = value;
-            }
-            return new ILGPUNet(result);
+            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(Row + 1, Column));
+            AddOneRowKernel(bBuffer.Extent.ToIntIndex(), Data.View, Row, value, bBuffer.View);
+            //var old = Data.GetAsArray2D();
+            //var @new = bBuffer.GetAsArray2D();
+            return new ILGPUNet(bBuffer);
         }
 
         public DataInterface RemoveLastOneColumn()
@@ -358,21 +443,12 @@ namespace Ren.Device
 
         public DataInterface RemoveLastOneRow()
         {
-            //MemoryBuffer2D<float, Stride2D.DenseX> cBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(Row - 1, Column));
-            //cBuffer.CopyFrom(Data);
-            //return new ILGPUNet(cBuffer);
+            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(Row - 1, Column));
+            RemoveOneRowKernel(bBuffer.Extent.ToIntIndex(), Data.View, Row - 1, bBuffer.View);
 
-            float[,] removeData = new float[Row - 1, Column];
-            var oldData = Data.GetAsArray2D();
-
-            for (int i = 0; i < Row - 1; i++)
-            {
-                for (int j = 0; j < Column; j++)
-                {
-                    removeData[i, j] = oldData[i, j];
-                }
-            }
-            return new ILGPUNet(removeData);
+            //var old = Data.GetAsArray2D();
+            //var @new = bBuffer.GetAsArray2D();
+            return new ILGPUNet(bBuffer);
         }
 
         //public void AddColumn(float[] column)
@@ -391,13 +467,14 @@ namespace Ren.Device
         //}
 
         /// <summary>
-        /// 这个地方 先 GPU -> CPU -> GPU，目前没有找到合适的转换函数
+        /// 矩阵转置
         /// </summary>
         /// <returns></returns>
         public DataInterface Transpose()
         {
-            var result = Data.View.AsTransposed().GetAsArray2D();
-            return new ILGPUNet(result);
+            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(Column, Row));
+            TransposeKernel(bBuffer.Extent.ToIntIndex(), Data.View, bBuffer.View);
+            return new ILGPUNet(bBuffer);
         }
         public float GetItem()
         {
@@ -484,49 +561,13 @@ namespace Ren.Device
             return new ILGPUNet(bBuffer);
         }
 
+        public void Dispose()
+        {
+            this.Data.Dispose();
+            this.Data = null;
+        }
+
         public float this[int i, int j] { get => Data.View[i, j]; set => Data.View[i, j] = value; }
 
-        public static ILGPUNet operator *(ILGPUNet lhs, ILGPUNet rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> cBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(lhs.Row, rhs.Column));
-            MultiplyKernel(cBuffer.Extent.ToIntIndex(), lhs.Data.View, rhs.Data.View, cBuffer.View);
-            return new ILGPUNet(cBuffer);
-        }
-        public static ILGPUNet operator *(float lhs, ILGPUNet rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(rhs.Row, rhs.Column));
-            MultiplyNumberKernel(bBuffer.Extent.ToIntIndex(), rhs.Data.View, lhs, bBuffer.View);
-            return new ILGPUNet(bBuffer);
-        }
-        public static ILGPUNet operator *(ILGPUNet lhs, float rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(lhs.Row, lhs.Column));
-            MultiplyNumberKernel(bBuffer.Extent.ToIntIndex(), lhs.Data.View, rhs, bBuffer.View);
-            return new ILGPUNet(bBuffer);
-        }
-        public static ILGPUNet operator /(ILGPUNet lhs, float rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(lhs.Row, lhs.Column));
-            DivideNumberKernel(bBuffer.Extent.ToIntIndex(), lhs.Data.View, rhs, bBuffer.View);
-            return new ILGPUNet(bBuffer);
-        }
-        public static ILGPUNet operator +(ILGPUNet lhs, ILGPUNet rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> cBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(lhs.Row, rhs.Column));
-            AddKernel(cBuffer.Extent.ToIntIndex(), lhs.Data.View, rhs.Data.View, cBuffer.View);
-            return new ILGPUNet(cBuffer);
-        }
-        public static ILGPUNet operator +(ILGPUNet lhs, float rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(lhs.Row, lhs.Column));
-            AddNumberKernel(bBuffer.Extent.ToIntIndex(), lhs.Data.View, rhs, bBuffer.View);
-            return new ILGPUNet(bBuffer);
-        }
-        public static ILGPUNet operator -(ILGPUNet lhs, ILGPUNet rhs)
-        {
-            MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(lhs.Row, lhs.Column));
-            MinusKernel(bBuffer.Extent.ToIntIndex(), lhs.Data.View, rhs.Data.View, bBuffer.View);
-            return new ILGPUNet(bBuffer);
-        }
     }
 }

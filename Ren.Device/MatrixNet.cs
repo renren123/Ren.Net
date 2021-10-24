@@ -25,10 +25,6 @@ namespace Ren.Device
         {
             this.Data = MBuild.DenseOfArray(data);
         }
-        public MatrixNet(int m, int n)
-        {
-            Data = MBuild.Dense(m, n, 0F);
-        }
         public MatrixNet(int m, int n, float value)
         {
             Data = MBuild.Dense(m, n, value);
@@ -215,6 +211,11 @@ namespace Ren.Device
                 }
             }
             return new MatrixNet(newData);
+        }
+
+        public void Dispose()
+        {
+            this.Data = null;
         }
 
         public float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }

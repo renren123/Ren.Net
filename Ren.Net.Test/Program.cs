@@ -50,23 +50,13 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 100),
+                new Linear(1, 1000),
                 new ReLU(),
                 //// layer2
-                new Linear(100, 100),
-                new ReLU(),
-                new Linear(100, 100),
-                new ReLU(),
-                new Linear(100, 100),
-                new ReLU(),
-                new Linear(100, 100),
-                new ReLU(),
-                new Linear(100, 100),
-                new ReLU(),
-                new Linear(100, 100),
+                new Linear(1000, 1000),
                 new ReLU(),
                 //// layer3
-                new Linear(100, 1),
+                new Linear(1000, 1),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.001F);

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Ren.Device
 {
-    public interface DataInterface : ICloneable
+    public interface DataInterface : ICloneable, IDisposable
     {
         public DeviceTpye Device { get; }
         public int Row { get; }
