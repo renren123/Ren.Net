@@ -26,12 +26,11 @@ namespace Ren.Net.Objects
         /// </summary>
         private void Init()
         {
-            Log.Debug("net initing");
-
             if (IsInit)
             {
                 return;
             }
+            Log.Debug(" ********************* net initing *********************");
             for (int i = 0; i < Nets.Count; i++)
             {
                 var net = Nets[i];
@@ -47,9 +46,9 @@ namespace Ren.Net.Objects
                 }
                 net.Init();
             }
-
+            Log.Debug("\r\n\r\nnet: \r\n" + this.ToString());
             IsInit = true;
-            Log.Debug("net inited");
+            Log.Debug(" ********************* net inited *********************");
         }
         /// <summary>
         /// 向下 找激活函数，然后分配 激活函数中的权限初始化 对象给 网络节点
