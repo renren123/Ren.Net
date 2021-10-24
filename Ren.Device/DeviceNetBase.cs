@@ -11,7 +11,7 @@ namespace Ren.Device
 
         public DeviceNetBase () 
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
         public DeviceNetBase(float[,] data) 
         {
@@ -128,6 +128,16 @@ namespace Ren.Device
         {
             throw new NotImplementedException();
         }
+
+        public virtual DataInterface Multiply(DataInterface rhs)
+        {
+            throw new NotImplementedException();
+        }
+
+        //public virtual DeviceNetBase Multiply(DeviceNetBase rhs)
+        //{
+        //    throw new NotImplementedException();
+        //}
         public virtual float this[int i, int j]
         {
             get
@@ -139,7 +149,7 @@ namespace Ren.Device
                 throw new NotImplementedException();
             }
         }
-        public  static DeviceNetBase operator *(DeviceNetBase lhs, DeviceNetBase rhs)
+        public static DeviceNetBase operator *(DeviceNetBase lhs, DeviceNetBase rhs)
         {
             throw new NotImplementedException();
         }

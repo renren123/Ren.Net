@@ -10,21 +10,31 @@ namespace Ren.Net.Objects
     [Serializable]
     public class Tensor : ICloneable
     {
+        public DeviceTpye Device { set; get; } = DeviceTpye.CPU;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
         /// 行数 是神经元的数量，列数是 batchsize 的数量
         /// </summary>
-        private DeviceNetBase deviceData { set; get; }
-        public int Column => deviceData.Column;
+        private DataInterface deviceData { set; get; }
         public int Row => deviceData.Row;
-
-        public Tensor(float[,] data)
-        {
-            deviceData = new DeviceNetBase(data);
-        }
-        private Tensor(DeviceNetBase deviceData)
+        public int Column => deviceData.Column;
+        private Tensor(DataInterface deviceData)
         {
             this.deviceData = deviceData;
+        }
+        public Tensor(float[,] data)
+        {
+            switch (Device)
+            {
+                case DeviceTpye.CPU:
+                    deviceData = new MatrixNet(data);
+                    break;
+                case DeviceTpye.CUDA:
+                    deviceData = new ILGPUNet(data);
+                    break;
+                case DeviceTpye.Default:
+                    throw new Exception();
+            }
         }
         /// <summary>
         /// 初始化 一个 torch
@@ -33,19 +43,49 @@ namespace Ren.Net.Objects
         /// <param name="batch">一个 batch 的大小</param>
         public Tensor(int neuronNumber, int batch)
         {
-            deviceData = new MatrixNet(neuronNumber, batch);
+            switch (Device)
+            {
+                case DeviceTpye.CPU:
+                    deviceData = new MatrixNet(neuronNumber, batch);
+                    break;
+                case DeviceTpye.CUDA:
+                    deviceData = new ILGPUNet(neuronNumber, batch);
+                    break;
+                case DeviceTpye.Default:
+                    throw new Exception();
+            }
         }
         public Tensor(int neuronNumber, int batch, float value)
         {
-            deviceData = new MatrixNet(neuronNumber, batch, value);
+            switch (Device)
+            {
+                case DeviceTpye.CPU:
+                    deviceData = new MatrixNet(neuronNumber, batch, value);
+                    break;
+                case DeviceTpye.CUDA:
+                    deviceData = new ILGPUNet(neuronNumber, batch, value);
+                    break;
+                case DeviceTpye.Default:
+                    throw new Exception();
+            }
         }
         public Tensor(int neuronNumber, int batch, Func<int, int, float> init)
         {
-            deviceData = new MatrixNet(neuronNumber, batch, init);
+            switch (Device)
+            {
+                case DeviceTpye.CPU:
+                    deviceData = new MatrixNet(neuronNumber, batch, init);
+                    break;
+                case DeviceTpye.CUDA:
+                    deviceData = new ILGPUNet(neuronNumber, batch, init);
+                    break;
+                case DeviceTpye.Default:
+                    throw new Exception();
+            }
         }
         public object Clone()
         {
-            return new Tensor(deviceData.Clone() as DeviceNetBase);
+            return new Tensor(deviceData.Clone() as DataInterface);
         }
         
         public float RowAverage(int i)
@@ -66,8 +106,7 @@ namespace Ren.Net.Objects
         }
         public Tensor AddOneColumnWithValue(int length, float value)
         {
-            deviceData.AddOneColumnWithValue(length, value);
-            return this;
+            return new Tensor(deviceData.AddOneColumnWithValue(length, value));
         }
         /// <summary>
         /// 增加一行 赋值为 value
@@ -77,44 +116,45 @@ namespace Ren.Net.Objects
         /// <returns></returns>
         public Tensor AddOneRowWithValue(int length, float value)
         {
-            deviceData.AddOneRowWithValue(length, value);
-            return this;
+            return new Tensor(deviceData.AddOneRowWithValue(length, value));
         }
         public Tensor RemoveLastOneColumn()
         {
-            deviceData.RemoveLastOneColumn();
-            return this;
+            return new Tensor(deviceData.RemoveLastOneColumn());
         }
         public Tensor RemoveLastOneRow()
         {
-            deviceData.RemoveLastOneRow();
-            return this;
+            return new Tensor(deviceData.RemoveLastOneRow());
         }
         /// <summary>
         /// 增加一列，加到最后
         /// </summary>
         /// <param name="column"></param>
-        public void AddColumn(float[] column)
-        {
-            deviceData.AddColumn(column);
-        }
-        public void AddRow(float[] column)
-        {
-            deviceData.AddRow(column);
-        }
-        public void InsertColumn(int columnIndex, float[] column)
-        {
-            deviceData.InsertColumn(columnIndex, column);
-        }
+        //public void AddColumn(float[] column)
+        //{
+        //    deviceData.AddColumn(column);
+        //}
+        //public void AddRow(float[] column)
+        //{
+        //    deviceData.AddRow(column);
+        //}
+        //public void InsertColumn(int columnIndex, float[] column)
+        //{
+        //    deviceData.InsertColumn(columnIndex, column);
+        //}
         /// <summary>
         /// 矩阵转置
         /// </summary>
         /// <returns></returns>
         public Tensor Transpose()
         {
-            deviceData.Transpose();
-            return this;
+            return new Tensor(deviceData.Transpose());
         }
+        public Tensor Relu(Tensor old)
+        {
+            return new Tensor(deviceData.Relu(old.deviceData));
+        }
+
         /// <summary>
         /// 获取具体数值（待确定 pytorch 是不是同样的作用）
         /// </summary>
@@ -131,8 +171,8 @@ namespace Ren.Net.Objects
         /// <returns></returns>
         public static Tensor DotMultiply(Tensor a, Tensor b)
         {
-            a.deviceData.DotMultiply(b.deviceData);
-            return new Tensor(a.deviceData);
+            var result = a.deviceData.DotMultiply(b.deviceData);
+            return new Tensor(result);
         }
         /// <summary>
         /// 开方
@@ -141,8 +181,8 @@ namespace Ren.Net.Objects
         /// <returns></returns>
         public static Tensor Sqrt(Tensor a)
         {
-            a.deviceData.Sqrt();
-            return new Tensor(a.deviceData);
+            var result = a.deviceData.Sqrt();
+            return new Tensor(result);
         }
         /// <summary>
         /// 点除，对应位相除
@@ -152,8 +192,8 @@ namespace Ren.Net.Objects
         /// <returns></returns>
         public static Tensor DotDivide(Tensor dividend, Tensor divisor)
         {
-            dividend.deviceData.DotDivide(divisor.deviceData);
-            return new Tensor(dividend.deviceData);
+            var result = dividend.deviceData.DotDivide(divisor.deviceData);
+            return new Tensor(result);
         }
         public override string ToString()
         {

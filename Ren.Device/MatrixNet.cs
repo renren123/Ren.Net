@@ -6,14 +6,17 @@ using System.Text;
 
 namespace Ren.Device
 {
-    public class MatrixNet : DeviceNetBase
+    [Serializable]
+    public class MatrixNet : DataInterface
     {
-        public override int Column { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public override int Row { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int Row => this.Data.RowCount;
+        public int Column => this.Data.ColumnCount;
+        public DeviceTpye Device { get; } = DeviceTpye.CUDA;
 
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
         private static VectorBuilder<float> VBuild { get; } = Vector<float>.Build;
         private Matrix<float> Data { set; get; }
+
         private MatrixNet(Matrix<float> data)
         {
             this.Data = data;
@@ -34,19 +37,19 @@ namespace Ren.Device
         {
             Data = MBuild.Dense(m, n, init);
         }
-        public override object Clone()
+        public object Clone()
         {
             return new MatrixNet(Data.Clone());
         }
-        public override float RowAverage(int i)
+        public float RowAverage(int index)
         {
-            return Data.Row(i).Average();
+            return Data.Row(index).Average();
         }
-        public override float ColumnAverage(int j)
+        public float ColumnAverage(int j)
         {
             return Data.Column(j).Average();
         }
-        public override float RowVariance(int index)
+        public float RowVariance(int index)
         {
             var row = Data.Row(index);
             float sum = 0F;
@@ -57,7 +60,7 @@ namespace Ren.Device
             }
             return sum / row.Count;
         }
-        public override float ColumnVariance(int index)
+        public float ColumnVariance(int index)
         {
             var column = Data.Column(index);
             float sum = 0F;
@@ -68,10 +71,11 @@ namespace Ren.Device
             }
             return sum / column.Count;
         }
-        public override void AddOneColumnWithValue(int length, float value)
+        public DataInterface AddOneColumnWithValue(int length, float value)
         {
             Vector<float> vector = VBuild.Dense(length, value);
-            this.Data = this.Data.InsertColumn(Column, vector);
+            var data = this.Data.InsertColumn(Column, vector);
+            return new MatrixNet(data);
         }
         /// <summary>
         /// 增加一行 赋值为 value
@@ -79,51 +83,54 @@ namespace Ren.Device
         /// <param name="length"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override void AddOneRowWithValue(int length, float value)
+        public DataInterface AddOneRowWithValue(int length, float value)
         {
             Vector<float> vector = VBuild.Dense(length, value);
-            this.Data = this.Data.InsertRow(Row, vector);
+            var data = this.Data.InsertRow(Row, vector);
+            return new MatrixNet(data);
         }
-        public override void RemoveLastOneColumn()
+        public DataInterface RemoveLastOneColumn()
         {
-            this.Data = this.Data.RemoveColumn(Column - 1);
+            var data = this.Data.RemoveColumn(Column - 1);
+            return new MatrixNet(data);
         }
-        public override void RemoveLastOneRow()
+        public DataInterface RemoveLastOneRow()
         {
-            this.Data = this.Data.RemoveRow(Row - 1);
+            var data = this.Data.RemoveRow(Row - 1);
+            return new MatrixNet(data);
         }
         /// <summary>
         /// 增加一列，加到最后
         /// </summary>
         /// <param name="column"></param>
-        public override void AddColumn(float[] column)
-        {
-            Vector<float> vector = VBuild.Dense(column);
-            this.Data = this.Data.InsertColumn(Column, vector);
-        }
-        public override void AddRow(float[] column)
-        {
-            Vector<float> vector = VBuild.Dense(column);
-            this.Data = this.Data.InsertRow(Row, vector);
-        }
-        public override void InsertColumn(int columnIndex, float[] column)
-        {
-            Vector<float> vector = VBuild.Dense(column);
-            this.Data.InsertColumn(columnIndex, vector);
-        }
+        //public void AddColumn(float[] column)
+        //{
+        //    Vector<float> vector = VBuild.Dense(column);
+        //    this.Data = this.Data.InsertColumn(Column, vector);
+        //}
+        //public void AddRow(float[] column)
+        //{
+        //    Vector<float> vector = VBuild.Dense(column);
+        //    this.Data = this.Data.InsertRow(Row, vector);
+        //}
+        //public void InsertColumn(int columnIndex, float[] column)
+        //{
+        //    Vector<float> vector = VBuild.Dense(column);
+        //    this.Data.InsertColumn(columnIndex, vector);
+        //}
         /// <summary>
         /// 矩阵转置
         /// </summary>
         /// <returns></returns>
-        public override void Transpose()
+        public DataInterface Transpose()
         {
-            this.Data = this.Data.Transpose();
+            return new MatrixNet(this.Data.Transpose());
         }
         /// <summary>
         /// 获取具体数值（待确定 pytorch 是不是同样的作用）
         /// </summary>
         /// <returns></returns>
-        public override float GetItem()
+        public float GetItem()
         {
             return this.Data.RowSums().Sum() / (Row * Column);
         }
@@ -133,19 +140,25 @@ namespace Ren.Device
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public override void DotMultiply(DeviceNetBase data)
+        public DataInterface DotMultiply(DataInterface data)
         {
             MatrixNet matrixNet = data as MatrixNet;
-            this.Data = Matrix<float>.op_DotDivide(this.Data, matrixNet.Data);
+            var copy = Matrix<float>.op_DotMultiply(this.Data, matrixNet.Data);
+            return new MatrixNet(copy);
+        }
+        public DataInterface Multiply(DataInterface rhs)
+        {
+            return new MatrixNet(this.Data * (rhs as MatrixNet).Data);
         }
         /// <summary>
         /// 开方
         /// </summary>
         /// <param name="a"></param>
         /// <returns></returns>
-        public override void Sqrt()
+        public DataInterface Sqrt()
         {
-            this.Data = Matrix<float>.Sqrt(this.Data);
+            var result = Matrix<float>.Sqrt(this.Data);
+            return new MatrixNet(result);
         }
         /// <summary>
         /// 点除，对应位相除
@@ -153,41 +166,57 @@ namespace Ren.Device
         /// <param name="dividend"></param>
         /// <param name="divisor"></param>
         /// <returns></returns>
-        public override void DotDivide(DeviceNetBase divisor)
+        public DataInterface DotDivide(DataInterface divisor)
         {
             MatrixNet matrixNet = divisor as MatrixNet;
-            this.Data = Matrix<float>.op_DotDivide(this.Data, matrixNet.Data);
+            var result = Matrix<float>.op_DotDivide(this.Data, matrixNet.Data);
+            return new MatrixNet(result);
         }
-        public override float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }
 
+        public DataInterface Multiply(float rhs)
+        {
+            return new MatrixNet(this.Data * rhs);
+        }
 
-        public static MatrixNet operator *(MatrixNet lhs, MatrixNet rhs)
+        public DataInterface Divide(float rhs)
         {
-            throw new NotImplementedException();
+            return new MatrixNet(this.Data / rhs);
         }
-        public static MatrixNet operator *(float lhs, MatrixNet rhs)
+
+        public DataInterface Add(DataInterface rhs)
         {
-            throw new NotImplementedException();
+            MatrixNet matrixNet = rhs as MatrixNet;
+            return new MatrixNet(this.Data + matrixNet.Data);
         }
-        public static MatrixNet operator *(MatrixNet lhs, float rhs)
+
+        public DataInterface Add(float rhs)
         {
-            throw new NotImplementedException();
+            return new MatrixNet(this.Data + rhs);
         }
-        public static MatrixNet operator /(MatrixNet lhs, float rhs)
+
+        public DataInterface Minus(DataInterface rhs)
         {
-            throw new NotImplementedException();
+            MatrixNet matrixNet = rhs as MatrixNet;
+            return new MatrixNet(this.Data - matrixNet.Data);
         }
-        public static MatrixNet operator +(MatrixNet lhs, MatrixNet rhs)
+
+        public DataInterface Relu(DataInterface old)
         {
-            throw new NotImplementedException();
+            MatrixNet oldData = old as MatrixNet;
+            Matrix<float> newData = Data.Clone();
+            for (int i = 0; i < Row; i++)
+            {
+                for (int j = 0; j < Column; j++)
+                {
+                    if(oldData[i, j] < 0F)
+                    {
+                        newData[i, j] = 0F;
+                    }
+                }
+            }
+            return new MatrixNet(newData);
         }
-        public static MatrixNet operator +(MatrixNet lhs, float rhs)
-        {
-            throw new NotImplementedException();
-        }
-        public static MatrixNet operator -(MatrixNet lhs, MatrixNet rhs)
-        {
-            throw new NotImplementedException();
-        }
+
+        public float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }
     }
 }

@@ -53,23 +53,23 @@ namespace Ren.Net.Test
                 new Linear(1, 100),
                 new ReLU(),
                 //// layer2
-                //new Linear(10, 10),
-                //new ReLU(),
-                //new Linear(10, 10),
-                //new ReLU(),
-                //new Linear(1000, 1000),
-                //new ReLU(),
-                //new Linear(1000, 1000),
-                //new ReLU(),
-                //new Linear(1000, 1000),
-                //new ReLU(),
-                //new Linear(1000, 1000),
-                //new ReLU(),
+                new Linear(100, 100),
+                new ReLU(),
+                new Linear(100, 100),
+                new ReLU(),
+                new Linear(100, 100),
+                new ReLU(),
+                new Linear(100, 100),
+                new ReLU(),
+                new Linear(100, 100),
+                new ReLU(),
+                new Linear(100, 100),
+                new ReLU(),
                 //// layer3
                 new Linear(100, 1),
             });
 
-            netWork.Optimizer = new Adam(learningRate: 0.0001F);
+            netWork.Optimizer = new Adam(learningRate: 0.001F);
 
 
             // Sequential netWork = Sequential.Load();
@@ -126,7 +126,7 @@ namespace Ren.Net.Test
             int b = new Random().Next(1, 100);
 
             Tensor input = new Tensor(new float[,] { { a  } });
-            Tensor label = new Tensor(new float[,] { { a * a} });
+            Tensor label = new Tensor(new float[,] { { a + 1} });
             return (input, label);
         }
     }

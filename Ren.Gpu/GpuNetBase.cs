@@ -4,6 +4,7 @@ using ILGPU.Runtime.Cuda;
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace Ren.Gpu
 {
@@ -41,9 +42,9 @@ namespace Ren.Gpu
             RunMatrixMultiply(sanityMatrixA, sanityMatrixB, sanityMatrixC);
 
             // Prepare random matrices
-            const int m = 1000;
-            const int n = 1000;
-            const int k = 1000;
+            const int m = 500;
+            const int n = 500;
+            const int k = 500;
 
             var aMatrix = CreateRandomMatrix(m, k);
             var bMatrix = CreateRandomMatrix(k, n);
@@ -139,8 +140,9 @@ namespace Ren.Gpu
 
             foreach (var device in context)
             {
-                using var accelerator = device.CreateAccelerator(context);
-
+                //context.GetCudaDevice(0)
+                //using var accelerator = device.CreateAccelerator(context);
+                using var accelerator = context.GetCudaDevice(0).CreateAccelerator(context);
                 sw.Restart();
                 var acceleratedResult = MatrixMultiplyAccelerated(accelerator, a, b);
                 sw.Stop();
@@ -225,6 +227,9 @@ namespace Ren.Gpu
             using var cBuffer = accelerator.Allocate2DDenseX<float>(new Index2D(m, n));
             aBuffer.CopyFromCPU(a);
             bBuffer.CopyFromCPU(b);
+
+            var test = aBuffer.View.BaseView;
+            var test1 = aBuffer.View.BaseView.GetAsArray().Average();
 
             kernel(cBuffer.Extent.ToIntIndex(), aBuffer.View, bBuffer.View, cBuffer.View);
 

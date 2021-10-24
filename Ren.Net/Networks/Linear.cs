@@ -58,22 +58,26 @@ namespace Ren.Net.Networks
                     return WIOptimizer.GetWI(sumInput);
                 }
             });
-            
+
             Log.Debug($"Linear inited [{InputNumber}, {OutputNumber}]");
         }
         public override Tensor Forward(Tensor @in)
         {
             int batchSize = @in.Column;          // batch 的大小
 
-            if (batchSize == -1)
+            if (batchSize <= 0)
             {
-                throw new Exception("Linear::Forward, batchSize is -1 or neuronNumber is -1");
+                throw new Exception($"Linear::Forward, batchSize {batchSize}");
             }
-            X_In = @in.Clone() as Tensor;    // 保存输入，用于反向传播时更新 WI 的大小
+            //X_In = @in.Clone() as Tensor;    // 保存输入，用于反向传播时更新 WI 的大小
+            //@in = @in.AddOneRowWithValue(batchSize, 1F);
+            //Tensor x_out = WI * @in;
 
-            @in = @in.AddOneRowWithValue(batchSize, 1F);
 
-            Tensor x_out = WI * @in;
+            // ********************** Test **********************
+            X_In = @in.AddOneRowWithValue(batchSize, 1F);    // 保存输入，用于反向传播时更新 WI 的大小
+            Tensor x_out = WI * X_In;
+            // ********************** Test **********************
 
             return x_out;
         }
@@ -84,16 +88,18 @@ namespace Ren.Net.Networks
         /// <returns></returns>
         public override Tensor Backup(Tensor @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
         {
-            int batchSize = @out.Column;
-
-            if (batchSize == -1)
+            // batchSize
+            if (@out.Column <= 0)
             {
-                throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
+                throw new Exception($"Linear::Backup, batchSize is {@out.Column}");
             }
 
-            Tensor sensitive_out =WI.Transpose() * @out;
+            Tensor sensitive_out = WI.Transpose() * @out;
 
-            X_In = X_In.AddOneRowWithValue(batchSize, 1F);
+            //X_In = X_In.AddOneRowWithValue(batchSize, 1F);
+
+            // ********************** Test **********************
+            // ********************** Test **********************
 
             var dwTemp = @out * X_In.Transpose();
 
