@@ -30,15 +30,42 @@ namespace Ren.Net.Optimizers
         }
         public override Tensor GetOptimizer(Tensor dw)
         {
-            VTorch = B1 * VTorch + (1 - B1) * dw;
-            STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiply(dw, dw);
+            using Tensor dotSquare = Tensor.DotMultiply(dw, dw);
+            using Tensor b1_VTorch = B1 * VTorch;
+            using Tensor r_B1_VTorch = (1 - B1) * dw;
+            using Tensor b2_STorch = B2 * STorch;
+            using Tensor r_B2_STorch = (1 - B2) * dotSquare;
 
-            Tensor Vcorrection = VTorch / (1 - B1_Pow);
-            Tensor Scorrection = STorch / (1 - B2_Pow);
-            Tensor dividend = LearningRate * Vcorrection;
-            Tensor divisor = Tensor.Sqrt(Scorrection) + E;
+            if (VTorch != null)
+            {
+                VTorch.Dispose();
+            }
+            VTorch = b1_VTorch + r_B1_VTorch;
+            if (STorch != null)
+            {
+                STorch.Dispose();
+            }
+            STorch = b2_STorch + r_B2_STorch;
+            
+            using Tensor Vcorrection = VTorch / (1 - B1_Pow);
+            using Tensor Scorrection = STorch / (1 - B2_Pow);
+            using Tensor dividend = LearningRate * Vcorrection;
+            using Tensor storchSqrt = Tensor.Sqrt(Scorrection);
+            using Tensor divisor = storchSqrt + E;
 
             return Tensor.DotDivide(dividend, divisor);
+
+
+
+            //VTorch = B1 * VTorch + (1 - B1) * dw;
+            //STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiply(dw, dw);
+
+            //Tensor Vcorrection = VTorch / (1 - B1_Pow);
+            //Tensor Scorrection = STorch / (1 - B2_Pow);
+            //Tensor dividend = LearningRate * Vcorrection;
+            //Tensor divisor = Tensor.Sqrt(Scorrection) + E;
+
+            //return Tensor.DotDivide(dividend, divisor);
         }
 
         public override void Step()

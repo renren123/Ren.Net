@@ -218,6 +218,18 @@ namespace Ren.Device
             this.Data = null;
         }
 
+        public void AddToA(DataInterface rhs)
+        {
+            MatrixNet matrixNet = rhs as MatrixNet;
+            this.Data = Data + matrixNet.Data;
+        }
+
+        public void MinusToA(DataInterface rhs)
+        {
+            MatrixNet matrixNet = rhs as MatrixNet;
+            this.Data = Data - matrixNet.Data;
+        }
+
         public float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }
     }
 }

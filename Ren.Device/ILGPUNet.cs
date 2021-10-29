@@ -74,6 +74,16 @@ namespace Ren.Device
                 ArrayView2D<float, Stride2D.DenseX>>(
                 MatrixADDAcceleratedKernel);
         /// <summary>
+        /// 矩阵相加,结果保存在 B 中
+        /// </summary>
+        private static Action<Index2D,
+            ArrayView2D<float, Stride2D.DenseX>,
+            ArrayView2D<float, Stride2D.DenseX>> ADDToAKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                ArrayView2D<float, Stride2D.DenseX>,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                MatrixADDToAAcceleratedKernel);
+        /// <summary>
         /// 矩阵相减
         /// </summary>
         private static Action<Index2D,
@@ -85,6 +95,16 @@ namespace Ren.Device
                 ArrayView2D<float, Stride2D.DenseX>,
                 ArrayView2D<float, Stride2D.DenseX>>(
                 MatrixMinusAcceleratedKernel);
+        /// <summary>
+        /// 矩阵相减,结果赋值给 A 
+        /// </summary>
+        private static Action<Index2D,
+            ArrayView2D<float, Stride2D.DenseX>,
+            ArrayView2D<float, Stride2D.DenseX>> MinusToAKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                ArrayView2D<float, Stride2D.DenseX>,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                MatrixMinusToAAcceleratedKernel);
         /// <summary>
         /// 矩阵与数字相乘
         /// </summary>
@@ -155,7 +175,7 @@ namespace Ren.Device
                 ArrayView2D<float, Stride2D.DenseX>>(
                 MatrixCopyAcceleratedKernel);
         /// <summary>
-        /// 拷贝数据
+        /// 矩阵转置
         /// </summary>
         private static Action<Index2D,
             ArrayView2D<float, Stride2D.DenseX>,
@@ -233,6 +253,13 @@ namespace Ren.Device
         {
             cView[index] = aView[index] + bView[index];
         }
+        static void MatrixADDToAAcceleratedKernel(
+            Index2D index,
+            ArrayView2D<float, Stride2D.DenseX> aView,
+            ArrayView2D<float, Stride2D.DenseX> bView)
+        {
+            aView[index] = aView[index] + bView[index];
+        }
         static void MatrixMinusAcceleratedKernel(
             Index2D index,
             ArrayView2D<float, Stride2D.DenseX> aView,
@@ -240,6 +267,13 @@ namespace Ren.Device
             ArrayView2D<float, Stride2D.DenseX> cView)
         {
             cView[index] = aView[index] - bView[index];
+        }
+        static void MatrixMinusToAAcceleratedKernel(
+            Index2D index,
+            ArrayView2D<float, Stride2D.DenseX> aView,
+            ArrayView2D<float, Stride2D.DenseX> bView)
+        {
+            aView[index] = aView[index] - bView[index];
         }
         static void MatrixMultiplyNumberAcceleratedKernel(
             Index2D index,
@@ -533,6 +567,16 @@ namespace Ren.Device
             return new ILGPUNet(cBuffer);
         }
 
+        public void AddToA(DataInterface rhs)
+        {
+            var right = rhs as ILGPUNet;
+            if (right.Row != Row || right.Column != Column)
+            {
+                throw new Exception($"ILGPUNet::Add [{right.Row}, {right.Column}] != [{Row}, {Column}]");
+            }
+            ADDToAKernel(right.Data.Extent.ToIntIndex(), right.Data.View, Data.View);
+        }
+
         public DataInterface Add(float rhs)
         {
             MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(Row, Column));
@@ -551,6 +595,16 @@ namespace Ren.Device
             MinusKernel(bBuffer.Extent.ToIntIndex(), this.Data.View, right.Data.View, bBuffer.View);
             return new ILGPUNet(bBuffer);
         }
+        public void MinusToA(DataInterface rhs)
+        {
+            var right = rhs as ILGPUNet;
+            if (right.Row != Row || right.Column != Column)
+            {
+                throw new Exception($"ILGPUNet::MinusToA [{right.Row}, {right.Column}] != [{Row}, {Column}]");
+            }
+            MinusToAKernel(right.Data.Extent.ToIntIndex(), this.Data.View, right.Data.View);
+        }
+
 
         public DataInterface Relu(DataInterface old)
         {
@@ -566,7 +620,6 @@ namespace Ren.Device
             this.Data.Dispose();
             this.Data = null;
         }
-
         public float this[int i, int j] { get => Data.View[i, j]; set => Data.View[i, j] = value; }
 
     }

@@ -29,10 +29,16 @@ namespace Ren.Net.ActivationFunction
             //    }
             //}
             //return @in;
-
+            if (X_IN != null)
+            {
+                X_IN.Dispose();
+            }
             X_IN = @in.Clone() as Tensor;
 
-            return @in.Relu(X_IN);
+            Tensor x_out = @in.Relu(X_IN);
+            @in.Dispose();
+
+            return x_out;
         }
         public override Tensor Backup(Tensor @out)
         {
@@ -48,7 +54,10 @@ namespace Ren.Net.ActivationFunction
             //}
             //return @out;
 
-            return @out.Relu(X_IN);
+            Tensor x_out = @out.Relu(X_IN);
+            @out.Dispose();
+
+            return x_out;
         }
         public override string ToString()
         {

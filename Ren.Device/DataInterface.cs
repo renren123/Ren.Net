@@ -41,6 +41,7 @@ namespace Ren.Device
         public DataInterface Multiply(float rhs);
         public DataInterface Divide(float rhs);
         public DataInterface Add(DataInterface rhs);
+        public void AddToA(DataInterface rhs);
         public DataInterface Add(float rhs);
         /// <summary>
         /// 减法
@@ -48,6 +49,7 @@ namespace Ren.Device
         /// <param name="rhs"></param>
         /// <returns></returns>
         public DataInterface Minus(DataInterface rhs);
+        public void MinusToA(DataInterface rhs);
         #endregion
 
         #region Net method

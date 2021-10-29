@@ -50,13 +50,15 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 1000),
+                new Linear(1, 10000),
                 new ReLU(),
                 //// layer2
-                new Linear(1000, 1000),
+                new Linear(10000, 10000),
                 new ReLU(),
+                //new Linear(10000, 10000),
+                //new ReLU(),
                 //// layer3
-                new Linear(1000, 1),
+                new Linear(10000, 1),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.001F);
@@ -82,10 +84,10 @@ namespace Ren.Net.Test
                 Tensor output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
-                if (i % 500 == 0)
+                if (i % 200 == 0)
                 {
                     Log.Information($"loss: {sensitive.GetItem()}");
-                    Sequential.Save(netWork);
+                    //Sequential.Save(netWork);
                 }
 
                 netWork.Backup(sensitive);

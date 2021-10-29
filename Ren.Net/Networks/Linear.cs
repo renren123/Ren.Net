@@ -75,10 +75,14 @@ namespace Ren.Net.Networks
 
 
             // ********************** Test **********************
+            if (X_In != null)
+            {
+                X_In.Dispose();
+            }
             X_In = @in.AddOneRowWithValue(batchSize, 1F);    // 保存输入，用于反向传播时更新 WI 的大小
             Tensor x_out = WI * X_In;
             // ********************** Test *********************
-
+            
             @in.Dispose();
             return x_out;
         }
@@ -95,22 +99,28 @@ namespace Ren.Net.Networks
                 throw new Exception($"Linear::Backup, batchSize is {@out.Column}");
             }
 
-            Tensor sensitive_out = WI.Transpose() * @out;
+            using Tensor wiT = WI.Transpose();
+
+            using Tensor sensitive_out = wiT * @out;
 
             //X_In = X_In.AddOneRowWithValue(batchSize, 1F);
 
             // ********************** Test **********************
             // ********************** Test **********************
 
-            var dwTemp = @out * X_In.Transpose();
+            //var xinT = X_In.Transpose();
 
-            @out.Dispose();
+            using Tensor xinT = X_In.Transpose();
 
-            WI -= Optimizer.GetOptimizer(dwTemp);
+            using Tensor dwTemp = @out * xinT;
 
-            Tensor sensitiveOut = sensitive_out.RemoveLastOneRow();
-            sensitive_out.Dispose();
-            return sensitiveOut;
+            using Tensor delta = Optimizer.GetOptimizer(dwTemp);
+
+            WI.MinusToA(delta);
+
+            // WI -= Optimizer.GetOptimizer(dwTemp);
+
+            return sensitive_out.RemoveLastOneRow();
         }
         public override string ToString()
         {

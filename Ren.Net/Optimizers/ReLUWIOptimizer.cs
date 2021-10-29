@@ -10,8 +10,6 @@ namespace Ren.Net.Optimizers
         private static readonly Random r = new Random(DateTime.UtcNow.Millisecond);
         public override float GetWI(int sumInput)
         {
-            // return 1F;
-
             //float x = (float)r.NextDouble();
             //float number = (Math.Abs(x) / 1) * (2.0F / sumInput);
 
