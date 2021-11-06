@@ -1,94 +1,151 @@
-﻿using Serilog;
+﻿using Ren.Net.Objects;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ren.Net.Optimizers
 {
+    /// <summary>
+    /// 原理：https://www.jianshu.com/p/aebcaf8af76e
+    /// adam 优化器
+    /// </summary>
+    [Serializable]
     public class Adam : Optimizer
     {
-        private float B1_Pow { set; get; } = 0.9F;
-        private float B2_Pow { set; get; } = 0.999F;
+        public static readonly float E = 0.00000001F;
+        public static readonly float B1 = 0.9F;
+        public static readonly float B2 = 0.999F;
 
-        public float E { get; } = 0.00000001F;
-        public float B1 { get; } = 0.9F;
-        public float B2 { get; } = 0.999F;
+        private float B1_Pow { set; get; } = B1;
+        private float B2_Pow { set; get; } = B2;
 
-        public List<float[]> V { set; get; }
-        public List<float[]> S { set; get; }
-
-        public List<float> WB_V { set; get; }
-        public List<float> WB_S { set; get; }
-
+        public Tensor VTorch { set; get; }
+        public Tensor STorch { set; get; }
         public Adam(float learningRate) : base(learningRate) { }
-
-        /// <summary>
-        /// int OutputIndex, int InputIndex 对应一条权重, 原理：https://www.jianshu.com/p/aebcaf8af76e
-        /// </summary>
-        /// <param name="dw"></param>
-        /// <param name="OutputIndex"></param>
-        /// <param name="InputIndex"></param>
-        /// <returns></returns>
-        public override float GetOptimizer(float dw, int OutputIndex, int InputIndex)
+        public override void Init()
         {
-            if(S == null)
-            {
-                S = new List<float[]>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    S.Add(new float[InputNumber]);
-                }
-            }
-            if(V == null)
-            {
-                V = new List<float[]>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    V.Add(new float[InputNumber]);
-                }
-            }
 
-            V[OutputIndex][InputIndex] = B1 * V[OutputIndex][InputIndex] + (1 - B1) * dw;
-            S[OutputIndex][InputIndex] = B2 * S[OutputIndex][InputIndex] + (1 - B2) * dw * dw;
 
-            float Vcorrection = V[OutputIndex][InputIndex] / (1 - B1_Pow);
-            float Scorrection = S[OutputIndex][InputIndex] / (1 - B2_Pow);
+            VTorch = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            STorch = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
 
-            float temp1 = ((float)Math.Sqrt(Scorrection) + E);
-            float temp2 = LearningRate * Vcorrection;
-            float temp3 = temp2 / temp1;
-
-            // Log.Debug("I: " + OutputIndex + " J: "+ InputIndex + " Gradient: " + temp3 + "\tVcorrection: " + Vcorrection + "\tScorrection: "+ Scorrection);
-
-            return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
+            VTorch.Width = STorch.Width = OutputNumber;
+            VTorch.Height = STorch.Height = InputNumber;
         }
-        public override float GetOptimizer(float dw, int OutputIndex)
+        public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
-            if(WB_S == null)
+            switch (dw.Device)
             {
-                WB_S = new List<float>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    WB_S.Add(0F);
-                }
-            }
-            if (WB_V == null)
-            {
-                WB_V = new List<float>(OutputNumber);
-                for (int i = 0; i < OutputNumber; i++)
-                {
-                    WB_V.Add(0F);
-                }
-            }
-            WB_V[OutputIndex] = B1 * WB_V[OutputIndex] + (1 - B1) * dw;
-            WB_S[OutputIndex] = B2 * WB_S[OutputIndex] + (1 - B2) * dw * dw;
+                case Device.DeviceTpye.CPU:
+                    {
+                        VTorch = B1 * VTorch + (1 - B1) * dw;
+                        STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiplySelf(dw, dw);
 
-            float Vcorrection = WB_V[OutputIndex] / (1 - B1_Pow);
-            float Scorrection = WB_S[OutputIndex] / (1 - B2_Pow);
+                        Tensor Vcorrection = VTorch / (1 - B1_Pow);
+                        Tensor Scorrection = STorch / (1 - B2_Pow);
+                        Tensor dividend = LearningRate * Vcorrection;
+                        //Tensor divisor = Tensor.Sqrt(Scorrection) + E;
 
-            return LearningRate * Vcorrection / ((float)Math.Sqrt(Scorrection) + E);
+                        Tensor divisor = Scorrection.Sqrt() + E;
+
+                        return Tensor.DotDivide(dividend, divisor);
+
+
+
+                        //using Tensor dotSquare = Tensor.DotMultiplySelf(dw, dw);
+                        //using Tensor b1_VTorch = B1 * VTorch;
+                        //using Tensor r_B1_VTorch = (1 - B1) * dw;
+                        //using Tensor b2_STorch = B2 * STorch;
+                        //using Tensor r_B2_STorch = (1 - B2) * dotSquare;
+                        //VTorch = b1_VTorch + r_B1_VTorch;
+                        //STorch = b2_STorch + r_B2_STorch;
+
+                        //using Tensor Vcorrection = VTorch / (1 - B1_Pow);
+                        //using Tensor Scorrection = STorch / (1 - B2_Pow);
+                        //using Tensor dividend = LearningRate * Vcorrection;
+
+                        //Tensor.Sqrt(Scorrection);
+
+                        ////using Tensor storchSqrt = Tensor.Sqrt(Scorrection);
+                        //using Tensor divisor = Scorrection + E;
+                        //return Tensor.DotDivide(dividend, divisor);
+                    }
+                    break;
+                case Device.DeviceTpye.CUDA:
+                    {
+                        Tensor.DotMultiply(dw, dw, Tensor.SwapA);
+                        Tensor.Multiply((1 - B2), Tensor.SwapA, Tensor.SwapB);
+                        Tensor.Multiply(B2, STorch, Tensor.SwapA);
+                        Tensor.Add(Tensor.SwapA, Tensor.SwapB, STorch);     // 计算出 STorch
+
+                        Tensor.Multiply(B1, VTorch, Tensor.SwapA);
+                        Tensor.Multiply((1 - B1), dw, Tensor.SwapB);
+                        Tensor.Add(Tensor.SwapA, Tensor.SwapB, VTorch);     // 计算出 VTorch
+
+                        Tensor.DotDivide(VTorch, (1 - B1_Pow), Tensor.SwapA);
+                        Tensor.Multiply(LearningRate, Tensor.SwapA, Tensor.SwapB);  // 计算出 Tensor.SwapB = dividend
+                        Tensor.DotDivide(STorch, (1 - B2_Pow), Tensor.SwapA);
+                        Tensor.Sqrt(Tensor.SwapA);
+                        Tensor.Add(Tensor.SwapA, E, Tensor.SwapC);          // 计算出 divisor， Tensor.SwapC = divisor
+                        Tensor.DotDivide(Tensor.SwapB, Tensor.SwapC, @out);
+                    }
+                    break;
+            }
+            //Tensor.DotMultiply(dw, dw, Tensor.SwapA);
+            //Tensor.Multiply((1 - B2), Tensor.SwapA, Tensor.SwapB);
+            //Tensor.Multiply(B2, STorch, Tensor.SwapA);
+            //Tensor.Add(Tensor.SwapA, Tensor.SwapB, STorch);     // 计算出 STorch
+
+            //Tensor.Multiply(B1, VTorch, Tensor.SwapA);
+            //Tensor.Multiply((1 - B1), dw, Tensor.SwapB);
+            //Tensor.Add(Tensor.SwapA, Tensor.SwapB, VTorch);     // 计算出 VTorch
+
+            //Tensor.DotDivide(VTorch, (1 - B1_Pow), Tensor.SwapA);
+            //Tensor.Multiply(LearningRate, Tensor.SwapA, Tensor.SwapB);  // 计算出 Tensor.SwapB = dividend
+            //Tensor.DotDivide(STorch, (1 - B2_Pow), Tensor.SwapA);
+            //Tensor.Sqrt(Tensor.SwapA);
+            //Tensor.Add(Tensor.SwapA, E, Tensor.SwapC);          // 计算出 divisor， Tensor.SwapC = divisor
+            //Tensor.DotDivide(Tensor.SwapB, Tensor.SwapC, @out);
+
+            return @out;
+
+            //using Tensor dotSquare = Tensor.DotMultiplySelf(dw, dw);
+            //using Tensor b1_VTorch = B1 * VTorch;
+            //using Tensor r_B1_VTorch = (1 - B1) * dw;
+            //using Tensor b2_STorch = B2 * STorch;
+            //using Tensor r_B2_STorch = (1 - B2) * dotSquare;
+
+            //if (VTorch != null)
+            //{
+            //    VTorch.Dispose();
+            //}
+            //VTorch = b1_VTorch + r_B1_VTorch;
+            //if (STorch != null)
+            //{
+            //    STorch.Dispose();
+            //}
+            //STorch = b2_STorch + r_B2_STorch;
+            
+            //using Tensor Vcorrection = VTorch / (1 - B1_Pow);
+            //using Tensor Scorrection = STorch / (1 - B2_Pow);
+            //using Tensor dividend = LearningRate * Vcorrection;
+            //using Tensor storchSqrt = Tensor.Sqrt(Scorrection);
+            //using Tensor divisor = storchSqrt + E;
+            //return Tensor.DotDivide(dividend, divisor);
+
+
+            // ########################## old ##########################
+            //VTorch = B1 * VTorch + (1 - B1) * dw;
+            //STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiply(dw, dw);
+
+            //Tensor Vcorrection = VTorch / (1 - B1_Pow);
+            //Tensor Scorrection = STorch / (1 - B2_Pow);
+            //Tensor dividend = LearningRate * Vcorrection;
+            //Tensor divisor = Tensor.Sqrt(Scorrection) + E;
+
+            //return Tensor.DotDivide(dividend, divisor);
         }
-
 
         public override void Step()
         {
@@ -97,27 +154,15 @@ namespace Ren.Net.Optimizers
         }
         public override object Clone()
         {
-            if(OutputNumber == -1)
-            {
-                return new Adam(this.LearningRate);
-            }
             Adam adam = new Adam(this.LearningRate)
             {
-                S = new List<float[]>(OutputNumber),
-                V = new List<float[]>(OutputNumber)
+                OutputNumber = this.OutputNumber,
+                InputNumber = this.InputNumber,
             };
-            for (int i = 0; i < OutputNumber; i++)
+            if(VTorch != null)
             {
-                float[] tempS = new float[InputNumber];
-                float[] tempV = new float[InputNumber];
-
-                for (int j = 0; j < InputNumber; j++)
-                {
-                    tempS[i] = this.S[i][j];
-                    tempV[i] = this.V[i][j];
-                }
-                adam.S.Add(tempS);
-                adam.V.Add(tempV);
+                adam.VTorch = this.VTorch.Clone() as Tensor;
+                adam.STorch = this.STorch.Clone() as Tensor;
             }
             return adam;
         }

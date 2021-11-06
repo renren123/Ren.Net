@@ -36,7 +36,9 @@ namespace Ren.Net.Test
                     shared: true,
                     retainedFileCountLimit: 30))
                 .WriteTo.Console(LogEventLevel.Information,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                    outputTemplate: "{Timestamp:HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                    // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+                
                 .CreateLogger();
         }
         static void Main(string[] args)
@@ -48,19 +50,27 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 100),
+                new Linear(1, 10),
                 new ReLU(),
-                // layer2
-                new Linear(100, 100),
+                //// layer2
+                new Linear(10, 10),
                 new ReLU(),
+                //new Linear(10000, 10000),
+                //new ReLU(),
                 //// layer3
-                new Linear(100, 1),
+                new Linear(10, 1),
             });
-            netWork.Optimizer = new Adam(learningRate: 0.01F);
+
+            netWork.Optimizer = new Adam(learningRate: 0.001F);
+            netWork.Device = Device.DeviceTpye.CUDA;
+
+
+            // Sequential netWork = Sequential.Load();
+            Log.Information("net: \r\n" + netWork.ToString());
 
             MSELoss loss = new MSELoss();
 
-            int epoch = 5000;
+            int epoch = 100000;
 
             long startTime = Stopwatch.GetTimestamp();
 
@@ -72,11 +82,14 @@ namespace Ren.Net.Test
                 }
                 var (input, label) = GetTorch();
 
-                Torch output = netWork.Forward(input);
+                Tensor output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
-                if (i % 100 == 0)
-                    Console.WriteLine($"aim: {label[0,0]} out: {output[0,0]} loss: {sensitive[0,0]}" );
+                if (i % 200 == 0)
+                {
+                    Log.Information($"loss: {sensitive.GetItem()}");
+                    //Sequential.Save(netWork);
+                }
 
                 netWork.Backup(sensitive);
 
@@ -86,58 +99,33 @@ namespace Ren.Net.Test
 
             Log.Information("ms: " + ((endTime - startTime) * 1000.0 / Stopwatch.Frequency));
 
-            // Gradient Check 
-            // GradientCheck(netWork);
-
-            Console.WriteLine("END");
+            Log.Information("END");
 
             Console.ReadKey();
         }
-
-        //static void GradientCheck(Sequential netWork)
-        //{
-        //    float epsilon = 0.0001F;
-        //    netWork.ADDGradient(epsilon);
-        //    var (testInput, testLabel) = GetTorch();
-        //    var addResult = netWork.Forward(testInput);
-        //    netWork.ReduceGradient(epsilon * 2);
-        //    var reduceResult = netWork.Forward(testInput);
-
-        //    float expected_gradient = (reduceResult.Data[0][0] - addResult.Data[0][0]) / (2 * epsilon);
-
-        //    float checkResult = Math.Abs(addResult.Data[0][0] - reduceResult.Data[0][0]);
-
-        //    if (checkResult >= 0.0001F)
-        //    {
-        //        Console.WriteLine($"checkout error {checkResult}");
-        //    }
-        //    else
-        //    {
-        //        Console.WriteLine($"checkout success {checkResult}");
-        //    }
-        //}
-
-       private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
         {
             Console.Error.WriteLine($"Fatal error: {e.Exception}");
-            //MiniDump.TryDump("error.dmp");
-
-            //BasicExecutor.Execute(MainProcer.Stop);
+            Log.Error(e.ToString());
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
         }
-
-       
-
         /// <summary>
         /// 模拟 函数 y = x + 1
         /// </summary>
         /// <returns></returns>
-        static (Torch input, Torch label) GetTorch()
+        static (Tensor input, Tensor label) GetTorch()
         {
-            int x = new Random().Next(1, 100);
-            Torch input = new Torch(new float[,] { { x } });
+            int a = new Random().Next(1, 100);
+            int b = new Random().Next(1, 100);
 
-            Torch label = new Torch(new float[,] { { x + 1 } });
+            //Tensor input = new Tensor(new float[,] { { a  } });
+            //Tensor label = new Tensor(new float[,] { { a + 1} });
+            Tensor input = new Tensor(12, 12, a);
+            Tensor label = new Tensor(12, 12, a + 1);
+
+            input.Width = label.Width = 1;
+            input.Height = label.Height = 1;
+
             return (input, label);
         }
     }

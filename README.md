@@ -10,3 +10,8 @@ https://github.com/mathnet/mathnet-numerics
 
 # CUDA 加速
 https://github.com/m4rs-mt/ILGPU
+
+# ADAM 
+为例来进行显存控制，将整个过程进行分解，然后利用中间变量消除重复申请显存的问题
+![image](https://user-images.githubusercontent.com/26969703/140619034-0bb65d69-1112-4a65-90ad-cafbc76fd8a2.png)
+

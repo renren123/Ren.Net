@@ -6,14 +6,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Ren.Net.Networks
 {
+    [Serializable]
     public class Linear : NetModule
     {
-        public static Dictionary<string, int> RecordDic = new Dictionary<string, int>();
-        private readonly Random r = new Random(DateTime.UtcNow.Millisecond);
+        public static Tensor SwapA { set; get; }
+        public static Tensor SwapB { set; get; }
+
+
         /// <summary>
         /// 输入层神经元个数
         /// </summary>
@@ -22,236 +26,199 @@ namespace Ren.Net.Networks
         /// 输出层神经元个数
         /// </summary>
         public int OutputNumber { set; get; }
-        // public int BatchSize { set; get; }
         /// <summary>
-        /// 一层神经元 存储的结构
+        /// 权重数组
         /// </summary>
-        // public List<NetNeuron> FullyNeurns { set; get; }
-        /// <summary>
-        /// 权重单独保存在一个地图里面，方向是正向传播的方向，list 每个元素是当前 神经元素的个数，float[] 数组是上一层元素的个数
-        /// </summary>
-        //public List<float[]> WI { set; get; }
-
-        public Torch WI { set; get; }
-        public List<float> WB { set; get; }
+        public Tensor WI { set; get; }
         /// <summary>
         /// list 的数量是前一层的数量
         /// </summary>
-        public Torch X_In { set; get; }
+        public Tensor X_In { set; get; }
+
+        public Linear LinearDevice { set; get; }
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="inputSize"></param>
+        /// <param name="inputSize">输入层 神经元数量</param>
         /// <param name="outputSize">当前层 神经元的数量</param>
         public Linear(int inputNumber, int outputNumber)
         {
             this.InputNumber = inputNumber;
             this.OutputNumber = outputNumber;
-            WI = new Torch(outputNumber, inputNumber);
-            WB = new List<float>(outputNumber);
-
-            int sumInput = outputNumber + inputNumber;
-
-            for (int i = 0; i < outputNumber; i++)
-            {
-                for (int j = 0; j < inputNumber; j++)
-                {
-                    WI[i, j] = W_value_method(sumInput);
-                }
-                WB.Add(1);
-            }
         }
-        public override Torch Forward(Torch @in)
+        public override void Init()
         {
-            int batchSize = @in.Column;          // batch 的大小
-
-            if (batchSize == -1)
-            {
-                throw new Exception("Linear::Forward, batchSize is -1 or neuronNumber is -1");
-            }
-            Optimizer.InputNumber = this.InputNumber;
+            Optimizer.InputNumber = this.InputNumber + 1;
             Optimizer.OutputNumber = this.OutputNumber;
+            Optimizer.Init();
 
-            //Torch x_out = new Torch(OutputNumber, batchSize);   // 神经元的数量是下一层的大小
-
-            X_In = @in.Clone() as Torch;    // 保存输入
-
-            Torch x_out = WI * @in;
-
-            //for (int i = 0; i < OutputNumber; i++)
+            int sumInput = OutputNumber + InputNumber;
+            //WI = new Tensor(OutputNumber, InputNumber + 1, (int i, int j) =>
             //{
-            //    for (int j = 0; j < InputNumber; j++)
+            //    if (j == InputNumber)
             //    {
-            //        //// ******************test********************
-            //        //// 下一层的输入 (i) = (i,j)  * 上一层输出 (j)
-            //        //x_out.Data[i][0] += WI[i][j] * @in.Data[j][0];
-            //        //continue;
-            //        //// ******************test********************
+            //        return 1F;
+            //    }
+            //    else
+            //    {
+            //        return WIOptimizer.GetWI(sumInput);
+            //    }
+            //});
 
-            //        for (int k = 0; k < batchSize; k++)
-            //        {
-            //            x_out.Data[i][k] += WI[i][j] * @in.Data[j][k];
-            //        }
-            //    }
-            //    // 更新偏置项
-            //    for (int k = 0; k < batchSize; k++)
-            //    {
-            //        x_out.Data[i][k] += WB[k];
-            //    }
-            //}
-            for (int i = 0; i < OutputNumber; i++)
+            WI = new Tensor(MaxLinearNumber, MaxLinearNumber, (int i, int j) =>
             {
-                // 更新偏置项
-                for (int k = 0; k < batchSize; k++)
+                if (j == InputNumber)
                 {
-                    x_out[i, k] += WB[k];
+                    return 1F;
                 }
+                else
+                {
+                    return WIOptimizer.GetWI(sumInput);
+                }
+            });
+            WI.Width = OutputNumber;
+            WI.Height = InputNumber + 1;
+
+            //SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            X_In = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+
+            Log.Debug($"Linear inited [{InputNumber}, {OutputNumber}]");
+        }
+        public override Tensor Forward(Tensor @in)
+        {
+            int batchSize = @in.Width;          // batch 的大小
+
+            if (batchSize <= 0)
+            {
+                throw new Exception($"Linear::Forward, batchSize {batchSize}");
             }
-            return x_out;
+            switch (@in.Device)
+            {
+                case Device.DeviceTpye.CPU:
+                    {
+                        X_In = @in.AddOneRowWithValue(batchSize, 1F);
+                        @in = WI * X_In;
+                    }
+                    break;
+                case Device.DeviceTpye.CUDA:
+                    {
+                        Tensor.AddLastOneRowWithValue(@in, 1F, X_In);
+                        Tensor.Multiply(WI, X_In, @in);
+                    }
+                    break;
+                default:
+                    throw new Exception($"Linear::Forward, Device {@in.Device}");
+            }
+
+
+            //X_In = @in.Clone() as Tensor;    // 保存输入，用于反向传播时更新 WI 的大小
+            //@in = @in.AddOneRowWithValue(batchSize, 1F);
+            //Tensor x_out = WI * @in;
+
+
+            // ********************** Test **********************
+            //if (X_In != null)
+            //{
+            //    X_In.Dispose();
+            //}
+            // X_In = @in.AddOneRowWithValue(batchSize, 1F);    // 保存输入，用于反向传播时更新 WI 的大小
+            // Tensor x_out = WI * X_In;
+            // ********************** Test *********************
+
+            // ********************** Test *********************
+            //Tensor.AddLastOneRowWithValue(@in, 1F, X_In);
+            //Tensor.Multiply(WI, X_In, @in);
+            //Tensor.RemoveLastOneRow(X_In);
+            // ********************** Test *********************
+
+
+            // @in.Dispose();
+            return @in;
         }
         /// <summary>
-        /// 
+        /// 反向传播
         /// </summary>
         /// <param name="out">list 是当前层神经元的数量</param>
         /// <returns></returns>
-        public override Torch Backup(Torch @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
+        public override Tensor Backup(Tensor @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
         {
-            int batchSize = @out.Column;
-
-            if (batchSize == -1)
+            // batchSize
+            if (@out.Column <= 0)
             {
-                throw new Exception("Linear::Backup, batchSize is -1 or neuronNumber is -1");
+                throw new Exception($"Linear::Backup, batchSize is {@out.Column}");
             }
-            Torch sensitive_out = new Torch(InputNumber, batchSize);   // list 的个数 表示上一层的神经元个数
-            for (int i = 0; i < OutputNumber; i++)
-            {
-                for (int j = 0; j < InputNumber; j++)
-                {
-                    //// ******************test********************
-                    //// 损失值 上一层神经元 = (i,j) * 下一层神经元 i 
-                    //sensitive_out.Data[j][0] += WI[i][j] * @out.Data[i][0];
-                    //continue;
-                    //// ******************test********************
 
-                    for (int k = 0; k < batchSize; k++)
+            switch (@out.Device)
+            {
+                case Device.DeviceTpye.CPU:
                     {
-                        sensitive_out[j, k] += WI[i, j] * @out[i, k];
+                        using Tensor sensitive_out = WI.Transpose() * @out;
+                        using Tensor dwTemp = @out * X_In.Transpose();
+                        WI -= Optimizer.GetOptimizer(dwTemp, null);
+                        return sensitive_out.RemoveLastOneRow();
                     }
-                }
-            }
-            for (int i = 0; i < OutputNumber; i++)
-            {
-                for (int j = 0; j < InputNumber; j++)
-                {
-                    //// ******************test********************
-                    //float dwTemp = X_In.Data[j][0] * @out.Data[i][0];
-                    //float deltWI = Optimizer.GetOptimizer(dwTemp, i, j);
-                    //WI[i][j] -= deltWI;      // list 的个数 表示当前层的神经元个数
-                    //// WI[i][j] -= dwTemp * 0.001F;       // list 的个数 表示当前层的神经元个数
-                    //continue;
-                    //// ******************test********************
-
-                    float[] dwArray = new float[batchSize];
-                    for (int k = 0; k < batchSize; k++)
+                    break;
+                case Device.DeviceTpye.CUDA:
                     {
-                        dwArray[k] = X_In[j, k] * @out[i, k];
+                        Tensor.Transpose(WI);
+                        Tensor.Copy(@out, Tensor.SwapA);
+                        Tensor.Multiply(WI, Tensor.SwapA, SwapA);    // SwapA = sensitive_out
+                        Tensor.Transpose(WI);
+                        Tensor.Transpose(X_In);
+                        Tensor.Multiply(@out, X_In, Tensor.SwapA);          // dwTemp = Tensor.Temp1
+
+                        Tensor.Copy(SwapA, @out);
+                        Tensor.Copy(Tensor.SwapA, SwapA);
+                        Tensor.RemoveLastOneRow(@out);
+
+                        Optimizer.GetOptimizer(SwapA, SwapB);
+
+                        Tensor.Minus(WI, SwapB, WI);
                     }
-                    float dwAverage = dwArray.Average();
-
-                    WI[i, j] -= Optimizer.GetOptimizer(dwAverage, i, j);
-
-                    // ******************test********************
-                    lock (RecordDic)
-                    {
-                        string key = i + "_" + j;
-                        if(!RecordDic.ContainsKey(key))
-                        {
-                            RecordDic[key] = 1;
-                        }
-                        else
-                        {
-                            RecordDic[key] += 1;
-                        }
-                    }
-                    // ******************test********************
-                }
-            }
-            //PrintWI();
-
-            for (int i = 0; i < @out.Row; i++)
-            {
-                float dw = @out.RowAverage(i);
-
-                WB[i] -= Optimizer.GetOptimizer(dw, i);
+                    break;
+                default:
+                    throw new Exception($"Linear::Backup, Device {@out.Device}");
             }
 
-            //for (int i = 0; i < @out.Row; i++)
-            //{
-            //    float dw = @out.Data[i].Average();
 
-            //    WB[i] -= Optimizer.GetOptimizer(dw, i);
-            //}
+            //Tensor.Transpose(WI);
+            //Tensor.Copy(@out, Tensor.SwapA);
+            //Tensor.Multiply(WI, Tensor.SwapA, SwapA);    // SwapA = sensitive_out
+            //Tensor.Transpose(WI);
+            //Tensor.Transpose(X_In);
+            //Tensor.Multiply(@out, X_In, Tensor.SwapA);          // dwTemp = Tensor.Temp1
 
-            return sensitive_out;
+            //Tensor.Copy(SwapA, @out);
+            //Tensor.Copy(Tensor.SwapA, SwapA);
+            //Tensor.RemoveLastOneRow(@out);
+
+            //Optimizer.GetOptimizer(SwapA, SwapB);
+
+            //Tensor.Minus(WI, SwapB, WI);
+            return @out;
+
+
+            //using Tensor wiT = WI.Transpose();
+
+            //using Tensor sensitive_out = wiT * @out;
+
+            //using Tensor xinT = X_In.Transpose();
+
+            //using Tensor dwTemp = @out * xinT; 
+
+            ////using Tensor delta = Optimizer.GetOptimizer(dwTemp, Swap);
+
+            ////WI.MinusToA(delta);
+
+            //// WI -= Optimizer.GetOptimizer(dwTemp);
+
+            //return sensitive_out.RemoveLastOneRow();
         }
-        /// <summary>
-        /// 初始化权值，np.random.randn(n) * sqrt(2.0/n)，遵循 sumInput 个数的正太分布
-        /// </summary>
-        /// <param name="sumInput">输入个数</param>
-        /// <returns></returns>
-        public virtual float W_value_method(int sumInput)
+        public override string ToString()
         {
-            // return 1F;
-
-            //float x = (float)r.NextDouble();
-            //float number = (Math.Abs(x) / 1) * (2.0F / sumInput);
-
-            float y = (float)r.NextDouble();
-            float x = (float)r.NextDouble();
-            float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));
-            number *= (float)Math.Sqrt(2.0 / sumInput);
-            number = Math.Abs(number);
-            number *= (2.0F / sumInput);
-
-            //float y = (float)r.NextDouble();
-            //float x = (float)r.NextDouble();
-            //float number = (float)(Math.Cos(2 * Math.PI * x) * Math.Sqrt(-2 * Math.Log(1 - y)));
-            //number *= (float)Math.Sqrt(2.0 / sumInput);
-            //number = Math.Abs(number);
-
-            return number;
+            return $"Linear [{InputNumber}, {OutputNumber}]";
         }
-
-        //public override void ADDGradient(float epsilon)
-        //{
-        //    foreach (var item in WI)
-        //    {
-        //        for (int i = 0; i < item.Length; i++)
-        //        {
-        //            item[i] += epsilon;
-        //        }
-        //    }
-        //}
-
-        //public override void ReduceGradient(float epsilon)
-        //{
-        //    foreach (var item in WI)
-        //    {
-        //        for (int i = 0; i < item.Length; i++)
-        //        {
-        //            item[i] -= epsilon;
-        //        }
-        //    }
-        //}
-        //private void PrintWI()
-        //{
-        //    List<string> lines = new List<string>();
-
-        //    for (int i = 0; i < WI.Count; i++)
-        //    {
-        //        lines.Add(string.Join(" ", WI[i]));
-        //    }
-        //    Log.Debug("WI: " + lines.Count + "\t" + string.Join(" | ", lines));
-        //}
     }
 }

@@ -1,42 +1,91 @@
 ﻿using Ren.Net.Objects;
+using Ren.Net.Optimizers;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ren.Net.ActivationFunction
 {
+    [Serializable]
     public class ReLU : NetModule
     {
-        private Torch X_IN;
-        public override Torch Forward(Torch @in)
-        {
-            X_IN = @in.Clone() as Torch;
+        private Tensor X_IN;
 
-            for (int i = 0; i < @in.Row; i++)
-            {
-                for (int j = 0; j < @in.Column; j++)
-                {
-                    if(@in[i, j] < 0)
-                    {
-                        @in[i, j] = 0;
-                    }
-                }
-            }
-            return @in;
-        }
-        public override Torch Backup(Torch @out)
+        public override void Init()
         {
-            for (int i = 0; i < X_IN.Row; i++)
+            X_IN = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+        }
+        public ReLU()
+        {
+            this.WIOptimizer = new ReLUWIOptimizer();
+        }
+        public override Tensor Forward(Tensor @in)
+        {
+            switch (@in.Device)
             {
-                for (int j = 0; j < X_IN.Column; j++)
-                {
-                    if (X_IN[i, j] < 0)
+                case Device.DeviceTpye.CPU:
                     {
-                        @out[i, j] = 0;
+                        X_IN = @in.Clone() as Tensor;
+
+                        return @in.Relu(X_IN);
                     }
-                }
+                    break;
+                case Device.DeviceTpye.CUDA:
+                    {
+                        Tensor.Copy(@in, X_IN);
+                        Tensor.Relu(X_IN, X_IN, @in);
+                        return @in;
+                    }
+                    break;
+                default:
+                    throw new Exception("ReLU::Forward ");
             }
+            Tensor.Copy(@in, X_IN);
+            Tensor.Relu(X_IN, X_IN, @in);
+            return @in;
+
+
+            if (X_IN != null)
+            {
+                X_IN.Dispose();
+            }
+            X_IN = @in.Clone() as Tensor;
+
+            Tensor x_out = @in.Relu(X_IN);
+            @in.Dispose();
+
+            return x_out;
+        }
+        public override Tensor Backup(Tensor @out)
+        {
+            switch (@out.Device)
+            {
+                case Device.DeviceTpye.CPU:
+                    {
+                        return @out.Relu(X_IN);
+                    }
+                    break;
+                case Device.DeviceTpye.CUDA:
+                    {
+                        Tensor.Relu(X_IN, @out, @out);
+                        return @out;
+                    }
+                    break;
+                default:
+                    throw new Exception("ReLU::Forward ");
+            }
+
+            Tensor.Relu(X_IN, @out, @out);
             return @out;
+
+            Tensor x_out = @out.Relu(X_IN);
+            @out.Dispose();
+
+            return x_out;
+        }
+        public override string ToString()
+        {
+            return "ReLU";
         }
     }
 }
