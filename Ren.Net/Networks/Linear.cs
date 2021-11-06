@@ -14,6 +14,10 @@ namespace Ren.Net.Networks
     [Serializable]
     public class Linear : NetModule
     {
+        public static Tensor SwapA { set; get; }
+        public static Tensor SwapB { set; get; }
+
+
         /// <summary>
         /// 输入层神经元个数
         /// </summary>
@@ -30,6 +34,9 @@ namespace Ren.Net.Networks
         /// list 的数量是前一层的数量
         /// </summary>
         public Tensor X_In { set; get; }
+
+        public Linear LinearDevice { set; get; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -47,7 +54,19 @@ namespace Ren.Net.Networks
             Optimizer.Init();
 
             int sumInput = OutputNumber + InputNumber;
-            WI = new Tensor(OutputNumber, InputNumber + 1, (int i, int j) =>
+            //WI = new Tensor(OutputNumber, InputNumber + 1, (int i, int j) =>
+            //{
+            //    if (j == InputNumber)
+            //    {
+            //        return 1F;
+            //    }
+            //    else
+            //    {
+            //        return WIOptimizer.GetWI(sumInput);
+            //    }
+            //});
+
+            WI = new Tensor(MaxLinearNumber, MaxLinearNumber, (int i, int j) =>
             {
                 if (j == InputNumber)
                 {
@@ -58,33 +77,65 @@ namespace Ren.Net.Networks
                     return WIOptimizer.GetWI(sumInput);
                 }
             });
+            WI.Width = OutputNumber;
+            WI.Height = InputNumber + 1;
+
+            //SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            X_In = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
 
             Log.Debug($"Linear inited [{InputNumber}, {OutputNumber}]");
         }
         public override Tensor Forward(Tensor @in)
         {
-            int batchSize = @in.Column;          // batch 的大小
+            int batchSize = @in.Width;          // batch 的大小
 
             if (batchSize <= 0)
             {
                 throw new Exception($"Linear::Forward, batchSize {batchSize}");
             }
+            switch (@in.Device)
+            {
+                case Device.DeviceTpye.CPU:
+                    {
+                        X_In = @in.AddOneRowWithValue(batchSize, 1F);
+                        @in = WI * X_In;
+                    }
+                    break;
+                case Device.DeviceTpye.CUDA:
+                    {
+                        Tensor.AddLastOneRowWithValue(@in, 1F, X_In);
+                        Tensor.Multiply(WI, X_In, @in);
+                    }
+                    break;
+                default:
+                    throw new Exception($"Linear::Forward, Device {@in.Device}");
+            }
+
+
             //X_In = @in.Clone() as Tensor;    // 保存输入，用于反向传播时更新 WI 的大小
             //@in = @in.AddOneRowWithValue(batchSize, 1F);
             //Tensor x_out = WI * @in;
 
 
             // ********************** Test **********************
-            if (X_In != null)
-            {
-                X_In.Dispose();
-            }
-            X_In = @in.AddOneRowWithValue(batchSize, 1F);    // 保存输入，用于反向传播时更新 WI 的大小
-            Tensor x_out = WI * X_In;
+            //if (X_In != null)
+            //{
+            //    X_In.Dispose();
+            //}
+            // X_In = @in.AddOneRowWithValue(batchSize, 1F);    // 保存输入，用于反向传播时更新 WI 的大小
+            // Tensor x_out = WI * X_In;
             // ********************** Test *********************
-            
-            @in.Dispose();
-            return x_out;
+
+            // ********************** Test *********************
+            //Tensor.AddLastOneRowWithValue(@in, 1F, X_In);
+            //Tensor.Multiply(WI, X_In, @in);
+            //Tensor.RemoveLastOneRow(X_In);
+            // ********************** Test *********************
+
+
+            // @in.Dispose();
+            return @in;
         }
         /// <summary>
         /// 反向传播
@@ -99,28 +150,71 @@ namespace Ren.Net.Networks
                 throw new Exception($"Linear::Backup, batchSize is {@out.Column}");
             }
 
-            using Tensor wiT = WI.Transpose();
+            switch (@out.Device)
+            {
+                case Device.DeviceTpye.CPU:
+                    {
+                        using Tensor sensitive_out = WI.Transpose() * @out;
+                        using Tensor dwTemp = @out * X_In.Transpose();
+                        WI -= Optimizer.GetOptimizer(dwTemp, null);
+                        return sensitive_out.RemoveLastOneRow();
+                    }
+                    break;
+                case Device.DeviceTpye.CUDA:
+                    {
+                        Tensor.Transpose(WI);
+                        Tensor.Copy(@out, Tensor.SwapA);
+                        Tensor.Multiply(WI, Tensor.SwapA, SwapA);    // SwapA = sensitive_out
+                        Tensor.Transpose(WI);
+                        Tensor.Transpose(X_In);
+                        Tensor.Multiply(@out, X_In, Tensor.SwapA);          // dwTemp = Tensor.Temp1
 
-            using Tensor sensitive_out = wiT * @out;
+                        Tensor.Copy(SwapA, @out);
+                        Tensor.Copy(Tensor.SwapA, SwapA);
+                        Tensor.RemoveLastOneRow(@out);
 
-            //X_In = X_In.AddOneRowWithValue(batchSize, 1F);
+                        Optimizer.GetOptimizer(SwapA, SwapB);
 
-            // ********************** Test **********************
-            // ********************** Test **********************
+                        Tensor.Minus(WI, SwapB, WI);
+                    }
+                    break;
+                default:
+                    throw new Exception($"Linear::Backup, Device {@out.Device}");
+            }
 
-            //var xinT = X_In.Transpose();
 
-            using Tensor xinT = X_In.Transpose();
+            //Tensor.Transpose(WI);
+            //Tensor.Copy(@out, Tensor.SwapA);
+            //Tensor.Multiply(WI, Tensor.SwapA, SwapA);    // SwapA = sensitive_out
+            //Tensor.Transpose(WI);
+            //Tensor.Transpose(X_In);
+            //Tensor.Multiply(@out, X_In, Tensor.SwapA);          // dwTemp = Tensor.Temp1
 
-            using Tensor dwTemp = @out * xinT;
+            //Tensor.Copy(SwapA, @out);
+            //Tensor.Copy(Tensor.SwapA, SwapA);
+            //Tensor.RemoveLastOneRow(@out);
 
-            using Tensor delta = Optimizer.GetOptimizer(dwTemp);
+            //Optimizer.GetOptimizer(SwapA, SwapB);
 
-            WI.MinusToA(delta);
+            //Tensor.Minus(WI, SwapB, WI);
+            return @out;
 
-            // WI -= Optimizer.GetOptimizer(dwTemp);
 
-            return sensitive_out.RemoveLastOneRow();
+            //using Tensor wiT = WI.Transpose();
+
+            //using Tensor sensitive_out = wiT * @out;
+
+            //using Tensor xinT = X_In.Transpose();
+
+            //using Tensor dwTemp = @out * xinT; 
+
+            ////using Tensor delta = Optimizer.GetOptimizer(dwTemp, Swap);
+
+            ////WI.MinusToA(delta);
+
+            //// WI -= Optimizer.GetOptimizer(dwTemp);
+
+            //return sensitive_out.RemoveLastOneRow();
         }
         public override string ToString()
         {

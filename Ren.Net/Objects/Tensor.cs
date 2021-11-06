@@ -3,6 +3,7 @@ using Ren.Device;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Ren.Net.Objects
@@ -10,6 +11,9 @@ namespace Ren.Net.Objects
     [Serializable]
     public class Tensor : ICloneable, IDisposable
     {
+        public static Tensor SwapA { set; get; }
+        public static Tensor SwapB { set; get; }
+        public static Tensor SwapC { set; get; }
         public DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
@@ -18,6 +22,22 @@ namespace Ren.Net.Objects
         private DataInterface deviceData { set; get; }
         public int Row => deviceData.Row;
         public int Column => deviceData.Column;
+        public int Width 
+        { 
+            set 
+            {
+                deviceData.Width = value;
+            } 
+            get => deviceData.Width; 
+        }
+        public int Height 
+        {
+            set
+            {
+                deviceData.Height = value;
+            }
+            get => deviceData.Height;
+        }
         private Tensor(DataInterface deviceData)
         {
             this.deviceData = deviceData;
@@ -35,25 +55,8 @@ namespace Ren.Net.Objects
                 case DeviceTpye.Default:
                     throw new Exception();
             }
-        }
-        /// <summary>
-        /// 初始化 一个 torch
-        /// </summary>
-        /// <param name="neuronNumber">神经元的数量</param>
-        /// <param name="batch">一个 batch 的大小</param>
-        public Tensor(int neuronNumber, int batch)
-        {
-            switch (Device)
-            {
-                case DeviceTpye.CPU:
-                    deviceData = new MatrixNet(neuronNumber, batch, 0F);
-                    break;
-                case DeviceTpye.CUDA:
-                    deviceData = new ILGPUNet(neuronNumber, batch);
-                    break;
-                case DeviceTpye.Default:
-                    throw new Exception();
-            }
+            deviceData.Width = data.GetLength(0);
+            deviceData.Height = data.GetLength(1);
         }
         public Tensor(int neuronNumber, int batch, float value)
         {
@@ -68,6 +71,8 @@ namespace Ren.Net.Objects
                 case DeviceTpye.Default:
                     throw new Exception();
             }
+            deviceData.Width = neuronNumber;
+            deviceData.Height = batch;
         }
         public Tensor(int neuronNumber, int batch, Func<int, int, float> init)
         {
@@ -82,6 +87,8 @@ namespace Ren.Net.Objects
                 case DeviceTpye.Default:
                     throw new Exception();
             }
+            deviceData.Width = neuronNumber;
+            deviceData.Height = batch;
         }
         public object Clone()
         {
@@ -127,22 +134,6 @@ namespace Ren.Net.Objects
             return new Tensor(deviceData.RemoveLastOneRow());
         }
         /// <summary>
-        /// 增加一列，加到最后
-        /// </summary>
-        /// <param name="column"></param>
-        //public void AddColumn(float[] column)
-        //{
-        //    deviceData.AddColumn(column);
-        //}
-        //public void AddRow(float[] column)
-        //{
-        //    deviceData.AddRow(column);
-        //}
-        //public void InsertColumn(int columnIndex, float[] column)
-        //{
-        //    deviceData.InsertColumn(columnIndex, column);
-        //}
-        /// <summary>
         /// 矩阵转置
         /// </summary>
         /// <returns></returns>
@@ -172,6 +163,10 @@ namespace Ren.Net.Objects
         {
             this.deviceData.AddToA(right.deviceData);
         }
+        public Tensor Sqrt()
+        {
+            return new Tensor(this.deviceData.Sqrt());
+        }
 
         /// <summary>
         /// 矩阵点乘，对应位相乘
@@ -179,21 +174,12 @@ namespace Ren.Net.Objects
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static Tensor DotMultiply(Tensor a, Tensor b)
+        public static Tensor DotMultiplySelf(Tensor a, Tensor b)
         {
             var result = a.deviceData.DotMultiply(b.deviceData);
             return new Tensor(result);
         }
-        /// <summary>
-        /// 开方
-        /// </summary>
-        /// <param name="a"></param>
-        /// <returns></returns>
-        public static Tensor Sqrt(Tensor a)
-        {
-            var result = a.deviceData.Sqrt();
-            return new Tensor(result);
-        }
+        
         /// <summary>
         /// 点除，对应位相除
         /// </summary>
@@ -205,6 +191,9 @@ namespace Ren.Net.Objects
             var result = dividend.deviceData.DotDivide(divisor.deviceData);
             return new Tensor(result);
         }
+        
+
+
         public override string ToString()
         {
             return this.deviceData.ToString();
@@ -238,6 +227,11 @@ namespace Ren.Net.Objects
             return deviceData.GetHashCode();
         }
 
+        public float[,] ToArray()
+        {
+            return (this.deviceData as ILGPUNet).ToArray();
+        }
+
         public void Dispose()
         {
             this.deviceData.Dispose();
@@ -260,6 +254,117 @@ namespace Ren.Net.Objects
                 this.deviceData[i, j] = value;
             }
         }
+
+        #region static method
+        /// <summary>
+        /// result = left * right
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="result"></param>
+        public static void Multiply(Tensor left, Tensor right, Tensor result)
+        {
+            result.deviceData.GetType().GetMethod("Multiply", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
+        }
+        /// <summary>
+        /// result = left + right
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="result"></param>
+        public static void Add(Tensor left, Tensor right, Tensor result)
+        {
+            result.deviceData.GetType().GetMethod("Add", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
+        }
+        /// <summary>
+        /// result = left + right
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="result"></param>
+        public static void Add(Tensor left, float right, Tensor result)
+        {
+            result.deviceData.GetType().GetMethod("AddNumber", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right, result.deviceData });
+        }
+        /// <summary>
+        /// result = left * right
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="result"></param>
+        public static void Multiply(float left, Tensor right, Tensor result)
+        {
+            result.deviceData.GetType().GetMethod("MultiplyNumber", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left, right.deviceData, result.deviceData });
+        }
+        /// <summary>
+        /// result = left - right
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="result"></param>
+        public static void Minus(Tensor left, Tensor right, Tensor result)
+        {
+            result.deviceData.GetType().GetMethod("Minus", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
+        }
+        /// <summary>
+        /// 矩阵点乘
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="result"></param>
+        public static void DotMultiply(Tensor left, Tensor right, Tensor result)
+        {
+            left.deviceData.GetType().GetMethod("DotMultiply", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
+        }
+        public static void DotDivide(Tensor left, float right, Tensor result)
+        {
+            left.deviceData.GetType().GetMethod("DotDivideNumber", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right, result.deviceData });
+        }
+        public static void DotDivide(Tensor left, Tensor right, Tensor result)
+        {
+            left.deviceData.GetType().GetMethod("DotDivide", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
+        }
+        /// <summary>
+        /// 开方
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns></returns>
+        public static void Sqrt(Tensor @in)
+        {
+            @in.deviceData.GetType().GetMethod("Sqrt", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { @in.deviceData });
+        }
+        /// <summary>
+        /// 矩阵增加一行 Transpose
+        /// </summary>
+        /// <param name="in">输入矩阵</param>
+        /// <param name="value">增加矩阵的值</param>
+        /// <param name="result">输出矩阵</param>
+        public static void AddLastOneRowWithValue(Tensor @in, float value, Tensor result)
+        {
+            result.deviceData.GetType().GetMethod("AddOneRowWithValue", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { @in.deviceData, result.deviceData, value, @in.Width });
+        }
+        public static void Transpose(Tensor @in)
+        {
+            @in.deviceData.GetType().GetMethod("TransposeSelf", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { @in.deviceData });
+        }
+        public static void Copy(Tensor @in, Tensor result)
+        {
+            @in.deviceData.GetType().GetMethod("Copy", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { @in.deviceData, result.deviceData });
+        }
+        public static void RemoveLastOneRow(Tensor @in)
+        {
+            @in.deviceData.GetType().GetMethod("RemoveLastOneRow", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { @in.deviceData});
+        }
+        public static void Relu(Tensor left, Tensor right, Tensor result)
+        {
+            left.deviceData.GetType().GetMethod("ReluGPU", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
+        }
+
+
+        #endregion
+
+
+
         public static Tensor operator *(Tensor lhs, Tensor rhs)
         {
             return new Tensor(lhs.deviceData * rhs.deviceData);

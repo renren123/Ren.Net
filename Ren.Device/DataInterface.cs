@@ -9,6 +9,8 @@ namespace Ren.Device
         public DeviceTpye Device { get; }
         public int Row { get; }
         public int Column { get; }
+        public int Width { set; get; }
+        public int Height { set; get; }
 
         public float RowAverage(int index);
         public float ColumnAverage(int index);
@@ -38,6 +40,7 @@ namespace Ren.Device
         /// <param name="rhs"></param>
         /// <returns></returns>
         public DataInterface Multiply(DataInterface rhs);
+        // public void Multiply(DataInterface lhs, DataInterface rhs, DataInterface result);
         public DataInterface Multiply(float rhs);
         public DataInterface Divide(float rhs);
         public DataInterface Add(DataInterface rhs);

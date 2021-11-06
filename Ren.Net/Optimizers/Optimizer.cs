@@ -11,6 +11,7 @@ namespace Ren.Net.Optimizers
         public float LearningRate { set; get; }
         public int InputNumber { set; get; } = -1;
         public int OutputNumber { set; get; } = -1;
+        public int MaxLinearNumber { set; get; } = 0;
 
         public Optimizer(float learningRate)
         {
@@ -25,7 +26,7 @@ namespace Ren.Net.Optimizers
         //    throw new NotImplementedException();
         //}
 
-        public virtual Tensor GetOptimizer(Tensor dw)
+        public virtual Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
             throw new NotImplementedException();
         }

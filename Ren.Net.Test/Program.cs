@@ -50,18 +50,19 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10000),
+                new Linear(1, 10),
                 new ReLU(),
                 //// layer2
-                new Linear(10000, 10000),
+                new Linear(10, 10),
                 new ReLU(),
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3
-                new Linear(10000, 1),
+                new Linear(10, 1),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.001F);
+            netWork.Device = Device.DeviceTpye.CUDA;
 
 
             // Sequential netWork = Sequential.Load();
@@ -117,8 +118,14 @@ namespace Ren.Net.Test
             int a = new Random().Next(1, 100);
             int b = new Random().Next(1, 100);
 
-            Tensor input = new Tensor(new float[,] { { a  } });
-            Tensor label = new Tensor(new float[,] { { a + 1} });
+            //Tensor input = new Tensor(new float[,] { { a  } });
+            //Tensor label = new Tensor(new float[,] { { a + 1} });
+            Tensor input = new Tensor(12, 12, a);
+            Tensor label = new Tensor(12, 12, a + 1);
+
+            input.Width = label.Width = 1;
+            input.Height = label.Height = 1;
+
             return (input, label);
         }
     }

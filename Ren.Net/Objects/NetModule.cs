@@ -8,6 +8,7 @@ namespace Ren.Net.Objects
     [Serializable]
     public class NetModule
     {
+        public int MaxLinearNumber { set; get; }
         /// <summary>
         /// 优化器，用于优化 WI 更新
         /// </summary>

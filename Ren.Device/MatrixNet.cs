@@ -11,6 +11,9 @@ namespace Ren.Device
     {
         public int Row => this.Data.RowCount;
         public int Column => this.Data.ColumnCount;
+
+        public int Width { set; get; }
+        public int Height { set; get; }
         public DeviceTpye Device { get; } = DeviceTpye.CUDA;
 
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
@@ -231,5 +234,173 @@ namespace Ren.Device
         }
 
         public float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }
+
+
+        #region static method
+        public static void Multiply(DataInterface lhs, DataInterface rhs, DataInterface result)
+        {
+            MatrixNet left = lhs as MatrixNet;
+            MatrixNet right = rhs as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+            if (left.Height != right.Width)
+            {
+                throw new Exception($"MatrixNet::Multiply [{left.Width}, {left.Height}] != [{right.Width}, {right.Height}]");
+            }
+            ret.Data = left.Data * right.Data;
+        }
+        public static void MultiplyNumber(float lhs, DataInterface rhs, DataInterface result)
+        {
+            MatrixNet right = rhs as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+
+            ret.Data = lhs * right.Data;
+        }
+        public static void Minus(DataInterface lhs, DataInterface rhs, DataInterface result)
+        {
+            MatrixNet left = lhs as MatrixNet;
+            MatrixNet right = rhs as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+
+            if (left.Width != right.Width || left.Height != right.Height)
+            {
+                throw new Exception($"MatrixNet::Minus [{left.Width}, {left.Height}] != [{right.Width}, {right.Height}]");
+            }
+
+            result = lhs.Minus(lhs);
+        }
+        public static void Add(DataInterface lhs, DataInterface rhs, DataInterface @out)
+        {
+            var left = lhs as MatrixNet;
+            var right = rhs as MatrixNet;
+            var result = @out as MatrixNet;
+            if (left.Width != right.Width || left.Height != right.Height)
+            {
+                throw new Exception($"MatrixNet::Add [{left.Width}, {left.Height}] != [{right.Width}, {right.Height}]");
+            }
+
+            @out = lhs + rhs;
+        }
+        public static void AddNumber(DataInterface lhs, float rhs, DataInterface @out)
+        {
+            var left = lhs as MatrixNet;
+            var result = @out as MatrixNet;
+            result.Width = left.Width;
+            result.Height = left.Height;
+
+            @out = lhs + rhs;
+        }
+        public static void DotMultiply(DataInterface lhs, DataInterface rhs, DataInterface result)
+        {
+            MatrixNet left = lhs as MatrixNet;
+            MatrixNet right = rhs as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+
+            if (left.Width != right.Width || left.Height != right.Height)
+            {
+                throw new Exception($"MatrixNet::DotMultiply [{left.Width}, {left.Height}] != [{right.Width}, {right.Height}]");
+            }
+            ret.Width = left.Width;
+            ret.Height = left.Height;
+
+            result = lhs.DotMultiply(rhs);
+        }
+        public static void DotDivide(DataInterface lhs, DataInterface rhs, DataInterface result)
+        {
+            MatrixNet left = lhs as MatrixNet;
+            MatrixNet right = rhs as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+
+            if (left.Width != right.Width || left.Height != right.Height)
+            {
+                throw new Exception($"MatrixNet::DotDivide [{left.Width}, {left.Height}] != [{right.Width}, {right.Height}]");
+            }
+            ret.Width = left.Width;
+            ret.Height = left.Height;
+
+            result = lhs.DotDivide(rhs);
+        }
+        public static void DotDivideNumber(DataInterface lhs, float rhs, DataInterface result)
+        {
+            MatrixNet left = lhs as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+
+            ret.Width = left.Width;
+            ret.Height = left.Height;
+
+            result = lhs / rhs;
+        }
+        public static void Sqrt(DataInterface @in)
+        {
+            @in = @in.Sqrt();
+        }
+        public static void AddOneRowWithValue(DataInterface @in, DataInterface result, float value, int row)
+        {
+            MatrixNet left = @in as MatrixNet;
+            MatrixNet right = result as MatrixNet;
+            right.Width = left.Width + 1;
+            right.Height = left.Height;
+
+            Vector<float> vector = VBuild.Dense(right.Height, value);
+            right = new MatrixNet(left.Data.InsertRow(right.Height, vector));
+        }
+        public static void TransposeSelf(DataInterface @in)
+        {
+            MatrixNet left = @in as MatrixNet;
+            int temp = left.Width;
+            left.Width = left.Height;
+            left.Height = temp;
+
+            @in = @in.Transpose();
+        }
+        public static void Copy(DataInterface @in, DataInterface result)
+        {
+            MatrixNet left = @in as MatrixNet;
+            MatrixNet right = result as MatrixNet;
+            right.Width = left.Width;
+            right.Height = left.Height;
+
+            result = @in.Clone() as DataInterface;
+        }
+        public static void RemoveLastOneRow(DataInterface @in)
+        {
+            @in = @in.RemoveLastOneRow();
+            @in.Width -= 1;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="old">以前的结果</param>
+        /// <param name="new">新的结果</param>
+        /// <param name="result">赋值</param>
+        public static void ReluGPU(DataInterface old, DataInterface @new, DataInterface result)
+        {
+            MatrixNet oldData = old as MatrixNet;
+            MatrixNet right = @new as MatrixNet;
+            MatrixNet ret = result as MatrixNet;
+
+            if (oldData.Width != right.Width || oldData.Height != right.Height)
+            {
+                throw new Exception($"MatrixNet::ReluGPU [{oldData.Width}, {oldData.Height}] != [{right.Width}, {right.Height}]");
+            }
+            ret.Width = oldData.Width;
+            ret.Height = oldData.Height;
+
+            for (int i = 0; i < oldData.Row; i++)
+            {
+                for (int j = 0; j < oldData.Column; j++)
+                {
+                    if (oldData[i, j] < 0F)
+                    {
+                        ret[i, j] = 0F;
+                    }
+                    else
+                    {
+                        ret[i, j] = right[i, j];
+                    }
+                }
+            }
+        }
+        #endregion
+
     }
 }

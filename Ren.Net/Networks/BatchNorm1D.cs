@@ -64,7 +64,7 @@ namespace Ren.Net.Networks
             X_IN = @in.Clone() as Tensor;
             if (IsTrain)
             {
-                X_Hat = new Tensor(@in.Row, @in.Column);
+                X_Hat = new Tensor(@in.Row, @in.Column, 0F);
                 UB = new float[InputNumber];
                 SIGMAB = new float[InputNumber];
                 float[] sigmabTemp = new float[InputNumber];
@@ -109,8 +109,8 @@ namespace Ren.Net.Networks
         {
             int batchSize = @out.Column;
             // 处理 一个 batch
-            Tensor dx_hat = new Tensor(@out.Row, @out.Column);
-            Tensor dx = new Tensor(@out.Row, @out.Column);
+            Tensor dx_hat = new Tensor(@out.Row, @out.Column, 0F);
+            Tensor dx = new Tensor(@out.Row, @out.Column, 0F);
             float[] dsigmab = new float[InputNumber];
             float[] dub = new float[InputNumber];
             // 第一行 是 gamma  第二行 Bata
@@ -180,8 +180,10 @@ namespace Ren.Net.Networks
                     dgammaBata[i, 1] += @out[i, j];
                 }
             }
+            Tensor dwTemp = null;
+            Optimizer.GetOptimizer(dgammaBata, dwTemp);
 
-            GammaBata -= Optimizer.GetOptimizer(dgammaBata);
+            GammaBata -= dwTemp; 
             return dx;
         }
         //得到输出

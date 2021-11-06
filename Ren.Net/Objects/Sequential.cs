@@ -1,4 +1,5 @@
-﻿using Ren.Net.Optimizers;
+﻿using Ren.Device;
+using Ren.Net.Optimizers;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,8 @@ namespace Ren.Net.Objects
         private bool IsInit { set; get; } = false;
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
-        
+        public DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
+
         public Sequential(List<NetModule> nets)
         {
             Nets = new List<NetModule>(nets);
@@ -31,21 +33,71 @@ namespace Ren.Net.Objects
                 return;
             }
             Log.Debug(" ********************* net initing *********************");
-            for (int i = 0; i < Nets.Count; i++)
+
+            switch (Device)
             {
-                var net = Nets[i];
-                net.Optimizer = this.Optimizer.Clone() as Optimizer;
-                // net 的GetWI 找下一个 GetWI 赋值的激活函数
-                if (net.WIOptimizer == null)
-                {
-                    net.WIOptimizer = GetNextWeightsDelegate(i);
-                    if(net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
+                case DeviceTpye.CPU:
                     {
-                        net.WIOptimizer = GetNextWeightsDelegate(0);
+
+                        for (int i = 0; i < Nets.Count; i++)
+                        {
+                            var net = Nets[i];
+                            net.Optimizer = this.Optimizer.Clone() as Optimizer;
+                            // net 的GetWI 找下一个 GetWI 赋值的激活函数
+                            if (net.WIOptimizer == null)
+                            {
+                                net.WIOptimizer = GetNextWeightsDelegate(i);
+                                if (net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
+                                {
+                                    net.WIOptimizer = GetNextWeightsDelegate(0);
+                                }
+                            }
+                            net.Init();
+                        }
                     }
-                }
-                net.Init();
+                    break;
+                case DeviceTpye.CUDA:
+                    {
+                        int maxLinearNumber = 0;
+                        for (int i = 0; i < Nets.Count; i++)
+                        {
+                            if (Nets[i] is Networks.Linear net)
+                            {
+                                maxLinearNumber = Math.Max(maxLinearNumber, Math.Max(net.OutputNumber, net.InputNumber));
+                            }
+                        }
+                        maxLinearNumber += 2;
+
+                        for (int i = 0; i < Nets.Count; i++)
+                        {
+                            var net = Nets[i];
+                            net.Optimizer = this.Optimizer.Clone() as Optimizer;
+                            net.Optimizer.MaxLinearNumber = maxLinearNumber;
+                            // net 的GetWI 找下一个 GetWI 赋值的激活函数
+                            if (net.WIOptimizer == null)
+                            {
+                                net.WIOptimizer = GetNextWeightsDelegate(i);
+                                if (net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
+                                {
+                                    net.WIOptimizer = GetNextWeightsDelegate(0);
+                                }
+                            }
+                            net.MaxLinearNumber = maxLinearNumber;
+                            net.Init();
+                        }
+
+                        Tensor.SwapA = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+                        Tensor.SwapB = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+                        Tensor.SwapC = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+
+                        Networks.Linear.SwapA = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+                        Networks.Linear.SwapB = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+                    }
+                    break;
+                default:
+                    throw new Exception("Sequential::Init");
             }
+
             Log.Debug("\r\n\r\nnet: \r\n" + this.ToString());
             IsInit = true;
             Log.Debug(" ********************* net inited *********************");
