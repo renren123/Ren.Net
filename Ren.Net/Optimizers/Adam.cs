@@ -1,4 +1,6 @@
-﻿using Ren.Net.Objects;
+﻿using Ren.Device;
+using Ren.Net.Objects;
+using Ren.Net.Util;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -17,14 +19,25 @@ namespace Ren.Net.Optimizers
         public static readonly float B1 = 0.9F;
         public static readonly float B2 = 0.999F;
 
-        private float B1_Pow { set; get; } = B1;
-        private float B2_Pow { set; get; } = B2;
+        public float B1_Pow { set; get; } = B1;
+        public float B2_Pow { set; get; } = B2;
 
+        public virtual DeviceTpye Device { get; set; }
         public Tensor VTorch { set; get; }
         public Tensor STorch { set; get; }
+
+        private Adam AdamDevice { set; get; }
+
         public Adam(float learningRate) : base(learningRate) { }
         public override void Init()
         {
+            AdamDevice = InstenceHelper<Adam>.GetInstence(typeof(Adam), new object[] { LearningRate }).Find(p => p.Device == Device);
+            AdamDevice.InputNumber = this.InputNumber;
+            AdamDevice.OutputNumber = this.OutputNumber;
+            AdamDevice.LearningRate = this.LearningRate;
+            AdamDevice.MaxLinearNumber = this.MaxLinearNumber;
+            AdamDevice.Init();
+            return;
 
 
             VTorch = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
@@ -35,9 +48,12 @@ namespace Ren.Net.Optimizers
         }
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
+            return AdamDevice.GetOptimizer(dw, @out);
+
+
             switch (dw.Device)
             {
-                case Device.DeviceTpye.CPU:
+                case DeviceTpye.CPU:
                     {
                         VTorch = B1 * VTorch + (1 - B1) * dw;
                         STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiplySelf(dw, dw);
@@ -72,7 +88,7 @@ namespace Ren.Net.Optimizers
                         //return Tensor.DotDivide(dividend, divisor);
                     }
                     break;
-                case Device.DeviceTpye.CUDA:
+                case DeviceTpye.CUDA:
                     {
                         Tensor.DotMultiply(dw, dw, Tensor.SwapA);
                         Tensor.Multiply((1 - B2), Tensor.SwapA, Tensor.SwapB);
@@ -149,8 +165,9 @@ namespace Ren.Net.Optimizers
 
         public override void Step()
         {
-            B1_Pow *= B1;
-            B2_Pow *= B2;
+            //B1_Pow *= B1;
+            //B2_Pow *= B2;
+            AdamDevice?.Step();
         }
         public override object Clone()
         {
@@ -158,6 +175,8 @@ namespace Ren.Net.Optimizers
             {
                 OutputNumber = this.OutputNumber,
                 InputNumber = this.InputNumber,
+                Device = this.Device,
+                AdamDevice = this.AdamDevice
             };
             if(VTorch != null)
             {

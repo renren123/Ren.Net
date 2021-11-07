@@ -50,18 +50,22 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10),
+                new Linear(1, 5000),
                 new ReLU(),
                 //// layer2
-                new Linear(10, 10),
+                new Linear(5000, 5000),
                 new ReLU(),
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3
-                new Linear(10, 1),
+                new Linear(5000, 1),
             });
 
-            netWork.Optimizer = new Adam(learningRate: 0.001F);
+            netWork.Optimizer = new Adam(learningRate: 0.001F) 
+            {
+                Device = Device.DeviceTpye.CUDA
+            };
+            
             netWork.Device = Device.DeviceTpye.CUDA;
 
 
@@ -85,7 +89,7 @@ namespace Ren.Net.Test
                 Tensor output = netWork.Forward(input);
                 var sensitive = loss.CaculateLoss(label, output);
 
-                if (i % 200 == 0)
+                if (i % 2 == 0)
                 {
                     Log.Information($"loss: {sensitive.GetItem()}");
                     //Sequential.Save(netWork);
@@ -115,18 +119,32 @@ namespace Ren.Net.Test
         /// <returns></returns>
         static (Tensor input, Tensor label) GetTorch()
         {
-            int a = new Random().Next(1, 100);
-            int b = new Random().Next(1, 100);
+            // ########################### CPU ###########################
+            {
+                //int a = new Random().Next(1, 100);
 
-            //Tensor input = new Tensor(new float[,] { { a  } });
-            //Tensor label = new Tensor(new float[,] { { a + 1} });
-            Tensor input = new Tensor(12, 12, a);
-            Tensor label = new Tensor(12, 12, a + 1);
+                //Tensor input = new Tensor(new float[,] { { a } });
+                //Tensor label = new Tensor(new float[,] { { a + 1 } });
+                //return (input, label);
+            }
+            // ########################### CPU ###########################
 
-            input.Width = label.Width = 1;
-            input.Height = label.Height = 1;
+            // ########################### CUDA ###########################
+            {
+                int a = new Random().Next(1, 100);
+                int b = new Random().Next(1, 100);
 
-            return (input, label);
+                //Tensor input = new Tensor(new float[,] { { a  } });
+                //Tensor label = new Tensor(new float[,] { { a + 1} });
+                Tensor input = new Tensor(5002, 5002, a);
+                Tensor label = new Tensor(5002, 5002, a + 1);
+
+                input.Width = label.Width = 1;
+                input.Height = label.Height = 1;
+
+                return (input, label);
+            }
+            // ########################### CUDA ###########################
         }
     }
 }

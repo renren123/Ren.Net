@@ -52,6 +52,16 @@ namespace Ren.Net.Objects
                                     net.WIOptimizer = GetNextWeightsDelegate(0);
                                 }
                             }
+
+                            if (net is Networks.Linear linearNet)
+                            {
+                                linearNet.Device = Device;
+                            }
+                            if (net is ActivationFunction.ReLU reLu)
+                            {
+                                reLu.Device = Device;
+                            }
+
                             net.Init();
                         }
                     }
@@ -81,6 +91,14 @@ namespace Ren.Net.Objects
                                 {
                                     net.WIOptimizer = GetNextWeightsDelegate(0);
                                 }
+                            }
+                            if (net is Networks.Linear linearNet)
+                            {
+                                linearNet.Device = Device;
+                            }
+                            if (net is ActivationFunction.ReLU reLu)
+                            {
+                                reLu.Device = Device;
                             }
                             net.MaxLinearNumber = maxLinearNumber;
                             net.Init();

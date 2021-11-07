@@ -1,5 +1,7 @@
-﻿using Ren.Net.Objects;
+﻿using Ren.Device;
+using Ren.Net.Objects;
 using Ren.Net.Optimizers;
+using Ren.Net.Util;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
@@ -14,6 +16,7 @@ namespace Ren.Net.Networks
     [Serializable]
     public class Linear : NetModule
     {
+        public virtual DeviceTpye Device { get; set; }
         public static Tensor SwapA { set; get; }
         public static Tensor SwapB { set; get; }
 
@@ -49,6 +52,30 @@ namespace Ren.Net.Networks
         }
         public override void Init()
         {
+            this.LinearDevice = InstenceHelper<Linear>.GetInstence(
+                typeof(Linear), 
+                new object[] { this.InputNumber, this.OutputNumber }).
+                Find(p => p.Device == this.Device);
+            //var type = typeof(Linear).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(Linear)));
+            //List<Linear> linears = new List<Linear>();
+            //foreach (var item in type)
+            //{
+            //    linears.Add(Activator.CreateInstance(item, new object[] { this.InputNumber, this.OutputNumber }) as Linear);
+            //}
+            //this.LinearDevice = linears.Find(p => p.Device == this.Device);
+            Optimizer.InputNumber = this.InputNumber + 1;
+            Optimizer.OutputNumber = this.OutputNumber;
+            Optimizer.Init();
+            this.LinearDevice.Optimizer = Optimizer;
+            this.LinearDevice.WIOptimizer = WIOptimizer;
+            this.LinearDevice.MaxLinearNumber = this.MaxLinearNumber;
+
+
+            this.LinearDevice.Init();
+
+            return;
+
+
             Optimizer.InputNumber = this.InputNumber + 1;
             Optimizer.OutputNumber = this.OutputNumber;
             Optimizer.Init();
@@ -88,21 +115,25 @@ namespace Ren.Net.Networks
         }
         public override Tensor Forward(Tensor @in)
         {
-            int batchSize = @in.Width;          // batch 的大小
+            int batchSize = @in.Height == 0 ? @in.Column : @in.Height;          // batch 的大小
 
             if (batchSize <= 0)
             {
                 throw new Exception($"Linear::Forward, batchSize {batchSize}");
             }
+            return this.LinearDevice.Forward(@in);
+
+
+
             switch (@in.Device)
             {
-                case Device.DeviceTpye.CPU:
+                case DeviceTpye.CPU:
                     {
                         X_In = @in.AddOneRowWithValue(batchSize, 1F);
                         @in = WI * X_In;
                     }
                     break;
-                case Device.DeviceTpye.CUDA:
+                case DeviceTpye.CUDA:
                     {
                         Tensor.AddLastOneRowWithValue(@in, 1F, X_In);
                         Tensor.Multiply(WI, X_In, @in);
@@ -149,10 +180,11 @@ namespace Ren.Net.Networks
             {
                 throw new Exception($"Linear::Backup, batchSize is {@out.Column}");
             }
+            return this.LinearDevice.Backup(@out);
 
             switch (@out.Device)
             {
-                case Device.DeviceTpye.CPU:
+                case DeviceTpye.CPU:
                     {
                         using Tensor sensitive_out = WI.Transpose() * @out;
                         using Tensor dwTemp = @out * X_In.Transpose();
@@ -160,7 +192,7 @@ namespace Ren.Net.Networks
                         return sensitive_out.RemoveLastOneRow();
                     }
                     break;
-                case Device.DeviceTpye.CUDA:
+                case DeviceTpye.CUDA:
                     {
                         Tensor.Transpose(WI);
                         Tensor.Copy(@out, Tensor.SwapA);

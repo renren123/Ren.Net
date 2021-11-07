@@ -1,4 +1,5 @@
-﻿using Ren.Net.Objects;
+﻿using Ren.Device;
+using Ren.Net.Objects;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -9,8 +10,9 @@ namespace Ren.Net.Networks
     [Serializable]
     public class LinearCUDA : Linear
     {
-        public static Tensor SwapA { set; get; }
-        public static Tensor SwapB { set; get; }
+        //public static Tensor SwapA { set; get; }
+        //public static Tensor SwapB { set; get; }
+        public override DeviceTpye Device { get => DeviceTpye.CUDA; }
 
         public LinearCUDA(int inputNumber, int outputNumber) : base(inputNumber, outputNumber)
         {
@@ -18,7 +20,6 @@ namespace Ren.Net.Networks
         }
         public override void Init()
         {
-            base.Init();
             int sumInput = OutputNumber + InputNumber;
             WI = new Tensor(MaxLinearNumber, MaxLinearNumber, (int i, int j) =>
             {

@@ -1,4 +1,5 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Single;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,32 +68,52 @@ namespace Ren.Net.Test
             var mb = Matrix<float>.Build;
             var vb = Vector<float>.Build;
 
-            Matrix<float> matrix1 = mb.DenseOfArray(testData1);
-            Matrix<float> matrix2 = mb.DenseOfArray(testData2);
+            Matrix<float> a = mb.DenseOfArray(testData1);
+            Matrix<float> b = mb.DenseOfArray(testData2);
 
-            Vector<float> vector = vb.Dense(new float[] { 100F, 100F});
-            // vector Variance
 
-            var sqrtTest = Matrix<float>.Sqrt(matrix2);
-            var dotTest = Matrix<float>.op_DotMultiply(matrix2, matrix2);
-            var devide = Matrix<float>.op_DotDivide(matrix1, matrix2);
+            Matrix<float> c = mb.Dense(5000, 5000, 1F);
+            Matrix<float> d = mb.Dense(5000, 5000, 1F);
 
-            Console.WriteLine(devide.ToString());
-            Console.WriteLine(sqrtTest.ToString());
-            Console.WriteLine(dotTest.ToString());
 
-            var temp = matrix1.InsertColumn(2, vector);
+            //CreateVector.Dense()
 
-            Console.WriteLine("\r\n" + temp.ToString());
+            for (int i = 0; i < 10000; i++)
+            {
+                var result = c * d;
+           
+                Console.WriteLine(i);
+            }
 
-            var result = (matrix1 * matrix2).ToArray();
 
-            var avereage = matrix1;
-            var addTest = matrix1.Row(0).Add(100);
-
-            // ar test = avereage + addTest;
 
             Console.ReadKey();
+
+
+
+            //Vector<float> vector = vb.Dense(new float[] { 100F, 100F});
+            //// vector Variance
+
+            //var sqrtTest = Matrix<float>.Sqrt(matrix2);
+            //var dotTest = Matrix<float>.op_DotMultiply(matrix2, matrix2);
+            //var devide = Matrix<float>.op_DotDivide(matrix1, matrix2);
+
+            //Console.WriteLine(devide.ToString());
+            //Console.WriteLine(sqrtTest.ToString());
+            //Console.WriteLine(dotTest.ToString());
+
+            //var temp = matrix1.InsertColumn(2, vector);
+
+            //Console.WriteLine("\r\n" + temp.ToString());
+
+            //var result = (matrix1 * matrix2).ToArray();
+
+            //var avereage = matrix1;
+            //var addTest = matrix1.Row(0).Add(100);
+
+            //// ar test = avereage + addTest;
+
+            //Console.ReadKey();
             //var mb = Matrix<float>.Build;
             //Matrix<float> fromArray = mb.DenseOfArray(testData);
 
