@@ -15,7 +15,7 @@ https://github.com/m4rs-mt/ILGPU
 以 Adam 优化器为例来进行显存控制，将整个过程进行分解，然后利用中间变量消除重复申请显存的问题
 ![image](https://user-images.githubusercontent.com/26969703/140619034-0bb65d69-1112-4a65-90ad-cafbc76fd8a2.png)
 
-'''
+```
 
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
@@ -35,6 +35,6 @@ https://github.com/m4rs-mt/ILGPU
             return @out;
         }
         
-'''
+```
 
 Tensor.SwapA、Tensor.SwapB、Tensor.SwapC 是三个全局变量类似寄存器的作用，这样可以不用反复申请显存
