@@ -43,6 +43,9 @@ namespace Ren.Net.Test
 
             //var result = net1 * net2;
 
+            
+
+
             Tensor.MaxLinearNumber = 3;
             Tensor d = new Tensor(new float[,]
             {

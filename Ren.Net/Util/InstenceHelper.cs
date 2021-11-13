@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Ren.Net.Util
 {
+    [Serializable]
     public class InstenceHelper<T> where T : class
     {
         public static List<T> GetInstence(Type typeClass, object[] @param)

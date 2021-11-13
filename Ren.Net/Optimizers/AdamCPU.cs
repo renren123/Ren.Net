@@ -1,11 +1,13 @@
 ﻿using Ren.Device;
 using Ren.Net.Objects;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ren.Net.Optimizers
 {
+    [Serializable]
     public class AdamCPU : Adam
     {
         public override DeviceTpye Device { get =>  DeviceTpye.CPU; }
@@ -14,6 +16,7 @@ namespace Ren.Net.Optimizers
         {
             VTorch = new Tensor(OutputNumber, InputNumber, 0F);
             STorch = new Tensor(OutputNumber, InputNumber, 0F);
+            Log.Debug($"Adam CPU inited [{InputNumber}, {OutputNumber}]");
         }
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
@@ -23,8 +26,6 @@ namespace Ren.Net.Optimizers
             Tensor Vcorrection = VTorch / (1 - B1_Pow);
             Tensor Scorrection = STorch / (1 - B2_Pow);
             Tensor dividend = LearningRate * Vcorrection;
-            //Tensor divisor = Tensor.Sqrt(Scorrection) + E;
-
             Tensor divisor = Scorrection.Sqrt() + E;
 
             return Tensor.DotDivide(dividend, divisor);

@@ -1,17 +1,19 @@
 ﻿using Ren.Device;
 using Ren.Net.Objects;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ren.Net.ActivationFunction
 {
+    [Serializable]
     public class ReLUCPU : ReLU
     {
         public override DeviceTpye Device { get => DeviceTpye.CPU;}
         public override void Init()
         {
-            //base.Init();
+            Log.Debug($"ReLU CPU inited");
         }
         public override Tensor Forward(Tensor @in)
         {

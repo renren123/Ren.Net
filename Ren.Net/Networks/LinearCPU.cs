@@ -7,6 +7,7 @@ using System.Text;
 
 namespace Ren.Net.Networks
 {
+    [Serializable]
     public class LinearCPU : Linear
     {
         public override DeviceTpye Device { get => DeviceTpye.CPU; }
@@ -30,7 +31,7 @@ namespace Ren.Net.Networks
                 }
             });
 
-            Log.Debug($"LinearCPU inited [{InputNumber}, {OutputNumber}]");
+            Log.Debug($"Linear CPU inited [{InputNumber}, {OutputNumber}]");
         }
         public override Tensor Forward(Tensor @in)
         {

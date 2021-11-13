@@ -37,6 +37,7 @@ namespace Ren.Net.Test
                     retainedFileCountLimit: 30))
                 .WriteTo.Console(LogEventLevel.Information,
                     outputTemplate: "{Timestamp:HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+ 
                     // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
                 
                 .CreateLogger();
@@ -47,30 +48,32 @@ namespace Ren.Net.Test
 
             InitNetLogging();
 
+            string fileName = "file.name";
+            int epoch = 10000;
+
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10),
+                new Linear(1, 1000),
                 new ReLU(),
                 //// layer2
-                new Linear(10, 10),
+                new Linear(1000, 1000),
                 new ReLU(),
                 //new Linear(10000, 10000),
                 //new ReLU(),
-                //// layer3
-                new Linear(10, 1),
+                //// layer3 
+                new Linear(1000, 1),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.001F);
             netWork.Device = Device.DeviceTpye.CUDA;
 
-            // Sequential netWork = Sequential.Load();
-            Log.Information("net: \r\n" + netWork.ToString());
-
             MSELoss loss = new MSELoss();
 
-            int epoch = 100000;
+            //Sequential netWork = Sequential.Load();
+            //netWork.Device = Device.DeviceTpye.CPU;
 
+            Log.Information("net: \r\n" + netWork.ToString());
             long startTime = Stopwatch.GetTimestamp();
 
             for (int i = 0; i < epoch; i++)
@@ -82,12 +85,12 @@ namespace Ren.Net.Test
                 var (input, label) = GetTorch();
 
                 Tensor output = netWork.Forward(input);
-                var sensitive = loss.CaculateLoss(label, output);
+                Tensor sensitive = loss.CaculateLoss(label, output);
 
                 if (i % 100 == 0)
                 {
                     Log.Information($"loss: {sensitive.GetItem()}");
-                    //Sequential.Save(netWork);
+                    Sequential.Save(netWork, fileName);
                 }
 
                 netWork.Backup(sensitive);
@@ -109,37 +112,27 @@ namespace Ren.Net.Test
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
         }
         /// <summary>
-        /// 模拟 函数 y = x + 1
+        /// 模拟 函数 y = x + 1，行是神经元的个数 列是 batchSize
         /// </summary>
         /// <returns></returns>
         static (Tensor input, Tensor label) GetTorch()
         {
-            // ########################### CPU ###########################
+            int length = 200;
+            float[,] input = new float[1, length];
+            float[,] label = new float[1, length];
+
+            for (int i = 0; i < length; i++)
             {
-                int a = new Random().Next(1, 100);
-
-                Tensor input = new Tensor(new float[,] { { a } });
-                Tensor label = new Tensor(new float[,] { { a + 1 } });
-                return (input, label);
+                input[0, i] = R();
+                label[0, i] = input[0, i] + 1;
             }
-            // ########################### CPU ###########################
 
-            // ########################### CUDA ###########################
-            //{
-            //    int a = new Random().Next(1, 100);
-            //    int b = new Random().Next(1, 100);
-
-            //    //Tensor input = new Tensor(new float[,] { { a  } });
-            //    //Tensor label = new Tensor(new float[,] { { a + 1} });
-            //    Tensor input = new Tensor(8002, 8002, a);
-            //    Tensor label = new Tensor(8002, 8002, a + 1);
-
-            //    input.Width = label.Width = 1;
-            //    input.Height = label.Height = 1;
-
-            //    return (input, label);
-            //}
-            // ########################### CUDA ###########################
+            return (new Tensor(input), new Tensor(label));
+        }
+        static Random random = new Random();
+        static int R()
+        {
+            return random.Next(1, 1000);
         }
     }
 }

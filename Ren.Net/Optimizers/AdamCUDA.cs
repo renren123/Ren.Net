@@ -1,11 +1,13 @@
 ﻿using Ren.Device;
 using Ren.Net.Objects;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Ren.Net.Optimizers
 {
+    [Serializable]
     public class AdamCUDA : Adam
     {
         public override DeviceTpye Device { get => DeviceTpye.CUDA; }
@@ -17,6 +19,7 @@ namespace Ren.Net.Optimizers
 
             VTorch.Width = STorch.Width = OutputNumber;
             VTorch.Height = STorch.Height = InputNumber;
+            Log.Debug($"Adam CUDA inited [{InputNumber}, {OutputNumber}]");
         }
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {

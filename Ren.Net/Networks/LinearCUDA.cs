@@ -10,8 +10,6 @@ namespace Ren.Net.Networks
     [Serializable]
     public class LinearCUDA : Linear
     {
-        //public static Tensor SwapA { set; get; }
-        //public static Tensor SwapB { set; get; }
         public override DeviceTpye Device { get => DeviceTpye.CUDA; }
 
         public LinearCUDA(int inputNumber, int outputNumber) : base(inputNumber, outputNumber)
@@ -36,7 +34,7 @@ namespace Ren.Net.Networks
             WI.Height = InputNumber + 1;
 
             X_In = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-            Log.Debug($"LinearCUDA inited [{InputNumber}, {OutputNumber}]");
+            Log.Debug($"Linear CUDA inited [{InputNumber}, {OutputNumber}]");
         }
         public override Tensor Forward(Tensor @in)
         {

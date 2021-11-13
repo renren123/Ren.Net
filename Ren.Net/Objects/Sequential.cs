@@ -15,6 +15,9 @@ namespace Ren.Net.Objects
     public class Sequential
     {
         private bool IsInit { set; get; } = false;
+        /// <summary>
+        /// 是为了设置二维数组最大值，使Tensor 后面不用重复申请显存
+        /// </summary>
         private int MaxLinearNumber { set; get; }
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
@@ -54,100 +57,47 @@ namespace Ren.Net.Objects
             {
                 return;
             }
+            Log.Debug("");
+            Log.Debug("");
             Log.Debug(" ********************* net initing *********************");
 
             this.Optimizer.Device = this.Device;
 
-            switch (Device)
+            for (int i = 0; i < Nets.Count; i++)
             {
-                case DeviceTpye.CPU:
+                var net = Nets[i];
+                net.Optimizer = this.Optimizer.Clone() as Optimizer;
+                net.Optimizer.MaxLinearNumber = MaxLinearNumber;
+                // net 的GetWI 找下一个 GetWI 赋值的激活函数
+                if (net.WIOptimizer == null)
+                {
+                    net.WIOptimizer = GetNextWeightsDelegate(i);
+                    if (net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
                     {
-
-                        for (int i = 0; i < Nets.Count; i++)
-                        {
-                            var net = Nets[i];
-                            net.Optimizer = this.Optimizer.Clone() as Optimizer;
-                            // net 的GetWI 找下一个 GetWI 赋值的激活函数
-                            if (net.WIOptimizer == null)
-                            {
-                                net.WIOptimizer = GetNextWeightsDelegate(i);
-                                if (net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
-                                {
-                                    net.WIOptimizer = GetNextWeightsDelegate(0);
-                                }
-                            }
-
-                            net.Device = this.Device;
-
-                            //if (net is Networks.Linear linearNet)
-                            //{
-                            //    linearNet.Device = Device;
-                            //}
-                            //if (net is ActivationFunction.ReLU reLu)
-                            //{
-                            //    reLu.Device = Device;
-                            //}
-
-                            net.Init();
-                        }
+                        net.WIOptimizer = GetNextWeightsDelegate(0);
                     }
-                    break;
-                case DeviceTpye.CUDA:
-                    {
-                        //int maxLinearNumber = 0;
-                        //for (int i = 0; i < Nets.Count; i++)
-                        //{
-                        //    if (Nets[i] is Networks.Linear net)
-                        //    {
-                        //        maxLinearNumber = Math.Max(maxLinearNumber, Math.Max(net.OutputNumber, net.InputNumber));
-                        //    }
-                        //}
-                        //maxLinearNumber += 2;
+                }
 
-                        for (int i = 0; i < Nets.Count; i++)
-                        {
-                            var net = Nets[i];
-                            net.Optimizer = this.Optimizer.Clone() as Optimizer;
-                            net.Optimizer.MaxLinearNumber = MaxLinearNumber;
-                            // net 的GetWI 找下一个 GetWI 赋值的激活函数
-                            if (net.WIOptimizer == null)
-                            {
-                                net.WIOptimizer = GetNextWeightsDelegate(i);
-                                if (net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
-                                {
-                                    net.WIOptimizer = GetNextWeightsDelegate(0);
-                                }
-                            }
+                net.Device = this.Device;
+                if (Device == DeviceTpye.CUDA)
+                {
+                    net.MaxLinearNumber = MaxLinearNumber;
+                }
+                net.Init();
+            }
 
-                            net.Device = this.Device;
-
-                            //if (net is Networks.Linear linearNet)
-                            //{
-                            //    linearNet.Device = Device;
-                            //}
-                            //if (net is ActivationFunction.ReLU reLu)
-                            //{
-                            //    reLu.Device = Device;
-                            //}
-                            net.MaxLinearNumber = MaxLinearNumber;
-                            net.Init();
-                        }
-
-                        Tensor.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-                        Tensor.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-                        Tensor.SwapC = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-
-                        Networks.Linear.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-                        Networks.Linear.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-                    }
-                    break;
-                default:
-                    throw new Exception("Sequential::Init");
+            if (Device == DeviceTpye.CUDA)
+            {
+                Tensor.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+                Tensor.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+                Tensor.SwapC = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
             }
 
             Log.Debug("\r\n\r\nnet: \r\n" + this.ToString());
             IsInit = true;
             Log.Debug(" ********************* net inited *********************");
+            Log.Debug("");
+            Log.Debug("");
         }
         /// <summary>
         /// 向下 找激活函数，然后分配 激活函数中的权限初始化 对象给 网络节点
@@ -208,11 +158,11 @@ namespace Ren.Net.Objects
             }
             return builder.ToString();
         }
-        public static void Save(Sequential sequential, string fileName = null)
+        public static void Save(Sequential sequential, string fileName = "file.name")
         {
             if (fileName == null)
             {
-                fileName =Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "file.name");
+                fileName =Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), fileName);
             }
             FileStream fs = new FileStream(fileName, FileMode.Create);
             try
@@ -229,11 +179,11 @@ namespace Ren.Net.Objects
                 fs.Close();
             }
         }
-        public static Sequential Load(string fileName = null)
+        public static Sequential Load(string fileName = "file.name")
         {
             if(fileName == null)
             {
-                fileName = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "file.name");
+                fileName = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), fileName);
             }
             Sequential sequential = null;
             
