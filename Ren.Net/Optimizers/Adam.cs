@@ -21,8 +21,6 @@ namespace Ren.Net.Optimizers
 
         public float B1_Pow { set; get; } = B1;
         public float B2_Pow { set; get; } = B2;
-
-        public virtual DeviceTpye Device { get; set; }
         public Tensor VTorch { set; get; }
         public Tensor STorch { set; get; }
 
@@ -51,7 +49,7 @@ namespace Ren.Net.Optimizers
             return AdamDevice.GetOptimizer(dw, @out);
 
 
-            switch (dw.Device)
+            switch (Tensor.Device)
             {
                 case DeviceTpye.CPU:
                     {

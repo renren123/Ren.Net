@@ -15,13 +15,35 @@ namespace Ren.Net.Objects
     public class Sequential
     {
         private bool IsInit { set; get; } = false;
+        private int MaxLinearNumber { set; get; }
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
-        public DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
+
+        public DeviceTpye Device
+        { 
+            set 
+            {
+                Tensor.Device = value;
+            }
+            get
+            {
+                return Tensor.Device;
+            } 
+        }
 
         public Sequential(List<NetModule> nets)
         {
             Nets = new List<NetModule>(nets);
+
+            for (int i = 0; i < Nets.Count; i++)
+            {
+                if (Nets[i] is Networks.Linear net)
+                {
+                    MaxLinearNumber = Math.Max(MaxLinearNumber, Math.Max(net.OutputNumber, net.InputNumber));
+                }
+            }
+            MaxLinearNumber += 2;
+            Tensor.MaxLinearNumber = this.MaxLinearNumber;
         }
         /// <summary>
         /// 初始化
@@ -33,6 +55,8 @@ namespace Ren.Net.Objects
                 return;
             }
             Log.Debug(" ********************* net initing *********************");
+
+            this.Optimizer.Device = this.Device;
 
             switch (Device)
             {
@@ -53,14 +77,16 @@ namespace Ren.Net.Objects
                                 }
                             }
 
-                            if (net is Networks.Linear linearNet)
-                            {
-                                linearNet.Device = Device;
-                            }
-                            if (net is ActivationFunction.ReLU reLu)
-                            {
-                                reLu.Device = Device;
-                            }
+                            net.Device = this.Device;
+
+                            //if (net is Networks.Linear linearNet)
+                            //{
+                            //    linearNet.Device = Device;
+                            //}
+                            //if (net is ActivationFunction.ReLU reLu)
+                            //{
+                            //    reLu.Device = Device;
+                            //}
 
                             net.Init();
                         }
@@ -68,21 +94,21 @@ namespace Ren.Net.Objects
                     break;
                 case DeviceTpye.CUDA:
                     {
-                        int maxLinearNumber = 0;
-                        for (int i = 0; i < Nets.Count; i++)
-                        {
-                            if (Nets[i] is Networks.Linear net)
-                            {
-                                maxLinearNumber = Math.Max(maxLinearNumber, Math.Max(net.OutputNumber, net.InputNumber));
-                            }
-                        }
-                        maxLinearNumber += 2;
+                        //int maxLinearNumber = 0;
+                        //for (int i = 0; i < Nets.Count; i++)
+                        //{
+                        //    if (Nets[i] is Networks.Linear net)
+                        //    {
+                        //        maxLinearNumber = Math.Max(maxLinearNumber, Math.Max(net.OutputNumber, net.InputNumber));
+                        //    }
+                        //}
+                        //maxLinearNumber += 2;
 
                         for (int i = 0; i < Nets.Count; i++)
                         {
                             var net = Nets[i];
                             net.Optimizer = this.Optimizer.Clone() as Optimizer;
-                            net.Optimizer.MaxLinearNumber = maxLinearNumber;
+                            net.Optimizer.MaxLinearNumber = MaxLinearNumber;
                             // net 的GetWI 找下一个 GetWI 赋值的激活函数
                             if (net.WIOptimizer == null)
                             {
@@ -92,24 +118,27 @@ namespace Ren.Net.Objects
                                     net.WIOptimizer = GetNextWeightsDelegate(0);
                                 }
                             }
-                            if (net is Networks.Linear linearNet)
-                            {
-                                linearNet.Device = Device;
-                            }
-                            if (net is ActivationFunction.ReLU reLu)
-                            {
-                                reLu.Device = Device;
-                            }
-                            net.MaxLinearNumber = maxLinearNumber;
+
+                            net.Device = this.Device;
+
+                            //if (net is Networks.Linear linearNet)
+                            //{
+                            //    linearNet.Device = Device;
+                            //}
+                            //if (net is ActivationFunction.ReLU reLu)
+                            //{
+                            //    reLu.Device = Device;
+                            //}
+                            net.MaxLinearNumber = MaxLinearNumber;
                             net.Init();
                         }
 
-                        Tensor.SwapA = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
-                        Tensor.SwapB = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
-                        Tensor.SwapC = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+                        Tensor.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+                        Tensor.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+                        Tensor.SwapC = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
 
-                        Networks.Linear.SwapA = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
-                        Networks.Linear.SwapB = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
+                        Networks.Linear.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+                        Networks.Linear.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
                     }
                     break;
                 default:

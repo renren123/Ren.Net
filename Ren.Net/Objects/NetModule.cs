@@ -9,7 +9,7 @@ namespace Ren.Net.Objects
     [Serializable]
     public class NetModule
     {
-        
+        public virtual DeviceTpye Device { get; set; }
         public int MaxLinearNumber { set; get; }
         /// <summary>
         /// 优化器，用于优化 WI 更新

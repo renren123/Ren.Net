@@ -1,4 +1,5 @@
-﻿using Ren.Net.Objects;
+﻿using Ren.Device;
+using Ren.Net.Objects;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,6 +9,7 @@ namespace Ren.Net.Optimizers
     [Serializable]
     public class Optimizer : ICloneable
     {
+        public virtual DeviceTpye Device { get; set; }
         public float LearningRate { set; get; }
         public int InputNumber { set; get; } = -1;
         public int OutputNumber { set; get; } = -1;

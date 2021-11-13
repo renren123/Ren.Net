@@ -16,7 +16,6 @@ namespace Ren.Net.Networks
     [Serializable]
     public class Linear : NetModule
     {
-        public virtual DeviceTpye Device { get; set; }
         public static Tensor SwapA { set; get; }
         public static Tensor SwapB { set; get; }
 
@@ -125,7 +124,7 @@ namespace Ren.Net.Networks
 
 
 
-            switch (@in.Device)
+            switch (Tensor.Device)
             {
                 case DeviceTpye.CPU:
                     {
@@ -140,7 +139,7 @@ namespace Ren.Net.Networks
                     }
                     break;
                 default:
-                    throw new Exception($"Linear::Forward, Device {@in.Device}");
+                    throw new Exception($"Linear::Forward, Device {Tensor.Device}");
             }
 
 
@@ -182,7 +181,7 @@ namespace Ren.Net.Networks
             }
             return this.LinearDevice.Backup(@out);
 
-            switch (@out.Device)
+            switch (Tensor.Device)
             {
                 case DeviceTpye.CPU:
                     {
@@ -211,7 +210,7 @@ namespace Ren.Net.Networks
                     }
                     break;
                 default:
-                    throw new Exception($"Linear::Backup, Device {@out.Device}");
+                    throw new Exception($"Linear::Backup, Device {Tensor.Device}");
             }
 
 

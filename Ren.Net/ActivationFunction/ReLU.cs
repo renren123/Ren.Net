@@ -12,7 +12,6 @@ namespace Ren.Net.ActivationFunction
     public class ReLU : NetModule
     {
         public Tensor X_IN;
-        public virtual DeviceTpye Device { get; set; }
         private ReLU ReLUDevice { set; get; }
 
         public override void Init()
@@ -30,7 +29,7 @@ namespace Ren.Net.ActivationFunction
         public override Tensor Forward(Tensor @in)
         {
             return ReLUDevice.Forward(@in);
-            switch (@in.Device)
+            switch (Tensor.Device)
             {
                 case DeviceTpye.CPU:
                     {
@@ -68,7 +67,7 @@ namespace Ren.Net.ActivationFunction
         public override Tensor Backup(Tensor @out)
         {
             return ReLUDevice.Backup(@out);
-            switch (@out.Device)
+            switch (Tensor.Device)
             {
                 case DeviceTpye.CPU:
                     {

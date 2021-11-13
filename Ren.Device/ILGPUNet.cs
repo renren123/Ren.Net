@@ -492,6 +492,12 @@ namespace Ren.Device
             Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, ka));
             Data.CopyFromCPU(data);
         }
+        public ILGPUNet(int m, int n, float[,] data)
+        {
+            Data = Accelerator.Allocate2DDenseX<float>(new Index2D(m, n));
+            Data.CopyFromCPU(data);
+        }
+
         public ILGPUNet(int m, int n, float value = 0F)
         {
             float[,] data = new float[m, n];

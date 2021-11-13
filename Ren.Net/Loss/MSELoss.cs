@@ -9,7 +9,7 @@ namespace Ren.Net.Loss
     {
         public Tensor CaculateLoss(Tensor label, Tensor output)
         {
-            switch (label.Device)
+            switch (Tensor.Device)
             {
                 case Device.DeviceTpye.CPU:
                     {

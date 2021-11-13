@@ -43,6 +43,17 @@ namespace Ren.Net.Test
 
             //var result = net1 * net2;
 
+            Tensor.MaxLinearNumber = 3;
+            Tensor d = new Tensor(new float[,]
+            {
+                { 1, 2 },
+                { 1, 2 }
+            });
+
+            PrintArray(d.ToArray());
+            Console.WriteLine();
+
+
             Tensor a = new Tensor(new float[,] 
             {
                 {1, -1, 4},
@@ -65,6 +76,8 @@ namespace Ren.Net.Test
             });
             c.Width = 2;
             c.Height = 1;
+
+            
 
             // Tensor.Multiply(a, b, c);
             // Tensor.Multiply(3F, a,  c);

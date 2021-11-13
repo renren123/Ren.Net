@@ -14,7 +14,9 @@ namespace Ren.Net.Objects
         public static Tensor SwapA { set; get; }
         public static Tensor SwapB { set; get; }
         public static Tensor SwapC { set; get; }
-        public DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
+        public static int MaxLinearNumber { set; get; }
+
+        public static DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
         /// 行数 是神经元的数量，列数是 batchsize 的数量
@@ -50,7 +52,22 @@ namespace Ren.Net.Objects
                     deviceData = new MatrixNet(data);
                     break;
                 case DeviceTpye.CUDA:
-                    deviceData = new ILGPUNet(data);
+                    {
+                        int witdh = data.GetLength(0);
+                        int height = data.GetLength(1);
+
+                        deviceData  =  new ILGPUNet(MaxLinearNumber, MaxLinearNumber, (int i, int j) =>
+                        {
+                            if (i < witdh && j < height)
+                            {
+                                return data[i, j];
+                            }
+                            else
+                            {
+                                return 0F;
+                            }
+                        });
+                    }
                     break;
                 case DeviceTpye.Default:
                     throw new Exception();
