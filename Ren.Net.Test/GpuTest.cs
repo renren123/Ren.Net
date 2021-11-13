@@ -8,6 +8,8 @@ using Ren.Device;
 using System.Diagnostics;
 using ILGPU.Runtime;
 using Ren.Net.Objects;
+using Ren.Net.Networks;
+using Ren.Net.Optimizers;
 
 namespace Ren.Net.Test
 {
@@ -43,17 +45,40 @@ namespace Ren.Net.Test
 
             //var result = net1 * net2;
 
+
+
+            Tensor.Device = DeviceTpye.CPU;
+            Tensor.MaxLinearNumber = 3;
+
             
 
-
-            Tensor.MaxLinearNumber = 3;
+            // 两个神经元 batchSize = 3
             Tensor d = new Tensor(new float[,]
             {
-                { 1, 2 },
-                { 1, 2 }
+                { 1, 2, 3 },
+                { 1, 2, 3 }
             });
 
-            PrintArray(d.ToArray());
+            Tensor s = new Tensor(new float[,]
+            {
+                { 1, 1, 1 },
+                { 1, 1, 1 }
+            });
+
+
+            BatchNorm1D batchNorm1D = new BatchNorm1D(2);
+            batchNorm1D.Device = DeviceTpye.CPU;
+            batchNorm1D.Optimizer = new Adam(learningRate: 0.001F);
+            batchNorm1D.Optimizer.Device = DeviceTpye.CPU;
+            batchNorm1D.Init();
+
+            var batchResult = batchNorm1D.Forward(d);
+            var senOut = batchNorm1D.Backup(s);
+
+            PrintArray(batchResult.ToArray());
+            Console.WriteLine();
+            PrintArray(senOut.ToArray());
+
             Console.WriteLine();
 
 

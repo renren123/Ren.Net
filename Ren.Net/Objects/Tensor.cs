@@ -246,7 +246,7 @@ namespace Ren.Net.Objects
 
         public float[,] ToArray()
         {
-            return (this.deviceData as ILGPUNet).ToArray();
+            return this.deviceData.ToArray();
         }
 
         public void Dispose()

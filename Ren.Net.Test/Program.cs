@@ -54,19 +54,21 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 1000),
+                new Linear(1, 10),
+                new BatchNorm1D(10),
                 new ReLU(),
                 //// layer2
-                new Linear(1000, 1000),
-                new ReLU(),
+                //new Linear(10, 10),
+                //new BatchNorm1D(10),
+                //new ReLU(),
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3 
-                new Linear(1000, 1),
+                new Linear(10, 1),
             });
 
-            netWork.Optimizer = new Adam(learningRate: 0.001F);
-            netWork.Device = Device.DeviceTpye.CUDA;
+            netWork.Optimizer = new Adam(learningRate: 0.01F);
+            netWork.Device = Device.DeviceTpye.CPU;
 
             MSELoss loss = new MSELoss();
 
@@ -117,17 +119,32 @@ namespace Ren.Net.Test
         /// <returns></returns>
         static (Tensor input, Tensor label) GetTorch()
         {
-            int length = 200;
-            float[,] input = new float[1, length];
-            float[,] label = new float[1, length];
+            //{
+            //    int length = 10;
+            //    float[,] input = new float[1, length];
+            //    float[,] label = new float[1, length];
 
-            for (int i = 0; i < length; i++)
+            //    for (int i = 0; i < length; i++)
+            //    {
+            //        input[0, i] = i;
+            //        label[0, i] = input[0, i] + 1;
+            //    }
+            //    return (new Tensor(input), new Tensor(label));
+            //}
+
             {
-                input[0, i] = R();
-                label[0, i] = input[0, i] + 1;
-            }
+                int length = 100;
+                float[,] input = new float[1, length];
+                float[,] label = new float[1, length];
 
-            return (new Tensor(input), new Tensor(label));
+                for (int i = 0; i < length; i++)
+                {
+                    input[0, i] = R();
+                    label[0, i] = input[0, i] + 1;
+                }
+
+                return (new Tensor(input), new Tensor(label));
+            }
         }
         static Random random = new Random();
         static int R()

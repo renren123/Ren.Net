@@ -29,6 +29,7 @@ namespace Ren.Device
         /// </summary>
         /// <returns></returns>
         public float GetItem();
+        public float[,] ToArray();
 
         #region 运算
         public DataInterface DotMultiply(DataInterface right);

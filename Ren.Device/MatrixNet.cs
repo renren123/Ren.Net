@@ -400,6 +400,11 @@ namespace Ren.Device
                 }
             }
         }
+
+        public float[,] ToArray()
+        {
+            return this.Data.ToArray();
+        }
         #endregion
 
     }

@@ -65,6 +65,7 @@ namespace Ren.Net.Test
                 { 2F, 2F },
                 { 3F, 5F },
             };
+
             var mb = Matrix<float>.Build;
             var vb = Vector<float>.Build;
 
