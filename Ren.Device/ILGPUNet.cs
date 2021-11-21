@@ -672,7 +672,7 @@ namespace Ren.Device
             DotDivideKernel(cBuffer.Extent.ToIntIndex(), this.Data.View, right.Data.View, cBuffer.View);
             return new ILGPUNet(cBuffer);
         }
-        public DataInterface Divide(float rhs)
+        public DataInterface Divide(float rhs, bool divisor = true)
         {
             MemoryBuffer2D<float, Stride2D.DenseX> bBuffer = Accelerator.Allocate2DDenseX<float>(new Index2D(Row, Column));
             DivideNumberKernel(bBuffer.Extent.ToIntIndex(), Data.View, rhs, bBuffer.View);
@@ -919,6 +919,20 @@ namespace Ren.Device
         }
 
         public DataInterface Relu(DataInterface old)
+        {
+            throw new NotImplementedException();
+        }
+        public DataInterface Sum(int axis)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataInterface Mean(int axis)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DataInterface Variance(int axis)
         {
             throw new NotImplementedException();
         }

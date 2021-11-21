@@ -15,6 +15,7 @@ namespace Ren.Net.Test
 
         static void Main(string[] args)
         {
+            Mulity();
             //Dictionary<int, int> keys = new Dictionary<int, int>();
             //Parallel.For(0, 1000, (xp) =>
             //{
@@ -72,9 +73,15 @@ namespace Ren.Net.Test
             Matrix<float> a = mb.DenseOfArray(testData1);
             Matrix<float> b = mb.DenseOfArray(testData2);
 
+            var devideTest = 1 / a;
+
+            Console.WriteLine(devideTest);
+
 
             Matrix<float> c = mb.Dense(5000, 5000, 1F);
             Matrix<float> d = mb.Dense(5000, 5000, 1F);
+
+            Vector<float> c1 = vb.Dense(5, 0F);
 
 
             //CreateVector.Dense()
@@ -124,6 +131,31 @@ namespace Ren.Net.Test
             //});
 
             //var a = new DenseMatrix(testData);
+        }
+        static void Mulity()
+        {
+            float[,] testData1 = new float[1, 2]
+            {
+                { 1F, 2F }
+            };
+            float[,] testData2 = new float[2, 2]
+            {
+                { 2F, 2F },
+                { 3F, 5F },
+            };
+
+            var mb = Matrix<float>.Build;
+            var vb = Vector<float>.Build;
+
+            Matrix<float> a = mb.DenseOfArray(testData1);
+            Matrix<float> b = mb.DenseOfArray(testData2);
+
+
+            var result = a * b;
+
+            Console.WriteLine(result);
+
+            Console.ReadKey();
         }
     }
 }

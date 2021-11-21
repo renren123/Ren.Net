@@ -12,32 +12,8 @@ namespace Ren.Net.Networks
     public class BatchNorm1D : NetModule
     {
         public static bool IsTrain { set; get; } = true;
-        public static readonly float E = 0.00000001F;
-        public static readonly float Momentum = 0.9F;
-        /// <summary>
-        /// 对应Ub
-        /// </summary>
-        private float RunningMean { set; get; }
-        /// <summary>
-        /// 对应Sigmab
-        /// </summary>
-        private float RunningVar { set; get; }
-        private float[] x_hat { set; get; }
-        private float UbAverage { set; get; }
-        private float SigmmaAverage { set; get; }
-        public float Ub { set; get; }
-        public float Sigmab { set; get; }
-        private float Gamma { set; get; } = 1;
-        private float Bata { set; get; } = 1;
-
-        public Adam AdamGamma { set; get; }
-        public Adam AdamBata { set; get; }
-        //public float Vgamma { set; get; }
-        //public float Sgamma { set; get; }
-        //public float Vbata { set; get; }
-        //public float Sbata { set; get; }
-
-
+        public static readonly float E = 0.001F;
+        public static readonly float Momentum = 0.99F;
 
         public Tensor X_IN { set; get; }
         public Tensor X_Hat { set; get; }
@@ -45,10 +21,8 @@ namespace Ren.Net.Networks
         /// 输入层神经元个数
         /// </summary>
         public int InputNumber { set; get; }
-        public float[] UB { set; get; }
-        public float[] SIGMAB { set; get; }
-        public float[] RMean { set; get; }
-        public float[] RVar { set; get; }
+        public Tensor Gamma { set; get; }
+        public Tensor Bata { set; get; }
         /// <summary>
         /// 第一列元素 Gamma、第二列 Bata
         /// </summary>
@@ -57,6 +31,10 @@ namespace Ren.Net.Networks
         /// 第一列元素 UB、第二列 SigmaB
         /// </summary>
         public Tensor UbSigmaB { set; get; }
+        public Tensor UB { set; get; }
+        public Tensor SigmaB { set; get; }
+        public Tensor RMean { set; get; }
+        public Tensor RVar { set; get; }
         /// <summary>
         /// 第一列元素 RMean、第二列 RVar
         /// </summary>
@@ -95,6 +73,19 @@ namespace Ren.Net.Networks
         public override Tensor Backup(Tensor @out)
         {
             return this.BatchNorm1DDevice.Backup(@out);
+        }
+        public void PrintArray(float[,] array)
+        {
+            Console.WriteLine();
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                for (int j = 0; j < array.GetLength(1); j++)
+                {
+                    Console.Write($"{array[i, j]} ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
         }
     }
 }

@@ -64,7 +64,7 @@ namespace Ren.Net.Test
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3 
-                new Linear(10, 1),
+                new Linear(10, 1)
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.01F);
@@ -92,7 +92,7 @@ namespace Ren.Net.Test
                 if (i % 100 == 0)
                 {
                     Log.Information($"loss: {sensitive.GetItem()}");
-                    Sequential.Save(netWork, fileName);
+                    // Sequential.Save(netWork, fileName);
                 }
 
                 netWork.Backup(sensitive);

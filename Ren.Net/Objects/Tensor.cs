@@ -185,13 +185,14 @@ namespace Ren.Net.Objects
             return new Tensor(this.deviceData.Sqrt());
         }
 
+
         /// <summary>
         /// 矩阵点乘，对应位相乘
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static Tensor DotMultiplySelf(Tensor a, Tensor b)
+        public static Tensor DotMultiply(Tensor a, Tensor b)
         {
             var result = a.deviceData.DotMultiply(b.deviceData);
             return new Tensor(result);
@@ -252,6 +253,18 @@ namespace Ren.Net.Objects
         public void Dispose()
         {
             this.deviceData.Dispose();
+        }
+        public Tensor Sum(int axis)
+        {
+            return new Tensor(this.deviceData.Sum(axis));
+        }
+        public Tensor Mean(int axis)
+        {
+            return new Tensor(this.deviceData.Mean(axis));
+        }
+        public Tensor Variance(int axis)
+        {
+            return new Tensor(this.deviceData.Variance(axis));
         }
 
         /// <summary>
@@ -397,6 +410,10 @@ namespace Ren.Net.Objects
         public static Tensor operator /(Tensor lhs, float rhs)
         {
             return new Tensor(lhs.deviceData / rhs);
+        }
+        public static Tensor operator /(float rhs, Tensor lhs)
+        {
+            return new Tensor(rhs / lhs.deviceData);
         }
         public static Tensor operator +(Tensor lhs, Tensor rhs)
         {

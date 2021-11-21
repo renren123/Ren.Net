@@ -21,7 +21,7 @@ namespace Ren.Net.Optimizers
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
             VTorch = B1 * VTorch + (1 - B1) * dw;
-            STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiplySelf(dw, dw);
+            STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiply(dw, dw);
 
             Tensor Vcorrection = VTorch / (1 - B1_Pow);
             Tensor Scorrection = STorch / (1 - B2_Pow);

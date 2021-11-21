@@ -55,14 +55,14 @@ namespace Ren.Net.Test
             // 两个神经元 batchSize = 3
             Tensor d = new Tensor(new float[,]
             {
-                { 1, 2, 3 },
-                { 1, 2, 3 }
+                { 1, 1, 1},
+                { 2, 3, 4},
             });
 
             Tensor s = new Tensor(new float[,]
             {
-                { 1, 1, 1 },
-                { 1, 1, 1 }
+                { 3, 3, 3},
+                { 3, 3, 3},
             });
 
 
