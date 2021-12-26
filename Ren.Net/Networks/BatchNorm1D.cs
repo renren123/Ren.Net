@@ -12,8 +12,8 @@ namespace Ren.Net.Networks
     public class BatchNorm1D : NetModule
     {
         public static bool IsTrain { set; get; } = true;
-        public static readonly float E = 0.001F;
-        public static readonly float Momentum = 0.99F;
+        public static readonly float E = (float)Math.Pow(10, -5);
+        public static readonly float Momentum = 0.9F;
 
         public Tensor X_IN { set; get; }
         public Tensor X_Hat { set; get; }

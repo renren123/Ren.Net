@@ -16,7 +16,7 @@ namespace Ren.Net.Objects
         public static Tensor SwapC { set; get; }
         public static int MaxLinearNumber { set; get; }
 
-        public static DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
+        public static DeviceTpye Device { set; get; } = DeviceTpye.Default;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
         /// 行数 是神经元的数量，列数是 batchsize 的数量

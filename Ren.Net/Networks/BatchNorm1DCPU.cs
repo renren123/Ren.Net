@@ -30,7 +30,7 @@ namespace Ren.Net.Networks
             SigmaB = new Tensor(InputNumber, 1, 0F);
             RMean = new Tensor(InputNumber, 1, 0F);
             RVar = new Tensor(InputNumber, 1, 0F);
-            Gamma = new Tensor(InputNumber, 1, 0F);
+            Gamma = new Tensor(InputNumber, 1, 1F);
             Bata = new Tensor(InputNumber, 1, 0F);
         }
         public override Tensor Forward(Tensor @in)
@@ -42,40 +42,19 @@ namespace Ren.Net.Networks
                 // numpy使用之np.matmul https://blog.csdn.net/alwaysyxl/article/details/83050137
                 // Batch Normalization及其反向传播 https://zhuanlan.zhihu.com/p/45614576
 
+                //X_IN = @in.Clone() as Tensor;
+
                 UB = @in.Mean(1);
                 SigmaB = @in.Variance(1);
 
-                X_Hat = Tensor.DotDivide((@in - UB), (SigmaB + E).Sqrt());
+                //PrintArray(@in.ToArray());
+
+                X_Hat = Tensor.DotDivide(@in - UB, (SigmaB + E).Sqrt());
+
                 @in = Tensor.DotMultiply(X_Hat, Gamma) + Bata;
 
                 RMean = Momentum * RMean + (1 - Momentum) * UB;
                 RVar = Momentum * RVar + (1 - Momentum) * SigmaB;
-
-                //if (X_Hat == null)
-                //{
-                //    X_Hat = new Tensor(@in.Row, @in.Column, 0F);
-                //}
-
-                //for (int i = 0; i < InputNumber; i++)
-                //{
-                //    UbSigmaB[i, 0] = @in.RowAverage(i);
-                //    UbSigmaB[i, 1] = @in.RowVariance(i);
-                //}
-
-                //for (int i = 0; i < @in.Row; i++)
-                //{
-                //    for (int j = 0; j < @in.Column; j++)
-                //    {
-                //        X_Hat[i, j] = (@in[i, j] - UbSigmaB[i, 0]) / (float)Math.Sqrt(UbSigmaB[i, 1] + E);
-                //        @in[i, j] = GammaBata[i, 0] * X_Hat[i, j] + GammaBata[i, 1];
-                //    }
-                //}
-
-                //for (int i = 0; i < InputNumber; i++)
-                //{
-                //    RMeanVar[i, 0] = Momentum * RMeanVar[i, 0] + (1 - Momentum) * UbSigmaB[i, 0];
-                //    RMeanVar[i, 1] = Momentum * RMeanVar[i, 1] + (1 - Momentum) * UbSigmaB[i, 1];
-                //}
             }
             else
             {
@@ -129,67 +108,47 @@ namespace Ren.Net.Networks
         }
         public override Tensor Backup(Tensor @out)
         {
+            //int N = @out.Column;
+
+            //Tensor dbeta = @out.Sum(axis: 1);
+            //Tensor dgama = Tensor.DotMultiply(X_Hat, @out).Sum(axis: 1);
+
+            //Tensor dxhat = Tensor.DotMultiply(@out, Gamma);
+            //Tensor dvar = Tensor.DotMultiply(Tensor.DotMultiply(dxhat, X_Hat).Sum(axis: 1), (-0.5F) * (1.0F / SigmaB + E));
+            //Tensor dmean = Tensor.DotDivide(dxhat.Sum(axis: 1), (SigmaB + E).Sqrt()) + Tensor.DotMultiply(dvar * (-2F), UB);
+
+            //Tensor dx = Tensor.DotDivide(dxhat, (SigmaB + E).Sqrt()) + Tensor.DotMultiply((X_IN - UB) / N, dvar * 2) + dmean / N;
+
+            //Gamma -= 0.001F * dgama;
+            //Bata -= 0.001F * dbeta;
+            //return dx;
+
+
             int N = @out.Column;
 
-            //Tensor x_minus_mean = new Tensor(@out.Row, @out.Column, 0F);
-            //Tensor var_plus_eps = new Tensor(@out.Row, @out.Column, 0F);
-
-            //for (int i = 0; i < @out.Row; i++)
-            //{
-            //    for (int j = 0; j < @out.Column; j++)
-            //    {
-            //        x_minus_mean[i, j] = X_IN[i, j] - UbSigmaB[i, 0];
-            //        var_plus_eps[i, j] = UbSigmaB[i, 1] + E;
-            //    }
-            //}
-
-            Tensor x_minus_mean = X_IN - UB;
             Tensor var_plus_eps = SigmaB + E;
+            Tensor dGamma = Tensor.DotMultiply(X_Hat, @out).Sum(axis: 1);
+            Tensor dBeta = @out.Sum(axis: 1);
 
-            Tensor dGamma = Tensor.DotMultiply(X_Hat, @out).Sum(1);
-            Tensor dBeta = @out.Sum(1);
-            Tensor matmulResult = new Tensor(@out.Row, @out.Column, 0F);
-            for (int i = 0; i < @out.Row; i++)
-            {
-                for (int j = 0; j < @out.Column; j++)
-                {
-                    matmulResult[i, j] = dGamma[i, 0];
-                }
-            }
-            Tensor dx_ = Tensor.DotMultiply(matmulResult, @out);
+            Tensor ones = new Tensor(1, N, 1F);
+            Tensor dx_ = Tensor.DotMultiply(Gamma * ones, @out);
 
-            Tensor dx = N * dx_ - dx_.Sum(1) - Tensor.DotMultiply(X_Hat, Tensor.DotMultiply(dx_, X_Hat).Sum(1));
-            dx = Tensor.DotDivide(dx, ((1.0F / N) / var_plus_eps.Sqrt()));
-            Gamma -= 0.001F * dGamma;
-            Bata -= 0.001F * dBeta;
-            return dx;
+            Tensor dx = N * dx_ - dx_.Sum(axis: 1) - Tensor.DotMultiply(X_Hat, Tensor.DotMultiply(dx_, X_Hat).Sum(axis: 1));
+            Tensor dx_out = Tensor.DotDivide(dx * (1.0F / N), var_plus_eps.Sqrt());
 
-            //Tensor dotMulity = Tensor.DotMultiply(X_Hat, @out);
-            //Tensor dGammaBeta = new Tensor(InputNumber, 2, 0F);
+            Console.WriteLine("dGamma");
+            PrintArray(dGamma.ToArray());
+            Console.WriteLine("dBeta");
+            PrintArray(dBeta.ToArray());
 
-            //for (int i = 0; i < InputNumber; i++)
-            //{
-            //    dGammaBeta[i, 0] = dotMulity.RowAverage(i) * N;
-            //    dGammaBeta[i, 1] = @out.RowAverage(i) * N;
-            //}
+            Gamma -= 0.1F * dGamma;
+            Bata -= 0.1F * dBeta;
 
-            //Tensor matmulResult = new Tensor(@out.Row, @out.Column, 0F);
-            //for (int i = 0; i < @out.Row; i++)
-            //{
-            //    for (int j = 0; j < @out.Column; j++)
-            //    {
-            //        matmulResult[i, j] = dGammaBeta[1, 0];
-            //    }
-            //}
-            //Tensor dx_ = Tensor.DotMultiply(matmulResult, @out);
-
-            //Tensor dx = N * dx_ - dx_.Sum(1) - Tensor.DotMultiply(X_Hat, Tensor.DotMultiply(dx_, X_Hat).Sum(1));
-            //dx = Tensor.DotDivide(dx , ((1.0F / N) / var_plus_eps.Sqrt()));
-
-            
-
-            //GammaBata -= 0.001F * dGammaBeta;
-            //return dx;
+            //Console.WriteLine("Gamma");
+            //PrintArray(Gamma.ToArray());
+            //Console.WriteLine("Bata");
+            //PrintArray(Bata.ToArray());
+            return dx_out;
 
 
             // ################ OLD #######################

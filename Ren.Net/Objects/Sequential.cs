@@ -1,4 +1,5 @@
 ﻿using Ren.Device;
+using Ren.Net.Loss;
 using Ren.Net.Optimizers;
 using Serilog;
 using System;
@@ -21,6 +22,7 @@ namespace Ren.Net.Objects
         private int MaxLinearNumber { set; get; }
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
+        public NetLoss Loss { set; get; }
 
         public DeviceTpye Device
         { 
@@ -133,6 +135,9 @@ namespace Ren.Net.Objects
         }
         public Tensor Backup(Tensor @out)
         {
+            // 损失函数的反向传播
+            @out = Loss.Backup(@out);
+
             for (int i = Nets.Count - 1; i >= 0; i--)
             {
                 var net = Nets[i];

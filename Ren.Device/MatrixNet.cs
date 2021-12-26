@@ -14,7 +14,7 @@ namespace Ren.Device
 
         public int Width { set; get; }
         public int Height { set; get; }
-        public DeviceTpye Device { get; } = DeviceTpye.CUDA;
+        public DeviceTpye Device { get; } = DeviceTpye.CPU;
 
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
         private static VectorBuilder<float> VBuild { get; } = Vector<float>.Build;
@@ -514,6 +514,8 @@ namespace Ren.Device
         /// <param name="result">赋值</param>
         public static void ReluGPU(DataInterface old, DataInterface @new, DataInterface result)
         {
+            throw new NotImplementedException();
+
             MatrixNet oldData = old as MatrixNet;
             MatrixNet right = @new as MatrixNet;
             MatrixNet ret = result as MatrixNet;

@@ -53,6 +53,8 @@ namespace Ren.Net.Test
             NDarray dgamma = np.sum(x_hat * dout, axis: 0);
             NDarray dbeta = np.sum(dout, axis: 0);
 
+            var test = gamma.reshape((1, -1));
+
             var matmulResult = np.matmul(np.ones((N, 1)), gamma.reshape((1, -1)));
 
             NDarray dx_ = matmulResult * dout;

@@ -1,21 +1,23 @@
-﻿using Ren.Net.Objects;
-using System.Collections.Generic;
-using System;
-using Ren.Net.Networks;
-using Ren.Net.ActivationFunction;
+﻿using Ren.Net.ActivationFunction;
 using Ren.Net.Loss;
+using Ren.Net.Networks;
+using Ren.Net.Objects;
 using Ren.Net.Optimizers;
-using System.Threading.Tasks;
-using System.IO;
-using System.Reflection;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Ren.Net.Test
 {
-    public class Program
+    class BNTest
     {
         private static void InitNetLogging()
         {
@@ -37,9 +39,9 @@ namespace Ren.Net.Test
                     retainedFileCountLimit: 30))
                 .WriteTo.Console(LogEventLevel.Information,
                     outputTemplate: "{Timestamp:HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
- 
-                    // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
-                
+
+                // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
+
                 .CreateLogger();
         }
         static void Main(string[] args)
@@ -49,27 +51,19 @@ namespace Ren.Net.Test
             InitNetLogging();
 
             string fileName = "file.name";
-            int epoch = 1000000;
+            int epoch = 3;
 
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 5),
-                new BatchNorm1D(5),
-                new ReLU(),
-                //// layer2
-                //new Linear(10, 10),
-                //new BatchNorm1D(10),
-                //new ReLU(),
-                //new Linear(10000, 10000),
-                //new ReLU(),
-                //// layer3 
-                new Linear(5, 1)
+                new BatchNorm1D(2),
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.01F);
             netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
+
+            // MSELoss loss = new MSELoss();
 
             //Sequential netWork = Sequential.Load();
             //netWork.Device = Device.DeviceTpye.CPU;
@@ -84,15 +78,19 @@ namespace Ren.Net.Test
                     int a = 0;
                 }
                 var (input, label) = GetTorch();
-
+                Log.Information("count: " + (i + 1));
                 Tensor output = netWork.Forward(input);
+                Console.WriteLine("output");
+                PrintArray(output.ToArray());
+
+                // Tensor sensitive = loss.CaculateLoss(label, output);
+                // Tensor sensitive = netWork.Loss.CaculateLoss(input, label);
                 Tensor sensitive = netWork.Loss.CaculateLoss(label, output);
 
-                if (i % 100 == 0)
-                {
-                    Log.Information($"loss: {sensitive.GetItem()}");
-                    // Sequential.Save(netWork, fileName);
-                }
+                //Console.WriteLine("sensitive");
+                //PrintArray(sensitive.ToArray());
+
+                Log.Information($"loss: {sensitive.GetItem()}");
 
                 netWork.Backup(sensitive);
 
@@ -119,14 +117,22 @@ namespace Ren.Net.Test
         static (Tensor input, Tensor label) GetTorch()
         {
             {
-                //float[,] input = { { 1, 2, 3, 4, 5 } };
-                //float[,] label = { { 2, 3, 4, 5, 6 } };
+                float[,] input =
+                {
+                    { 1, 1, 1 },
+                    { 2, 3, 4 },
+                };
+                float[,] label =
+                {
+                    { -2, -1, -1 },
+                    { -2, -1, -1 },
+                };
 
-                //return (new Tensor(input), new Tensor(label));
+                return (new Tensor(input), new Tensor(label));
             }
 
             {
-                int length = 100;
+                int length = 20;
                 float[,] input = new float[1, length];
                 float[,] label = new float[1, length];
 
@@ -143,6 +149,19 @@ namespace Ren.Net.Test
         static int R()
         {
             return random.Next(1, 1000);
+        }
+        static void PrintArray(float[,] array)
+        {
+            Console.WriteLine();
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                for (int j = 0; j < array.GetLength(1); j++)
+                {
+                    Console.Write($"{array[i, j]} ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
         }
     }
 }
