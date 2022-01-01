@@ -22,7 +22,7 @@ namespace Ren.Net.ActivationFunction
         }
         public ReLU()
         {
-            this.WIOptimizer = new ReLUWIOptimizer();
+            this.WIInitialize = new ReLUWIOptimizer();
         }
         public override Tensor Forward(Tensor @in)
         {

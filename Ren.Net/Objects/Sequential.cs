@@ -71,12 +71,16 @@ namespace Ren.Net.Objects
                 net.Optimizer = this.Optimizer.Clone() as Optimizer;
                 net.Optimizer.MaxLinearNumber = MaxLinearNumber;
                 // net 的GetWI 找下一个 GetWI 赋值的激活函数
-                if (net.WIOptimizer == null)
+                if (net.WIInitialize == null)
                 {
-                    net.WIOptimizer = GetNextWeightsDelegate(i);
-                    if (net.WIOptimizer == null && i != 0) // 如果没找到 就从头找 第一个
+                    net.WIInitialize = GetWeightsOptimizerDelegate(i + 1);
+                    if (net.WIInitialize == null)   // 如果没找到 就从头找 第一个
                     {
-                        net.WIOptimizer = GetNextWeightsDelegate(0);
+                        net.WIInitialize = GetWeightsOptimizerDelegate(0);
+                    }
+                    if (net.WIInitialize == null)   // 如果没有找到就用默认的
+                    {
+                        net.WIInitialize = new WIInitialization();
                     }
                 }
 
@@ -102,18 +106,19 @@ namespace Ren.Net.Objects
             Log.Debug("");
         }
         /// <summary>
-        /// 向下 找激活函数，然后分配 激活函数中的权限初始化 对象给 网络节点
+        /// 向下 找激活函数，然后分配 激活函数中的权限初始化 对象给 网络节点, 从 index 下一个节点
+        /// 开始遍历
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
-        private WIOptimizer GetNextWeightsDelegate(int index)
+        private WIInitialization GetWeightsOptimizerDelegate(int index)
         {
-            for (int i = index + 1; i < Nets.Count; i++)
+            for (int i = index; i < Nets.Count; i++)
             {
                 var net = Nets[i];
-                if(net.WIOptimizer != null)
+                if(net.WIInitialize != null)
                 {
-                    return net.WIOptimizer;
+                    return net.WIInitialize;
                 }
             }
             return null;

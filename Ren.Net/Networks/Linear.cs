@@ -59,7 +59,7 @@ namespace Ren.Net.Networks
             Optimizer.OutputNumber = this.OutputNumber;
             Optimizer.Init();
             this.LinearDevice.Optimizer = Optimizer;
-            this.LinearDevice.WIOptimizer = WIOptimizer;
+            this.LinearDevice.WIInitialize = WIInitialize;
             this.LinearDevice.MaxLinearNumber = this.MaxLinearNumber;
             this.LinearDevice.Init();
 

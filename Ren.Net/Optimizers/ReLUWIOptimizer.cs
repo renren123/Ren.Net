@@ -5,7 +5,7 @@ using System.Text;
 namespace Ren.Net.Optimizers
 {
     [Serializable]
-    public class ReLUWIOptimizer : WIOptimizer
+    public class ReLUWIOptimizer : WIInitialization
     {
         private static readonly Random r = new Random(DateTime.UtcNow.Millisecond);
         public override float GetWI(int sumInput)

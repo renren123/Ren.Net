@@ -56,17 +56,16 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new BatchNorm1D(2),
+                new Linear(2, 2),
             });
 
-            netWork.Optimizer = new Adam(learningRate: 0.01F);
+            netWork.Optimizer = new Adam(learningRate: 1F);
             netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
 
             // MSELoss loss = new MSELoss();
-
-            //Sequential netWork = Sequential.Load();
-            //netWork.Device = Device.DeviceTpye.CPU;
+            // Sequential netWork = Sequential.Load();
+            // netWork.Device = Device.DeviceTpye.CPU;
 
             Log.Information("net: \r\n" + netWork.ToString());
             long startTime = Stopwatch.GetTimestamp();
@@ -78,9 +77,8 @@ namespace Ren.Net.Test
                     int a = 0;
                 }
                 var (input, label) = GetTorch();
-                Log.Information("count: " + (i + 1));
                 Tensor output = netWork.Forward(input);
-                Console.WriteLine("output");
+                Console.WriteLine("count: " + (i + 1) + "\toutput: ");
                 PrintArray(output.ToArray());
 
                 // Tensor sensitive = loss.CaculateLoss(label, output);

@@ -27,7 +27,7 @@ namespace Ren.Net.Networks
                 }
                 else
                 {
-                    return WIOptimizer.GetWI(sumInput);
+                    return WIInitialize.GetWI(sumInput);
                 }
             });
 

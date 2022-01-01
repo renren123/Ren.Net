@@ -18,7 +18,7 @@ namespace Ren.Net.Objects
         /// <summary>
         /// 用于初始化 WI
         /// </summary>
-        public virtual WIOptimizer WIOptimizer { set; get; }
+        public virtual WIInitialization WIInitialize { set; get; }
         public virtual void Init()
         {
             
