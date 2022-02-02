@@ -17,7 +17,7 @@ namespace Ren.Device
         public float RowVariance(int index);
         public float ColumnVariance(int index);
         public DataInterface AddOneColumnWithValue(int length, float value);
-        public DataInterface AddOneRowWithValue(int length, float value);
+        public DataInterface AddOneRowWithValue(int row, float value);
         public DataInterface RemoveLastOneColumn();
         public DataInterface RemoveLastOneRow();
         //public void AddColumn(float[] column);

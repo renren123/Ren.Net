@@ -1,5 +1,6 @@
 ﻿using Ren.Device;
 using Ren.Net.Objects;
+using Ren.Net.Optimizers;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,6 +10,8 @@ namespace Ren.Net.Networks
     [Serializable]
     public class BatchNorm1DCPU : BatchNorm1D
     {
+        private Optimizer GammaOptimizer { set; get; }
+        private Optimizer BataOptimizer { set; get; }
         public override DeviceTpye Device { get => DeviceTpye.CPU; }
 
         public BatchNorm1DCPU(int inputNumber) : base(inputNumber)
@@ -17,19 +20,36 @@ namespace Ren.Net.Networks
         }
         public override void Init()
         {
-            GammaBata = new Tensor(InputNumber, 2, 1F);
+            //GammaBata = new Tensor(InputNumber, 2, 1F);
 
-            for (int i = 0; i < InputNumber; i++)
-            {
-                GammaBata[i, 1] = 0F;
-            }
-            UbSigmaB = new Tensor(InputNumber, 2, 0F);
-            RMeanVar = new Tensor(InputNumber, 2, 0F);
+            //for (int i = 0; i < InputNumber; i++)
+            //{
+            //    GammaBata[i, 1] = 0F;
+            //}
+            //UbSigmaB = new Tensor(InputNumber, 2, 0F);
+            //RMeanVar = new Tensor(InputNumber, 2, 0F);
+
+            //GammaOptimizer = new AdamCPU(0.0001F);
+            //GammaOptimizer.InputNumber = 1;
+            //GammaOptimizer.OutputNumber = InputNumber;
+            //GammaOptimizer.Init();
+
+            //BataOptimizer = new AdamCPU(0.0001F);
+            //BataOptimizer.InputNumber = 1;
+            //BataOptimizer.OutputNumber = InputNumber;
+            //BataOptimizer.Init();
+
+            GammaOptimizer = this.Optimizer.Clone() as Optimizer;
+            BataOptimizer = this.Optimizer.Clone() as Optimizer;
 
             UB = new Tensor(InputNumber, 1, 0F);
             SigmaB = new Tensor(InputNumber, 1, 0F);
             RMean = new Tensor(InputNumber, 1, 0F);
             RVar = new Tensor(InputNumber, 1, 0F);
+            // Gamma = new Tensor(InputNumber, 1, 1F);
+            // Bata = new Tensor(InputNumber, 1, 0F);
+
+            // ################# Test #################
             Gamma = new Tensor(InputNumber, 1, 1F);
             Bata = new Tensor(InputNumber, 1, 0F);
         }
@@ -108,22 +128,6 @@ namespace Ren.Net.Networks
         }
         public override Tensor Backup(Tensor @out)
         {
-            //int N = @out.Column;
-
-            //Tensor dbeta = @out.Sum(axis: 1);
-            //Tensor dgama = Tensor.DotMultiply(X_Hat, @out).Sum(axis: 1);
-
-            //Tensor dxhat = Tensor.DotMultiply(@out, Gamma);
-            //Tensor dvar = Tensor.DotMultiply(Tensor.DotMultiply(dxhat, X_Hat).Sum(axis: 1), (-0.5F) * (1.0F / SigmaB + E));
-            //Tensor dmean = Tensor.DotDivide(dxhat.Sum(axis: 1), (SigmaB + E).Sqrt()) + Tensor.DotMultiply(dvar * (-2F), UB);
-
-            //Tensor dx = Tensor.DotDivide(dxhat, (SigmaB + E).Sqrt()) + Tensor.DotMultiply((X_IN - UB) / N, dvar * 2) + dmean / N;
-
-            //Gamma -= 0.001F * dgama;
-            //Bata -= 0.001F * dbeta;
-            //return dx;
-
-
             int N = @out.Column;
 
             Tensor var_plus_eps = SigmaB + E;
@@ -136,13 +140,17 @@ namespace Ren.Net.Networks
             Tensor dx = N * dx_ - dx_.Sum(axis: 1) - Tensor.DotMultiply(X_Hat, Tensor.DotMultiply(dx_, X_Hat).Sum(axis: 1));
             Tensor dx_out = Tensor.DotDivide(dx * (1.0F / N), var_plus_eps.Sqrt());
 
-            Console.WriteLine("dGamma");
-            PrintArray(dGamma.ToArray());
-            Console.WriteLine("dBeta");
-            PrintArray(dBeta.ToArray());
+            //Console.WriteLine("dGamma");
+            //PrintArray(dGamma.ToArray());
+            //Console.WriteLine("dBeta");
+            //PrintArray(dBeta.ToArray());
 
-            Gamma -= 0.1F * dGamma;
-            Bata -= 0.1F * dBeta;
+            //Gamma -= 0.001F * dGamma;
+            //Bata -= 0.001F * dBeta;
+
+            // ############## test ##############
+            Gamma -= GammaOptimizer.GetOptimizer(dGamma, null);
+            Bata -= BataOptimizer.GetOptimizer(dBeta, null);
 
             //Console.WriteLine("Gamma");
             //PrintArray(Gamma.ToArray());

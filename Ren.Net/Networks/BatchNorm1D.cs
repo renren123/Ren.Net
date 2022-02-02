@@ -26,11 +26,11 @@ namespace Ren.Net.Networks
         /// <summary>
         /// 第一列元素 Gamma、第二列 Bata
         /// </summary>
-        public Tensor GammaBata { set; get; }
+        // public Tensor GammaBata { set; get; }
         /// <summary>
         /// 第一列元素 UB、第二列 SigmaB
         /// </summary>
-        public Tensor UbSigmaB { set; get; }
+        // public Tensor UbSigmaB { set; get; }
         public Tensor UB { set; get; }
         public Tensor SigmaB { set; get; }
         public Tensor RMean { set; get; }
@@ -38,7 +38,7 @@ namespace Ren.Net.Networks
         /// <summary>
         /// 第一列元素 RMean、第二列 RVar
         /// </summary>
-        public Tensor RMeanVar { set; get; }
+        // public Tensor RMeanVar { set; get; }
 
         private BatchNorm1D BatchNorm1DDevice { set; get; }
 

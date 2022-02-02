@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Ren.Net.ActivationFunction;
+using Ren.Net.Extensions;
 using Ren.Net.Loss;
 using Ren.Net.Networks;
 using Ren.Net.Objects;
@@ -74,6 +75,48 @@ namespace Ren.Net.UnitTest
         [TestMethod]
         public void LinearTest()
         {
+            Tensor.Device = Device.DeviceTpye.CPU;
+            Linear linear1 = new LinearCPU(2, 2);
+            MSELoss loss = new MSELoss();
+
+            linear1.Optimizer = new SGDCPU(0.01F);
+
+            linear1.WI = new Tensor(new float[,]
+            {
+                { 1F, -1.5F, 1F },
+                { 1F, 2F, -1F },
+            });
+            Tensor input = new Tensor(new float[,]
+            {
+                { 1, 6 },
+                { 2, 3 },
+            });
+            Tensor label = new Tensor(new float[,]
+            {
+                { 2, 4 },
+                { 3, 5 },
+            });
+            Tensor one_out_label = new Tensor(new float[,]
+            {
+                { -1.0000F, 2.5000F},
+                { 4.0000F, 11.0000F},
+            });
+            Tensor two_out_label = new Tensor(new float[,]
+            {
+                { -0.8125F, 3.0400F},
+                { 3.5800F, 9.5550F},
+            });
+
+            var output = linear1.Forward(input);
+            Assert.AreEqual(true, output.EqualsValue(one_out_label, 4));
+
+            Tensor sensitive = loss.CaculateLoss(label, output);
+            Tensor backUp = loss.Backup(sensitive);
+
+            linear1.Backup(backUp);
+            output = linear1.Forward(input);
+            Assert.AreEqual(true, output.EqualsValue(two_out_label, 4));
+
             //var linearMock = new Mock<Linear>(2, 2);
             //linearMock.Setup(p => p.W_value_method(2)).Returns(1);
             ////linearMock.SetupProperty(p => p.WI , new List<float[]>()
@@ -89,7 +132,7 @@ namespace Ren.Net.UnitTest
             //linearMock.CallBase = true;
 
             //var adamMock = new Mock<Adam>(1);
-            //adamMock.Setup(p => p.GetOptimizer(It.IsAny<float>(), It.IsAny<int>(), It.IsAny<int>())).Returns((float dw, int a, int b)=> dw);
+            //adamMock.Setup(p => p.GetOptimizer(It.IsAny<float>(), It.IsAny<int>(), It.IsAny<int>())).Returns((float dw, int a, int b) => dw);
             //adamMock.CallBase = true;
 
             //Linear linear = linearMock.Object;
@@ -120,6 +163,69 @@ namespace Ren.Net.UnitTest
             //Assert.AreEqual(-1, linear.WI[0][1]);
             //Assert.AreEqual(1, linear.WI[1][0]);
             //Assert.AreEqual(1, linear.WI[1][1]);
+        }
+        [TestMethod]
+        public void BNCPUTest()
+        {
+            // BN 前向传播 和 反向传播
+            // https://blog.csdn.net/weixin_39228381/article/details/107896863
+            Tensor.Device = Device.DeviceTpye.CPU;
+            BatchNorm1DCPU batchNorm1D = new BatchNorm1DCPU(4);
+            MSELoss loss = new MSELoss();
+            batchNorm1D.Optimizer = new SGDCPU(1F);
+
+            batchNorm1D.Init();
+            Tensor input = new Tensor(new float[,]
+            {
+                { 1, 6, 2},
+                { 2, 3, 4},
+                { 4, 2, 6},
+                { 1, 4, 1},
+            });
+            Tensor label = new Tensor(new float[,]
+            {
+                { 1, 2, 1},
+                { 2, 3, 2},
+                { 3, 4, 1},
+                { 4, 5, 2},
+            });
+            Tensor one_out_label = new Tensor(new float[,]
+            {
+                { -0.9258F, 1.3887F, -0.4629F},
+                { -1.2247F, 0.0000F, 1.2247F},
+                { 0.0000F, -1.2247F, 1.2247F},
+                { -0.7071F, 1.4142F, -0.7071F},
+            });
+
+            Tensor tow_out_label = new Tensor(new float[,]
+            {
+                { -0.0105F, 1.6825F, 0.3281F},
+                { 0.5543F, 1.1667F, 1.7790F},
+                { 1.3333F, 1.4710F, 1.1957F},
+                { 1.1464F, 3.2071F, 1.1464F},
+            });
+
+            Tensor three_out_label = new Tensor(new float[,]
+            {
+                { 0.4471F, 1.8293F, 0.7236F},
+                { 1.4438F, 1.7500F, 2.0562F},
+                { 2.0000F, 2.8188F, 1.1812F},
+                { 2.0732F, 4.1036F, 2.0732F},
+            });
+            var output = batchNorm1D.Forward(input);
+            Assert.AreEqual(true, output.EqualsValue(one_out_label, 4));
+
+            Tensor sensitive = loss.CaculateLoss(label, output);
+            Tensor backUp = loss.Backup(sensitive);
+            batchNorm1D.Backup(backUp);
+            output = batchNorm1D.Forward(input);
+            Assert.AreEqual(true, output.EqualsValue(tow_out_label, 4));
+
+            sensitive = loss.CaculateLoss(label, output);
+            backUp = loss.Backup(sensitive);
+            batchNorm1D.Backup(backUp);
+            output = batchNorm1D.Forward(input);
+            Assert.AreEqual(true, output.EqualsValue(three_out_label, 4));
         }
     }
 }

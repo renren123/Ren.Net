@@ -54,8 +54,8 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 5),
-                new BatchNorm1D(5),
+                new Linear(1, 10),
+                new BatchNorm1D(10),
                 new ReLU(),
                 //// layer2
                 //new Linear(10, 10),
@@ -64,10 +64,10 @@ namespace Ren.Net.Test
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3 
-                new Linear(5, 1)
+                new Linear(10, 1)
             });
 
-            netWork.Optimizer = new Adam(learningRate: 0.01F);
+            netWork.Optimizer = new SGD(learningRate: 0.001F);
             netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
 
@@ -112,21 +112,42 @@ namespace Ren.Net.Test
             Log.Error(e.ToString());
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
         }
+        static int count = 0;
         /// <summary>
         /// 模拟 函数 y = x + 1，行是神经元的个数 列是 batchSize
         /// </summary>
         /// <returns></returns>
         static (Tensor input, Tensor label) GetTorch()
         {
-            {
-                //float[,] input = { { 1, 2, 3, 4, 5 } };
-                //float[,] label = { { 2, 3, 4, 5, 6 } };
+            //{
+            //    count++;
+            //    if(count % 2 == 0)
+            //    {
+            //        float[,] input = { { 1, 1 } };
+            //        float[,] label = { { 2, 2 } };
 
-                //return (new Tensor(input), new Tensor(label));
-            }
+            //        return (new Tensor(input), new Tensor(label));
+            //    }
+            //    else
+            //    {
+            //        //float[,] input = { { 5, 4, 3, 2, 1 } };
+            //        //float[,] label = { { 6, 5, 4, 3, 2 } };
+            //        float[,] input = { { 2, 2 } };
+            //        float[,] label = { { 3, 3 } };
+
+            //        return (new Tensor(input), new Tensor(label));
+            //    }
+            //}
+
+            //{
+            //    float[,] input = { { 1, 2, 3, 4, 5 } };
+            //    float[,] label = { { 2, 3, 4, 5, 6 } };
+
+            //    return (new Tensor(input), new Tensor(label));
+            //}
 
             {
-                int length = 100;
+                int length = 20;
                 float[,] input = new float[1, length];
                 float[,] label = new float[1, length];
 
@@ -142,7 +163,7 @@ namespace Ren.Net.Test
         static Random random = new Random(DateTime.UtcNow.Millisecond);
         static int R()
         {
-            return random.Next(1, 1000);
+            return random.Next(1, 100);
         }
     }
 }

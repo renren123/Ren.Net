@@ -138,9 +138,9 @@ namespace Ren.Net.Objects
         /// <param name="length"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Tensor AddOneRowWithValue(int length, float value)
+        public Tensor AddLastOneRowWithValue(float value)
         {
-            return new Tensor(deviceData.AddOneRowWithValue(length, value));
+            return new Tensor(deviceData.AddOneRowWithValue(Row, value));
         }
         public Tensor RemoveLastOneColumn()
         {

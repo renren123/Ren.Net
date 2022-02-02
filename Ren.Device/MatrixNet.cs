@@ -82,10 +82,10 @@ namespace Ren.Device
         /// <param name="length"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public DataInterface AddOneRowWithValue(int length, float value)
+        public DataInterface AddOneRowWithValue(int row, float value)
         {
-            Vector<float> vector = VBuild.Dense(length, value);
-            var data = this.Data.InsertRow(Row, vector);
+            Vector<float> vector = VBuild.Dense(Column, value);
+            var data = this.Data.InsertRow(row, vector);
             return new MatrixNet(data);
         }
         public DataInterface RemoveLastOneColumn()

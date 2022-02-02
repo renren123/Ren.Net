@@ -19,6 +19,11 @@ namespace Ren.Net.Loss
         }
         public override Tensor CaculateLoss(Tensor label, Tensor output)
         {
+            // ############  test 
+            //Minus = output - label;
+            //return output - label;
+
+
             if (Reduction == "mean")
             {
                 throw new NotImplementedException();
@@ -73,7 +78,8 @@ namespace Ren.Net.Loss
                 {
                     case DeviceTpye.CPU:
                         {
-                            return Minus * (1.0F / batchSize);
+                            //return Minus;
+                            return Minus * (1.0F / (batchSize * 2 ));
                         }
                     case DeviceTpye.CUDA:
                         {

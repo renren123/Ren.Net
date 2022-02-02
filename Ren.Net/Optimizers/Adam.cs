@@ -54,13 +54,16 @@ namespace Ren.Net.Optimizers
                 OutputNumber = this.OutputNumber,
                 InputNumber = this.InputNumber,
                 Device = this.Device,
-                AdamDevice = this.AdamDevice
             };
-            if(VTorch != null)
+            if (this.AdamDevice != null)
             {
-                adam.VTorch = this.VTorch.Clone() as Tensor;
-                adam.STorch = this.STorch.Clone() as Tensor;
+                adam.AdamDevice = this.AdamDevice.Clone() as AdamCPU;
             }
+            //if(VTorch != null)
+            //{
+            //    adam.VTorch = this.VTorch.Clone() as Tensor;
+            //    adam.STorch = this.STorch.Clone() as Tensor;
+            //}
             return adam;
         }
     }

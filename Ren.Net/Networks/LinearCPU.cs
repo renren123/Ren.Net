@@ -21,6 +21,7 @@ namespace Ren.Net.Networks
             int sumInput = OutputNumber + InputNumber;
             WI = new Tensor(OutputNumber, InputNumber + 1, (int i, int j) =>
             {
+                // bias 放到最后一列
                 if (j == InputNumber)
                 {
                     return 1F;
@@ -36,21 +37,19 @@ namespace Ren.Net.Networks
         public override Tensor Forward(Tensor @in)
         {
             int batchSize = @in.Column;          // batch 的大小
-            X_In = @in.AddOneRowWithValue(batchSize, 1F);
+            X_In = @in.AddLastOneRowWithValue(1F);
             @in = WI * X_In;
 
             return @in;
-            //return @in.RemoveLastOneRow();
         }
         public override Tensor Backup(Tensor @out)
         {
-            //int batchSize = @out.Column;
-            //@out = @out.AddOneRowWithValue(batchSize, 1F);
-            //X_In = X_In.AddOneRowWithValue(batchSize, 1F);
+            int batchSize = @out.Column;
 
             Tensor sensitive_out = WI.Transpose() * @out;
-            Tensor dwTemp = @out * X_In.Transpose();
-            WI -= Optimizer.GetOptimizer(dwTemp, null);
+            Tensor dwTemp = @out * X_In.Transpose() * batchSize;
+
+            WI -= Optimizer.GetOptimizer(dwTemp, null); 
             return sensitive_out.RemoveLastOneRow();
         }
     }
