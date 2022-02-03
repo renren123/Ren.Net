@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ren.Gpu", "Ren.Gpu\Ren.Gpu.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ren.Device", "Ren.Device\Ren.Device.csproj", "{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ren.Data", "Ren.Data\Ren.Data.csproj", "{2A3866CE-F2B4-4BE3-8710-6B259F6B3C80}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F2BF5FC0-46A8-48EC-AFD2-DF213A69DE4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A3866CE-F2B4-4BE3-8710-6B259F6B3C80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A3866CE-F2B4-4BE3-8710-6B259F6B3C80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A3866CE-F2B4-4BE3-8710-6B259F6B3C80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A3866CE-F2B4-4BE3-8710-6B259F6B3C80}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

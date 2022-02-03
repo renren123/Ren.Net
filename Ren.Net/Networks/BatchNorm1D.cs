@@ -56,7 +56,7 @@ namespace Ren.Net.Networks
             //this.Optimizer.InputNumber = InputNumber;
             //this.Optimizer.OutputNumber = 2;
 
-            this.Optimizer.InputNumber = 2;
+            this.Optimizer.InputNumber = 1;
             this.Optimizer.OutputNumber = InputNumber;
 
             this.Optimizer.Init();

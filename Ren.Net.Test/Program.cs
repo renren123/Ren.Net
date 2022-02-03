@@ -55,7 +55,7 @@ namespace Ren.Net.Test
             {
                 // layer1
                 new Linear(1, 10),
-                new BatchNorm1D(10),
+                // new BatchNorm1D(10),
                 new ReLU(),
                 //// layer2
                 //new Linear(10, 10),
@@ -67,7 +67,7 @@ namespace Ren.Net.Test
                 new Linear(10, 1)
             });
 
-            netWork.Optimizer = new SGD(learningRate: 0.001F);
+            netWork.Optimizer = new SGD(learningRate: 0.01F);
             netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
 
@@ -147,7 +147,7 @@ namespace Ren.Net.Test
             //}
 
             {
-                int length = 20;
+                int length = 200;
                 float[,] input = new float[1, length];
                 float[,] label = new float[1, length];
 
@@ -163,7 +163,7 @@ namespace Ren.Net.Test
         static Random random = new Random(DateTime.UtcNow.Millisecond);
         static int R()
         {
-            return random.Next(1, 100);
+            return random.Next(1, 10000);
         }
     }
 }
