@@ -73,7 +73,7 @@ namespace Ren.Net.Test
             //Sequential netWork = Sequential.Load();
             //netWork.Device = Device.DeviceTpye.CPU;
 
-            Log.Information("net model: \r\n" + netWork.ToString());
+            Log.Information("net: \r\n" + netWork.ToString());
             long startTime = Stopwatch.GetTimestamp();
 
             for (int i = 0; i < epoch; i++)
