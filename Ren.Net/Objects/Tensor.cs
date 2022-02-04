@@ -254,6 +254,11 @@ namespace Ren.Net.Objects
         {
             this.deviceData.Dispose();
         }
+        /// <summary>
+        /// 返回每一行/列 sum
+        /// </summary>
+        /// <param name="axis">0 为 列， 1为行</param>
+        /// <returns>返回一个二维数组，但只有一行或一列</returns>
         public Tensor Sum(int axis)
         {
             return new Tensor(this.deviceData.Sum(axis));

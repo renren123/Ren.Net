@@ -87,5 +87,9 @@ namespace Ren.Net.Networks
             }
             Console.WriteLine();
         }
+        public override string ToString()
+        {
+            return $"BatchNorm1D [{InputNumber}]";
+        }
     }
 }

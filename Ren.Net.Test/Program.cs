@@ -12,6 +12,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Ren.Net.Test
 {
@@ -37,9 +38,6 @@ namespace Ren.Net.Test
                     retainedFileCountLimit: 30))
                 .WriteTo.Console(LogEventLevel.Information,
                     outputTemplate: "{Timestamp:HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
- 
-                    // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
-                
                 .CreateLogger();
         }
         static void Main(string[] args)
@@ -49,35 +47,34 @@ namespace Ren.Net.Test
             InitNetLogging();
 
             string fileName = "file.name";
-            int epoch = 1000000;
+            int epoch = 10000000;
+            Queue<float> lossQueue = new Queue<float>(10002);
 
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 10),
-                // new BatchNorm1D(10),
+                new Linear(1, 1),
+                new BatchNorm1D(1),
                 new ReLU(),
                 //// layer2
-                //new Linear(10, 10),
-                //new BatchNorm1D(10),
+                //new Linear(2, 2),
+                // new BatchNorm1D(2),
                 //new ReLU(),
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3 
-                new Linear(10, 1)
+                new Linear(1, 1)
             });
 
-            netWork.Optimizer = new SGD(learningRate: 0.01F);
+            netWork.Optimizer = new Adam(learningRate: 0.00001F);
             netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
 
-            //Sequential netWork = Sequential.Load();
-            //netWork.Device = Device.DeviceTpye.CPU;
-
             Log.Information("net: \r\n" + netWork.ToString());
             long startTime = Stopwatch.GetTimestamp();
+            long spendTime = Stopwatch.GetTimestamp();
 
-            for (int i = 0; i < epoch; i++)
+            for (int i = 1; i < epoch; i++)
             {
                 if (i == epoch - 1)
                 {
@@ -88,10 +85,24 @@ namespace Ren.Net.Test
                 Tensor output = netWork.Forward(input);
                 Tensor sensitive = netWork.Loss.CaculateLoss(label, output);
 
-                if (i % 100 == 0)
+                //if (i % 100 == 0)
+                //{
+                //    Log.Information($"loss: {sensitive.GetItem()}");
+                //    // Sequential.Save(netWork, fileName);
+                //}
+                var timeLast = (Stopwatch.GetTimestamp() - spendTime) * 1000.0 / Stopwatch.Frequency;
+
+                lossQueue.Enqueue(sensitive.GetItem());
+                while (lossQueue.Count > 10000)
                 {
-                    Log.Information($"loss: {sensitive.GetItem()}");
-                    // Sequential.Save(netWork, fileName);
+                    lossQueue.Dequeue();
+                }
+
+                if (timeLast > 1000)
+                {
+                    // Log.Information($"loss: {sensitive.GetItem()}");
+                    Log.Information($"loss: {lossQueue.Sum() / lossQueue.Count}");
+                    spendTime = Stopwatch.GetTimestamp();
                 }
 
                 netWork.Backup(sensitive);
@@ -147,7 +158,7 @@ namespace Ren.Net.Test
             //}
 
             {
-                int length = 200;
+                int length = 50;
                 float[,] input = new float[1, length];
                 float[,] label = new float[1, length];
 
@@ -161,9 +172,9 @@ namespace Ren.Net.Test
             }
         }
         static Random random = new Random(DateTime.UtcNow.Millisecond);
-        static int R()
+        static float R()
         {
-            return random.Next(1, 10000);
+            return random.Next(1, 100);
         }
     }
 }

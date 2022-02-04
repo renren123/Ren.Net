@@ -227,5 +227,43 @@ namespace Ren.Net.UnitTest
             output = batchNorm1D.Forward(input);
             Assert.AreEqual(true, output.EqualsValue(three_out_label, 4));
         }
+        [TestMethod]
+        public void BNForwardTest()
+        {
+            // 每一行是一个batch, size = 2
+            Tensor.Device = Device.DeviceTpye.CPU;
+            BatchNorm1DCPU batchNorm1D = new BatchNorm1DCPU(10);
+            batchNorm1D.Optimizer = new SGDCPU(1F);
+            batchNorm1D.Init();
+            Tensor input = new Tensor(new float[,]
+            {
+                { 0, 10 },
+                { 1, 11 },
+                { 2, 12 },
+                { 3, 13 },
+                { 4, 14 },
+                { 5, 15 },
+                { 6, 16 },
+                { 7, 17 },
+                { 8, 18 },
+                { 9, 19 },
+            });
+            Tensor label = new Tensor(new float[,]
+            {
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+                { -1.0000F, 1.0000F },
+            });
+            Tensor output = batchNorm1D.Forward(input);
+
+            Assert.AreEqual(true, output.EqualsValue(label, 4));
+        }
     }
 }
