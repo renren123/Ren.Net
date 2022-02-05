@@ -7,9 +7,21 @@ namespace Ren.Device
     public interface DataInterface : ICloneable, IDisposable
     {
         public DeviceTpye Device { get; }
+        /// <summary>
+        /// 在GPU模式下，Width 是实际数据的大小，Row 是 Tensor 的大小
+        /// </summary>
         public int Row { get; }
+        /// <summary>
+        /// 在GPU模式下，Height 是实际数据的大小，Column 是 Tensor 的大小
+        /// </summary>
         public int Column { get; }
+        /// <summary>
+        /// 在GPU模式下，Width 是实际数据的大小，Row 是 Tensor 的大小
+        /// </summary>
         public int Width { set; get; }
+        /// <summary>
+        /// 在GPU模式下，Height 是实际数据的大小，Column 是 Tensor 的大小
+        /// </summary>
         public int Height { set; get; }
 
         public float RowAverage(int index);
@@ -17,7 +29,7 @@ namespace Ren.Device
         public float RowVariance(int index);
         public float ColumnVariance(int index);
         public DataInterface AddOneColumnWithValue(int length, float value);
-        public DataInterface AddOneRowWithValue(int length, float value);
+        public DataInterface AddOneRowWithValue(int row, float value);
         public DataInterface RemoveLastOneColumn();
         public DataInterface RemoveLastOneRow();
         //public void AddColumn(float[] column);
@@ -29,6 +41,7 @@ namespace Ren.Device
         /// </summary>
         /// <returns></returns>
         public float GetItem();
+        public float[,] ToArray();
 
         #region 运算
         public DataInterface DotMultiply(DataInterface right);
@@ -42,7 +55,7 @@ namespace Ren.Device
         public DataInterface Multiply(DataInterface rhs);
         // public void Multiply(DataInterface lhs, DataInterface rhs, DataInterface result);
         public DataInterface Multiply(float rhs);
-        public DataInterface Divide(float rhs);
+        public DataInterface Divide(float rhs, bool divisor = true);
         public DataInterface Add(DataInterface rhs);
         public void AddToA(DataInterface rhs);
         public DataInterface Add(float rhs);
@@ -53,6 +66,24 @@ namespace Ren.Device
         /// <returns></returns>
         public DataInterface Minus(DataInterface rhs);
         public void MinusToA(DataInterface rhs);
+        /// <summary>
+        /// 返回每一行/列 sum
+        /// </summary>
+        /// <param name="axis">0 为 列， 1为行</param>
+        /// <returns></returns>
+        public DataInterface Sum(int axis);
+        /// <summary>
+        /// 返回每一行/列 sum
+        /// </summary>
+        /// <param name="axis">0 为 列， 1为行</param>
+        /// <returns></returns>
+        public DataInterface Mean(int axis);
+        /// <summary>
+        /// 返回每一行/列 sum
+        /// </summary>
+        /// <param name="axis">0 为 列， 1为行</param>
+        /// <returns></returns>
+        public DataInterface Variance(int axis);
         #endregion
 
         #region Net method
@@ -85,7 +116,11 @@ namespace Ren.Device
         }
         public static DataInterface operator /(DataInterface lhs, float rhs)
         {
-            return lhs.Divide(rhs);
+            return lhs.Divide(rhs, true);
+        }
+        public static DataInterface operator /(float rhs, DataInterface lhs)
+        {
+            return lhs.Divide(rhs, false);
         }
         public static DataInterface operator +(DataInterface lhs, DataInterface rhs)
         {

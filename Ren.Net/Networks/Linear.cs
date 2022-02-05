@@ -28,7 +28,9 @@ namespace Ren.Net.Networks
         /// </summary>
         public int OutputNumber { set; get; }
         /// <summary>
-        /// 权重数组
+        /// 权重数组, 
+        /// 数组横坐标的个数是下一列神经元的个数，
+        /// 数组纵坐标的个数是上一列神经元的额个数再加一列wb
         /// </summary>
         public Tensor WI { set; get; }
         /// <summary>
@@ -59,7 +61,7 @@ namespace Ren.Net.Networks
             Optimizer.OutputNumber = this.OutputNumber;
             Optimizer.Init();
             this.LinearDevice.Optimizer = Optimizer;
-            this.LinearDevice.WIOptimizer = WIOptimizer;
+            this.LinearDevice.WIInitialize = WIInitialize;
             this.LinearDevice.MaxLinearNumber = this.MaxLinearNumber;
             this.LinearDevice.Init();
 

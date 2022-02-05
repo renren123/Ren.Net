@@ -12,6 +12,9 @@ namespace Ren.Net.Optimizers
     {
         public override DeviceTpye Device { get =>  DeviceTpye.CPU; }
         public AdamCPU(float learningRate) : base(learningRate) { }
+        /// <summary>
+        /// Adam 初始化
+        /// </summary>
         public override void Init()
         {
             VTorch = new Tensor(OutputNumber, InputNumber, 0F);
@@ -21,7 +24,7 @@ namespace Ren.Net.Optimizers
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
             VTorch = B1 * VTorch + (1 - B1) * dw;
-            STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiplySelf(dw, dw);
+            STorch = B2 * STorch + (1 - B2) * Tensor.DotMultiply(dw, dw);
 
             Tensor Vcorrection = VTorch / (1 - B1_Pow);
             Tensor Scorrection = STorch / (1 - B2_Pow);
@@ -34,6 +37,23 @@ namespace Ren.Net.Optimizers
         {
             B1_Pow *= B1;
             B2_Pow *= B2;
+        }
+        public override object Clone()
+        {
+            AdamCPU adamCPU = new AdamCPU(this.LearningRate)
+            {
+                B1_Pow = B1_Pow,
+                B2_Pow = B2_Pow
+            };
+            if (VTorch != null)
+            {
+                adamCPU.VTorch = this.VTorch.Clone() as Tensor;
+            }
+            if (STorch != null)
+            {
+                adamCPU.STorch = this.STorch.Clone() as Tensor;
+            }
+            return adamCPU;
         }
     }
 }

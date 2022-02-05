@@ -21,30 +21,42 @@ namespace Ren.Net.Networks
             int sumInput = OutputNumber + InputNumber;
             WI = new Tensor(OutputNumber, InputNumber + 1, (int i, int j) =>
             {
+                // bias 放到最后一列
                 if (j == InputNumber)
                 {
                     return 1F;
                 }
                 else
                 {
-                    return WIOptimizer.GetWI(sumInput);
+                    return WIInitialize.GetWI(sumInput);
                 }
             });
 
             Log.Debug($"Linear CPU inited [{InputNumber}, {OutputNumber}]");
         }
+        /// <summary>
+        /// 正向传播参考
+        /// https://www.zybuluo.com/hanbingtao/note/476663
+        /// https://cloud.tencent.com/developer/article/1056429
+        /// </summary>
+        /// <param name="in"></param>
+        /// <returns></returns>
         public override Tensor Forward(Tensor @in)
         {
             int batchSize = @in.Column;          // batch 的大小
-            X_In = @in.AddOneRowWithValue(batchSize, 1F);
+            X_In = @in.AddLastOneRowWithValue(1F);
             @in = WI * X_In;
+
             return @in;
         }
         public override Tensor Backup(Tensor @out)
         {
+            int batchSize = @out.Column;
+
             Tensor sensitive_out = WI.Transpose() * @out;
-            Tensor dwTemp = @out * X_In.Transpose();
-            WI -= Optimizer.GetOptimizer(dwTemp, null);
+            Tensor dwTemp = @out * X_In.Transpose() * batchSize;
+
+            WI -= Optimizer.GetOptimizer(dwTemp, null); 
             return sensitive_out.RemoveLastOneRow();
         }
     }
