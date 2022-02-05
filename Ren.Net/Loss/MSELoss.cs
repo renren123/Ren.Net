@@ -19,11 +19,6 @@ namespace Ren.Net.Loss
         }
         public override Tensor CaculateLoss(Tensor label, Tensor output)
         {
-            // ############  test 
-            //Minus = output - label;
-            //return output - label;
-
-
             if (Reduction == "mean")
             {
                 throw new NotImplementedException();
@@ -39,30 +34,18 @@ namespace Ren.Net.Loss
                         }
                     case DeviceTpye.CUDA:
                         {
-                            Tensor.Minus(output, label, Tensor.SwapA);
-                            Tensor.DotMultiply(Tensor.SwapA, Tensor.SwapA, output);
+                            if (Minus == null)
+                            {
+                                Minus = new Tensor(Tensor.MaxLinearNumber, Tensor.MaxLinearNumber, 0F);
+                            }
+                            Tensor.Minus(output, label, Minus);
+                            Tensor.DotMultiply(Minus, Minus, output);
                             return output;
                         }
                     default:
                         throw new NotImplementedException();
                 }
             }
-
-            //switch (Tensor.Device)
-            //{
-            //    case DeviceTpye.CPU:
-            //        {
-            //            return output - label;
-            //        }
-            //    case DeviceTpye.CUDA:
-            //        {
-            //            Tensor.Minus(output, label, Tensor.SwapA);
-            //            Tensor.Copy(Tensor.SwapA, output);
-            //            return output;
-            //        }
-            //    default:
-            //        throw new NotImplementedException();
-            //}
         }
         public override Tensor Backup(Tensor output)
         {
@@ -78,7 +61,6 @@ namespace Ren.Net.Loss
                 {
                     case DeviceTpye.CPU:
                         {
-                            //return Minus;
                             return Minus * (1.0F / (batchSize * 2 ));
                         }
                     case DeviceTpye.CUDA:

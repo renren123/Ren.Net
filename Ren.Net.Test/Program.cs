@@ -46,8 +46,6 @@ namespace Ren.Net.Test
 
             InitNetLogging();
 
-            
-
             string fileName = "file.name";
             int epoch = 10000000;
             Queue<float> lossQueue = new Queue<float>(10002);
@@ -56,7 +54,7 @@ namespace Ren.Net.Test
             {
                 // layer1
                 new Linear(1, 1),
-                new BatchNorm1D(1),
+                // new BatchNorm1D(1),
                 new ReLU(),
                 //// layer2
                 //new Linear(2, 2),
@@ -67,9 +65,10 @@ namespace Ren.Net.Test
                 //// layer3 
                 new Linear(1, 1)
             });
+            netWork.BatchSize = 50;
 
             netWork.Optimizer = new Adam(learningRate: 0.00001F);
-            netWork.Device = Device.DeviceTpye.CPU;
+            netWork.Device = Device.DeviceTpye.CUDA;
             netWork.Loss = new MSELoss();
 
             Log.Information("net: \r\n" + netWork.ToString());

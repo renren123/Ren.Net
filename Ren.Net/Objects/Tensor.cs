@@ -1,5 +1,6 @@
 ﻿using MathNet.Numerics.LinearAlgebra;
 using Ren.Device;
+using Ren.Net.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Ren.Net.Objects
     [Serializable]
     public class Tensor : ICloneable, IDisposable
     {
+        public static int Interval { get; } = 2;
         public static Tensor SwapA { set; get; }
         public static Tensor SwapB { set; get; }
         public static Tensor SwapC { set; get; }
@@ -55,6 +57,8 @@ namespace Ren.Net.Objects
                     {
                         int witdh = data.GetLength(0);
                         int height = data.GetLength(1);
+
+                        MaxLinearNumber = MathHelper.Max(witdh + Interval, height + Interval, MaxLinearNumber);
 
                         deviceData  =  new ILGPUNet(MaxLinearNumber, MaxLinearNumber, (int i, int j) =>
                         {
