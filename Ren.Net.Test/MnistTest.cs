@@ -62,11 +62,11 @@ namespace Ren.Net.Test
             {
                 // layer1
                 new Linear(784, 100),
-                new BatchNorm1D(100),
+                // new BatchNorm1D(100),
                 new ReLU(),
                 //// layer2
                 new Linear(100, 100),
-                new BatchNorm1D(100),
+                // new BatchNorm1D(100),
                 new ReLU(),
                 //new Linear(10000, 10000),
                 //new ReLU(),
@@ -217,7 +217,7 @@ namespace Ren.Net.Test
         public override int Length => this.length;
 
         private int length = 0;
-        private string FilePath { set; get; } = @"E:\Project\Ren.Net\Data\mnist\train";
+        private string FilePath { set; get; } = @"C:\Users\jy\Desktop\Project\Ren.Net\Data\mnist\train";
         private int InputNumber { set; get; } = 0;
 
         private readonly object datasLock = new object();
