@@ -7,9 +7,21 @@ namespace Ren.Device
     public interface DataInterface : ICloneable, IDisposable
     {
         public DeviceTpye Device { get; }
+        /// <summary>
+        /// 在GPU模式下，Width 是实际数据的大小，Row 是 Tensor 的大小
+        /// </summary>
         public int Row { get; }
+        /// <summary>
+        /// 在GPU模式下，Height 是实际数据的大小，Column 是 Tensor 的大小
+        /// </summary>
         public int Column { get; }
+        /// <summary>
+        /// 在GPU模式下，Width 是实际数据的大小，Row 是 Tensor 的大小
+        /// </summary>
         public int Width { set; get; }
+        /// <summary>
+        /// 在GPU模式下，Height 是实际数据的大小，Column 是 Tensor 的大小
+        /// </summary>
         public int Height { set; get; }
 
         public float RowAverage(int index);

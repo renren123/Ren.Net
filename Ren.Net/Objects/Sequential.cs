@@ -19,7 +19,21 @@ namespace Ren.Net.Objects
         /// <summary>
         /// 是为了设置二维数组最大值，使Tensor 后面不用重复申请显存
         /// </summary>
-        private int MaxLinearNumber { set; get; }
+        private int MaxLinearNumber
+        {
+            set 
+            {
+                Tensor.MaxLinearNumber = value;
+            }
+            get 
+            {
+                return Tensor.MaxLinearNumber;
+            } 
+        }
+
+        private int TensorInterval { get => Tensor.Interval; }
+
+        public int BatchSize { set; get; } = 0;
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
         public NetLoss Loss { set; get; }
@@ -44,11 +58,11 @@ namespace Ren.Net.Objects
             {
                 if (Nets[i] is Networks.Linear net)
                 {
-                    MaxLinearNumber = Math.Max(MaxLinearNumber, Math.Max(net.OutputNumber, net.InputNumber));
+                    MaxLinearNumber = Math.Max(
+                        MaxLinearNumber, 
+                        Math.Max(net.OutputNumber + TensorInterval, net.InputNumber + TensorInterval));
                 }
             }
-            MaxLinearNumber += 2;
-            Tensor.MaxLinearNumber = this.MaxLinearNumber;
         }
         /// <summary>
         /// 初始化
