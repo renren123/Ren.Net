@@ -12,6 +12,9 @@ namespace Ren.Net.Optimizers
     {
         public override DeviceTpye Device { get =>  DeviceTpye.CPU; }
         public AdamCPU(float learningRate) : base(learningRate) { }
+        /// <summary>
+        /// Adam 初始化
+        /// </summary>
         public override void Init()
         {
             VTorch = new Tensor(OutputNumber, InputNumber, 0F);
