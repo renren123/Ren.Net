@@ -56,7 +56,7 @@ namespace Ren.Net.Test
             {
                 // layer1
                 new Linear(1, 1),
-                new BatchNorm1D(1),
+                // new BatchNorm1D(1),
                 new ReLU(),
                 //// layer2
                 //new Linear(2, 2),
