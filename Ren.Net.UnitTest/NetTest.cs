@@ -165,7 +165,7 @@ namespace Ren.Net.UnitTest
             //Assert.AreEqual(1, linear.WI[1][1]);
         }
         [TestMethod]
-        public void BNCPUTest()
+        public void BatchNorm1DCPUTest()
         {
             // BN 前向传播 和 反向传播
             // https://blog.csdn.net/weixin_39228381/article/details/107896863
@@ -228,7 +228,7 @@ namespace Ren.Net.UnitTest
             Assert.AreEqual(true, output.EqualsValue(three_out_label, 4));
         }
         [TestMethod]
-        public void BNForwardTest()
+        public void BatchNorm1DCPUForwardTest()
         {
             // 每一行是一个batch, size = 2
             Tensor.Device = Device.DeviceTpye.CPU;

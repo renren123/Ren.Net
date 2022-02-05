@@ -46,6 +46,8 @@ namespace Ren.Net.Test
 
             InitNetLogging();
 
+            
+
             string fileName = "file.name";
             int epoch = 10000000;
             Queue<float> lossQueue = new Queue<float>(10002);

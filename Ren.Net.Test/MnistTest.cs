@@ -53,7 +53,7 @@ namespace Ren.Net.Test
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             InitNetLogging();
 
-            MnistData mnistData = new MnistData(batchSize:200);
+            MnistData mnistData = new MnistData(batchSize:200, shuffle: true);
             mnistData.Init();
 
             string fileName = "file.name";
@@ -255,6 +255,7 @@ namespace Ren.Net.Test
 
             Parallel.ForEach(files, file =>
             {
+                // 获取某个目录的父目录
                 System.IO.DirectoryInfo parentDir = System.IO.Directory.GetParent(file);
                 float[] data = LoadPng(file);
                 int label = int.Parse(parentDir.Name);
@@ -279,12 +280,15 @@ namespace Ren.Net.Test
                 }
                 InputNumber = Datas.First().Data.Length;
             }
-            lock (datasLock)
-            {
-                ListRandom(Datas);
-            }
             Log.Information("mnist init data end");
         }
+        /// <summary>
+        /// SixLabors.ImageSharp，处理图像 
+        /// https://www.codenong.com/56e5e46af0c9006702d1/
+        /// https://www.cnblogs.com/hellotim/p/14023632.html
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public float[] LoadPng(string path)
         {
             using (Image<Rgba32> img = Image.Load<Rgba32>(path))
@@ -300,22 +304,6 @@ namespace Ren.Net.Test
                     }
                 }
                 return array;
-            }
-        }
-        public static void ListRandom<T>(List<T> sources)
-        {
-            Random rd = new Random();
-            int index = 0;
-            T temp;
-            for (int i = 0; i < sources.Count; i++)
-            {
-                index = rd.Next(0, sources.Count - 1);
-                if (index != i)
-                {
-                    temp = sources[i];
-                    sources[i] = sources[index];
-                    sources[index] = temp;
-                }
             }
         }
         private class MnistItem

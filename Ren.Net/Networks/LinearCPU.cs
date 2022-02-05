@@ -34,6 +34,13 @@ namespace Ren.Net.Networks
 
             Log.Debug($"Linear CPU inited [{InputNumber}, {OutputNumber}]");
         }
+        /// <summary>
+        /// 正向传播参考
+        /// https://www.zybuluo.com/hanbingtao/note/476663
+        /// https://cloud.tencent.com/developer/article/1056429
+        /// </summary>
+        /// <param name="in"></param>
+        /// <returns></returns>
         public override Tensor Forward(Tensor @in)
         {
             int batchSize = @in.Column;          // batch 的大小

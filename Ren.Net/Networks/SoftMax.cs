@@ -6,7 +6,11 @@ using System.Text;
 
 namespace Ren.Net.Networks
 {
-    //https://zhuanlan.zhihu.com/p/86184547
+    /// <summary>
+    /// 参考：
+    /// https://zhuanlan.zhihu.com/p/86184547
+    /// https://zhuanlan.zhihu.com/p/37740860
+    /// </summary>
     [Serializable]
     public class SoftMax : NetModule
     {

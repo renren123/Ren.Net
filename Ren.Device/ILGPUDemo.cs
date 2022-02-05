@@ -6,9 +6,9 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace Ren.Gpu
+namespace Ren.Device
 {
-    public class GpuNetBase
+    public class ILGPUDemo
     {
         /// <summary>
         /// Main entry point
