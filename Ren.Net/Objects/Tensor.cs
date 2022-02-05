@@ -16,7 +16,7 @@ namespace Ren.Net.Objects
         public static Tensor SwapC { set; get; }
         public static int MaxLinearNumber { set; get; }
 
-        public static DeviceTpye Device { set; get; } = DeviceTpye.CUDA;
+        public static DeviceTpye Device { set; get; } = DeviceTpye.Default;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
         /// 行数 是神经元的数量，列数是 batchsize 的数量
@@ -138,9 +138,9 @@ namespace Ren.Net.Objects
         /// <param name="length"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Tensor AddOneRowWithValue(int length, float value)
+        public Tensor AddLastOneRowWithValue(float value)
         {
-            return new Tensor(deviceData.AddOneRowWithValue(length, value));
+            return new Tensor(deviceData.AddOneRowWithValue(Row, value));
         }
         public Tensor RemoveLastOneColumn()
         {
@@ -185,13 +185,14 @@ namespace Ren.Net.Objects
             return new Tensor(this.deviceData.Sqrt());
         }
 
+
         /// <summary>
         /// 矩阵点乘，对应位相乘
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public static Tensor DotMultiplySelf(Tensor a, Tensor b)
+        public static Tensor DotMultiply(Tensor a, Tensor b)
         {
             var result = a.deviceData.DotMultiply(b.deviceData);
             return new Tensor(result);
@@ -246,12 +247,29 @@ namespace Ren.Net.Objects
 
         public float[,] ToArray()
         {
-            return (this.deviceData as ILGPUNet).ToArray();
+            return this.deviceData.ToArray();
         }
 
         public void Dispose()
         {
             this.deviceData.Dispose();
+        }
+        /// <summary>
+        /// 返回每一行/列 sum
+        /// </summary>
+        /// <param name="axis">0 为 列， 1为行</param>
+        /// <returns>返回一个二维数组，但只有一行或一列</returns>
+        public Tensor Sum(int axis)
+        {
+            return new Tensor(this.deviceData.Sum(axis));
+        }
+        public Tensor Mean(int axis)
+        {
+            return new Tensor(this.deviceData.Mean(axis));
+        }
+        public Tensor Variance(int axis)
+        {
+            return new Tensor(this.deviceData.Variance(axis));
         }
 
         /// <summary>
@@ -397,6 +415,10 @@ namespace Ren.Net.Objects
         public static Tensor operator /(Tensor lhs, float rhs)
         {
             return new Tensor(lhs.deviceData / rhs);
+        }
+        public static Tensor operator /(float rhs, Tensor lhs)
+        {
+            return new Tensor(rhs / lhs.deviceData);
         }
         public static Tensor operator +(Tensor lhs, Tensor rhs)
         {

@@ -14,7 +14,7 @@ namespace Ren.Device
 
         public int Width { set; get; }
         public int Height { set; get; }
-        public DeviceTpye Device { get; } = DeviceTpye.CUDA;
+        public DeviceTpye Device { get; } = DeviceTpye.CPU;
 
         private static MatrixBuilder<float> MBuild { get; } = Matrix<float>.Build;
         private static VectorBuilder<float> VBuild { get; } = Vector<float>.Build;
@@ -82,10 +82,10 @@ namespace Ren.Device
         /// <param name="length"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public DataInterface AddOneRowWithValue(int length, float value)
+        public DataInterface AddOneRowWithValue(int row, float value)
         {
-            Vector<float> vector = VBuild.Dense(length, value);
-            var data = this.Data.InsertRow(Row, vector);
+            Vector<float> vector = VBuild.Dense(Column, value);
+            var data = this.Data.InsertRow(row, vector);
             return new MatrixNet(data);
         }
         public DataInterface RemoveLastOneColumn()
@@ -139,11 +139,44 @@ namespace Ren.Device
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        public DataInterface DotMultiply(DataInterface data)
+        public DataInterface DotMultiply(DataInterface rhs)
         {
-            MatrixNet matrixNet = data as MatrixNet;
-            var copy = Matrix<float>.op_DotMultiply(this.Data, matrixNet.Data);
-            return new MatrixNet(copy);
+            MatrixNet matrixNet = rhs as MatrixNet;
+
+            if (this.Row == matrixNet.Row && this.Column == matrixNet.Column)
+            {
+                return new MatrixNet(Matrix<float>.op_DotMultiply(this.Data, matrixNet.Data));
+            }
+            // 每一列对应相乘
+            if (matrixNet.Row == 1 && matrixNet.Column == this.Column)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] * matrixNet.Data[0, j];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+
+            if (matrixNet.Row == this.Row && matrixNet.Column == 1)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] * matrixNet.Data[i, 0];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+            throw new Exception($"MatrixNet::DotMultiply [{this.Row}, {this.Column}] != [{matrixNet.Row}, {matrixNet.Column}]");
+
         }
         public DataInterface Multiply(DataInterface rhs)
         {
@@ -168,8 +201,41 @@ namespace Ren.Device
         public DataInterface DotDivide(DataInterface divisor)
         {
             MatrixNet matrixNet = divisor as MatrixNet;
-            var result = Matrix<float>.op_DotDivide(this.Data, matrixNet.Data);
-            return new MatrixNet(result);
+
+            if (this.Row == matrixNet.Row && this.Column == matrixNet.Column)
+            {
+                return new MatrixNet(Matrix<float>.op_DotDivide(this.Data, matrixNet.Data));
+            }
+
+            // 每一列对应相除
+            if (matrixNet.Row == 1 && matrixNet.Column == this.Column)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] / matrixNet.Data[0, j];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+
+            if (matrixNet.Row == this.Row && matrixNet.Column == 1)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] / matrixNet.Data[i, 0];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+            throw new Exception($"MatrixNet::DotDivide [{this.Row}, {this.Column}] != [{matrixNet.Row}, {matrixNet.Column}]");
         }
 
         public DataInterface Multiply(float rhs)
@@ -177,15 +243,56 @@ namespace Ren.Device
             return new MatrixNet(this.Data * rhs);
         }
 
-        public DataInterface Divide(float rhs)
+        public DataInterface Divide(float rhs, bool divisor = true)
         {
-            return new MatrixNet(this.Data / rhs);
+            if (divisor)
+            {
+                return new MatrixNet(this.Data / rhs);
+            }
+            else
+            {
+                return new MatrixNet(rhs / this.Data);
+            }
         }
 
         public DataInterface Add(DataInterface rhs)
         {
             MatrixNet matrixNet = rhs as MatrixNet;
-            return new MatrixNet(this.Data + matrixNet.Data);
+
+            if (this.Row == matrixNet.Row && this.Column == matrixNet.Column)
+            {
+                return new MatrixNet(this.Data + matrixNet.Data);
+            }
+
+            // 每一列对应相加
+            if (matrixNet.Row == 1 && matrixNet.Column == this.Column)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] + matrixNet.Data[0, j];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+
+            if (matrixNet.Row == this.Row && matrixNet.Column == 1)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] + matrixNet.Data[i, 0];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+            throw new Exception($"MatrixNet::Add [{this.Row}, {this.Column}] != [{matrixNet.Row}, {matrixNet.Column}]");
         }
 
         public DataInterface Add(float rhs)
@@ -196,7 +303,40 @@ namespace Ren.Device
         public DataInterface Minus(DataInterface rhs)
         {
             MatrixNet matrixNet = rhs as MatrixNet;
-            return new MatrixNet(this.Data - matrixNet.Data);
+
+            if(this.Row == matrixNet.Row && this.Column == matrixNet.Column)
+            {
+                return new MatrixNet(this.Data - matrixNet.Data);
+            }
+            // 每一列对应相减
+            if (matrixNet.Row == 1 && matrixNet.Column == this.Column)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] - matrixNet.Data[0, j];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+
+            if (matrixNet.Row ==  this.Row && matrixNet.Column == 1)
+            {
+                Matrix<float> data = MBuild.Dense(this.Row, this.Column, 0F);
+
+                for (int i = 0; i < this.Row; i++)
+                {
+                    for (int j = 0; j < this.Column; j++)
+                    {
+                        data[i, j] = this.Data[i, j] - matrixNet.Data[i, 0];
+                    }
+                }
+                return new MatrixNet(data);
+            }
+            throw new Exception($"MatrixNet::Minus [{this.Row}, {this.Column}] != [{matrixNet.Row}, {matrixNet.Column}]");
         }
 
         public DataInterface Relu(DataInterface old)
@@ -374,6 +514,8 @@ namespace Ren.Device
         /// <param name="result">赋值</param>
         public static void ReluGPU(DataInterface old, DataInterface @new, DataInterface result)
         {
+            throw new NotImplementedException();
+
             MatrixNet oldData = old as MatrixNet;
             MatrixNet right = @new as MatrixNet;
             MatrixNet ret = result as MatrixNet;
@@ -398,6 +540,122 @@ namespace Ren.Device
                         ret[i, j] = right[i, j];
                     }
                 }
+            }
+        }
+
+        public float[,] ToArray()
+        {
+            return this.Data.ToArray();
+        }
+
+        public DataInterface Sum(int axis)
+        {
+            switch (axis)
+            {
+                case 0:
+                    {
+                        Matrix<float> data = MBuild.Dense(1, this.Column, 0F);
+
+                        var colSum = this.Data.ColumnSums();
+
+                        for (int i = 0; i < this.Column; i++)
+                        {
+                            data[0, i] = colSum[i];
+                        }
+                        return new MatrixNet(data);
+                    }
+                case 1:
+                    {
+                        Matrix<float> data = MBuild.Dense(this.Row, 1, 0F);
+
+                        var rowSum = this.Data.RowSums();
+
+                        for (int i = 0; i < this.Row; i++)
+                        {
+                            data[i, 0] = rowSum[i];
+                        }
+                        return new MatrixNet(data);
+                    }
+                default:
+                    throw new Exception($"Sum {axis}");
+            }
+        }
+
+        public DataInterface Mean(int axis)
+        {
+            switch (axis)
+            {
+                case 0: // 求每一列 的均值
+                    {
+                        Matrix<float> data = MBuild.Dense(1, this.Column, 0F);
+
+                        var colSum = this.Data.ColumnSums();
+
+                        for (int i = 0; i < this.Column; i++)
+                        {
+                            data[0, i] = colSum[i] / this.Row;
+                        }
+                        return new MatrixNet(data);
+                    }
+                case 1: // 求每一行 的均值
+                    {
+                        Matrix<float> data = MBuild.Dense(this.Row, 1, 0F);
+
+                        var rowSum = this.Data.RowSums();
+
+                        for (int i = 0; i < this.Row; i++)
+                        {
+                            data[i, 0] = rowSum[i] / this.Column;
+                        }
+                        return new MatrixNet(data);
+                    }
+                default:
+                    throw new Exception($"Mean {axis}");
+            }
+        }
+
+        public DataInterface Variance(int axis)
+        {
+            switch (axis)
+            {
+                case 0: // 求每一列 的均值
+                    {
+                        Matrix<float> data = MBuild.Dense(1, this.Column, 0F);
+
+                        for (int i = 0; i < this.Column; i++)
+                        {
+                            float sum = 0F;
+                            var col = this.Data.Column(i);
+                            float average = col.Average();
+
+                            for (int j = 0; j < this.Row; j++)
+                            {
+                                sum += (col[j] - average) * (col[j] - average);
+                            }
+                            data[0, i] = sum / this.Row;
+                        }
+                        return new MatrixNet(data);
+                    }
+                case 1: // 求每一行 的均值
+                    {
+                        Matrix<float> data = MBuild.Dense(this.Row, 1, 0F);
+
+                        for (int i = 0; i < this.Row; i++)
+                        {
+                            float sum = 0F;
+                            var row = this.Data.Row(i);
+                            float average = row.Average();
+
+                            for (int j = 0; j < this.Column; j++)
+                            {
+                                sum += (row[j] - average) * (row[j] - average);
+                            }
+                            data[i, 0] = sum / this.Column;
+                        }
+                        return new MatrixNet(data);
+                    }
+                default:
+                    throw new Exception($"Variance {axis}");
             }
         }
         #endregion
