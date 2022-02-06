@@ -372,6 +372,26 @@ namespace Ren.Device
             MatrixNet matrixNet = rhs as MatrixNet;
             this.Data = Data - matrixNet.Data;
         }
+        /// <summary>
+        /// 按第一列遍历
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public float this[int index]
+        {
+            get
+            {
+                int j = index / this.Height;
+                int i = index % this.Height;
+                return Data[i, j];
+            }
+            set
+            {
+                int j = index / this.Height;
+                int i = index % this.Height;
+                Data[i, j] = value;
+            }
+        }
 
         public float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }
 

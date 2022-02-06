@@ -90,6 +90,17 @@ namespace Ren.Device
         public DataInterface Relu(DataInterface old);
         #endregion
 
+        public float this[int i]
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
         public float this[int i, int j]
         {
             get

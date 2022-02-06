@@ -758,7 +758,7 @@ namespace Ren.Device
             this.Data.Dispose();
             this.Data = null;
         }
-        public float this[int i, int j] { get => Data.View[i, j]; set => Data.View[i, j] = value; }
+        // public float this[int i, int j] { get => Data.View[i, j]; set => Data.View[i, j] = value; }
 
         public override string ToString()
         {

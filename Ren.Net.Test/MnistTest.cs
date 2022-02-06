@@ -90,7 +90,6 @@ namespace Ren.Net.Test
 
             for (int i = 0; i < 200; i++)
             {
-                
                 foreach ((Tensor data, Tensor label) item in mnistData)
                 {
                     Tensor output = netWork.Forward(item.data);
@@ -212,7 +211,7 @@ namespace Ren.Net.Test
         }
     }
 
-    public class MnistData : DataLoader
+    class MnistData : DataLoader
     {
         public override int Length => this.length;
 

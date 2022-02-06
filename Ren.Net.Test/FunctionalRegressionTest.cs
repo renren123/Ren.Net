@@ -14,10 +14,11 @@ using Serilog.Sinks.SystemConsole.Themes;
 using System.Diagnostics;
 using System.Linq;
 using Ren.Net.Extensions;
+using Ren.Data;
 
 namespace Ren.Net.Test
 {
-    public class Program
+    public class FunctionalRegressionTest
     {
         private static void InitNetLogging()
         {
@@ -67,48 +68,42 @@ namespace Ren.Net.Test
                 new Linear(1, 1)
             });
 
+            MnistData mnistData = new MnistData(batchSize: 10, shuffle: true);
+            mnistData.Init();
+
             netWork.Optimizer = new Adam(learningRate: 0.00001F);
-            netWork.Device = Device.DeviceTpye.CUDA;
+            netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
 
             Log.Information("net: \r\n" + netWork.ToString());
             long startTime = Stopwatch.GetTimestamp();
             long spendTime = Stopwatch.GetTimestamp();
 
-            for (int i = 1; i < epoch; i++)
+            for (int i = 0; i < 20000000; i++)
             {
-                if (i == epoch - 1)
+                foreach ((Tensor data, Tensor label) item in mnistData)
                 {
-                    int a = 0;
+                    Tensor output = netWork.Forward(item.data);
+                    Tensor sensitive = netWork.Loss.CaculateLoss(item.label, output);
+
+                    var timeLast = (Stopwatch.GetTimestamp() - spendTime) * 1000.0 / Stopwatch.Frequency;
+
+                    lossQueue.Enqueue(sensitive.GetItem());
+                    while (lossQueue.Count > 10000)
+                    {
+                        lossQueue.Dequeue();
+                    }
+
+                    if (timeLast > 1000)
+                    {
+                        Log.Information($"loss: {lossQueue.Sum() / lossQueue.Count}");
+                        spendTime = Stopwatch.GetTimestamp();
+                    }
+
+                    netWork.Backup(sensitive);
+
+                    netWork.OptimizerStep();
                 }
-                var (input, label) = GetTorch();
-
-                Tensor output = netWork.Forward(input);
-                Tensor sensitive = netWork.Loss.CaculateLoss(label, output);
-
-                //if (i % 100 == 0)
-                //{
-                //    Log.Information($"loss: {sensitive.GetItem()}");
-                //    // Sequential.Save(netWork, fileName);
-                //}
-                var timeLast = (Stopwatch.GetTimestamp() - spendTime) * 1000.0 / Stopwatch.Frequency;
-
-                lossQueue.Enqueue(sensitive.GetItem());
-                while (lossQueue.Count > 10000)
-                {
-                    lossQueue.Dequeue();
-                }
-
-                if (timeLast > 1000)
-                {
-                    // Log.Information($"loss: {sensitive.GetItem()}");
-                    Log.Information($"loss: {lossQueue.Sum() / lossQueue.Count}");
-                    spendTime = Stopwatch.GetTimestamp();
-                }
-
-                netWork.Backup(sensitive);
-
-                netWork.OptimizerStep();
             }
             long endTime = Stopwatch.GetTimestamp();
 
@@ -124,58 +119,44 @@ namespace Ren.Net.Test
             Log.Error(e.ToString());
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
         }
-        static int count = 0;
-        /// <summary>
-        /// 模拟 函数 y = x + 1，行是神经元的个数 列是 batchSize
-        /// </summary>
-        /// <returns></returns>
-        static (Tensor input, Tensor label) GetTorch()
+
+        class MnistData : DataLoader
         {
-            //{
-            //    count++;
-            //    if(count % 2 == 0)
-            //    {
-            //        float[,] input = { { 1, 1 } };
-            //        float[,] label = { { 2, 2 } };
+            public override int Length => length;
 
-            //        return (new Tensor(input), new Tensor(label));
-            //    }
-            //    else
-            //    {
-            //        //float[,] input = { { 5, 4, 3, 2, 1 } };
-            //        //float[,] label = { { 6, 5, 4, 3, 2 } };
-            //        float[,] input = { { 2, 2 } };
-            //        float[,] label = { { 3, 3 } };
+            private Random random = new Random(DateTime.UtcNow.Millisecond);
+            private int length = 18;
 
-            //        return (new Tensor(input), new Tensor(label));
-            //    }
-            //}
-
-            //{
-            //    float[,] input = { { 1, 2, 3, 4, 5 } };
-            //    float[,] label = { { 2, 3, 4, 5, 6 } };
-
-            //    return (new Tensor(input), new Tensor(label));
-            //}
-
+            public MnistData(int batchSize = 1, bool shuffle = false) : base(batchSize, shuffle)
             {
-                int length = 50;
-                float[,] input = new float[1, length];
-                float[,] label = new float[1, length];
 
-                for (int j = 0; j < length; j++)
-                {
-                    input[0, j] = R();
-                    label[0, j] = input[0, j] + 1;
-                }
+            }
+            public override void Init()
+            {
+
+            }
+            
+
+            public override (Tensor data, Tensor label) GetItem(int index)
+            {
+                float[,] input = new float[1, 2];
+                float[,] label = new float[1, 2];
+
+
+                input[0, 0] = R();
+                label[0, 0] = input[0, 0] + 1;
+
+                input[0, 1] = R();
+                label[0, 1] = input[0, 1] + 1;
 
                 return (new Tensor(input), new Tensor(label));
             }
-        }
-        static Random random = new Random(DateTime.UtcNow.Millisecond);
-        static float R()
-        {
-            return random.Next(1, 100);
+
+            
+            float R()
+            {
+                return random.Next(1, length);
+            }
         }
     }
 }

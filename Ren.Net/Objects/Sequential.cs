@@ -32,8 +32,6 @@ namespace Ren.Net.Objects
         }
 
         private int TensorInterval { get => Tensor.Interval; }
-
-        public int BatchSize { set; get; } = 0;
         private List<NetModule> Nets { set; get; }
         public Optimizer Optimizer { set; get; }
         public NetLoss Loss { set; get; }

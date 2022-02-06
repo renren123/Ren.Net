@@ -46,6 +46,50 @@ namespace Ren.Net.Objects
         {
             this.deviceData = deviceData;
         }
+        public Tensor(float[] data)
+        {
+            float[,] temp = null;
+
+            temp = new float[data.Length, 1];
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                temp[i, 0] = data[i];
+            }
+
+            switch (Device)
+            {
+                case DeviceTpye.CPU:
+                    {
+                        deviceData = new MatrixNet(temp);
+                    }
+                    break;
+                case DeviceTpye.CUDA:
+                    {
+                        int witdh = temp.GetLength(0);
+                        int height = temp.GetLength(1);
+
+                        MaxLinearNumber = MathHelper.Max(witdh + Interval, height + Interval, MaxLinearNumber);
+
+                        deviceData = new ILGPUNet(MaxLinearNumber, MaxLinearNumber, (int i, int j) =>
+                        {
+                            if (i < witdh && j < height)
+                            {
+                                return temp[i, j];
+                            }
+                            else
+                            {
+                                return 0F;
+                            }
+                        });
+                    }
+                    break;
+                default:
+                    throw new Exception(Device.ToString());
+            }
+            deviceData.Width = temp.GetLength(0);
+            deviceData.Height = temp.GetLength(1);
+        }
         public Tensor(float[,] data)
         {
             switch (Device)
@@ -274,6 +318,22 @@ namespace Ren.Net.Objects
         public Tensor Variance(int axis)
         {
             return new Tensor(this.deviceData.Variance(axis));
+        }
+        /// <summary>
+        /// 按第一列遍历
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        public float this[int index]
+        {
+            get
+            {
+                return this.deviceData[index];
+            }
+            set
+            {
+                this.deviceData[index] = value;
+            }
         }
 
         /// <summary>
