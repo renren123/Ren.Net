@@ -247,7 +247,7 @@ namespace Ren.Net.Test
             }
             return (new Tensor(dataMap), new Tensor(labelMap));
         }
-        public override void Init()
+        public void Init()
         {
             Log.Information("mnist init data start");
             string[] files = Directory.GetFiles(FilePath, "*.*", SearchOption.AllDirectories);
