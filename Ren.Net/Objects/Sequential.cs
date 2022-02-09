@@ -8,13 +8,20 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using static Ren.Net.Objects.NetModule;
 
 namespace Ren.Net.Objects
 {
     [Serializable]
     public class Sequential
     {
+        private int RegisterListCount { get; } = 5;
+        ///// <summary>
+        ///// 保存全局Tensor变量，作用类似寄存器
+        ///// </summary>
+        //private List<Tensor> RegisterList { set; get; } = new List<Tensor>();
+
+        private NetParameter NetParameter { set; get; } = new NetParameter();
+
         private bool IsInit { set; get; } = false;
         /// <summary>
         /// 是为了设置二维数组最大值，使Tensor 后面不用重复申请显存
@@ -75,11 +82,22 @@ namespace Ren.Net.Objects
             Log.Debug("");
             Log.Debug(" ********************* net initing *********************");
 
+            if (this.Device == DeviceTpye.CUDA)
+            {
+                NetParameter.Init(MaxLinearNumber);
+            }
+
+            //for (int i = 0; i < RegisterListCount; i++)
+            //{
+            //    RegisterList.Add(new Tensor(MaxLinearNumber, MaxLinearNumber, 0F));
+            //}
+
             this.Optimizer.Device = this.Device;
 
             for (int i = 0; i < Nets.Count; i++)
             {
                 var net = Nets[i];
+                net.LoadNetParameter(NetParameter);
                 net.Optimizer = this.Optimizer.Clone() as Optimizer;
                 net.Optimizer.MaxLinearNumber = MaxLinearNumber;
                 // net 的GetWI 找下一个 GetWI 赋值的激活函数
@@ -101,15 +119,16 @@ namespace Ren.Net.Objects
                 {
                     net.MaxLinearNumber = MaxLinearNumber;
                 }
+                
                 net.Init();
             }
 
-            if (Device == DeviceTpye.CUDA)
-            {
-                Tensor.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-                Tensor.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-                Tensor.SwapC = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-            }
+            //if (Device == DeviceTpye.CUDA)
+            //{
+            //    Tensor.SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //    Tensor.SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //    Tensor.SwapC = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //}
 
             Log.Debug("\r\n\r\nnet: \r\n" + this.ToString());
             IsInit = true;

@@ -7,7 +7,7 @@ using System.Text;
 namespace Ren.Net.Optimizers
 {
     [Serializable]
-    public class Optimizer : ICloneable
+    public class Optimizer : BaseNet , ICloneable
     {
         public virtual DeviceTpye Device { get; set; }
         public float LearningRate { set; get; }
@@ -23,11 +23,6 @@ namespace Ren.Net.Optimizers
         {
             throw new NotImplementedException();
         }
-        //public virtual float GetOptimizer(float dw,int OutputIndex, int InputIndex)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
         public virtual Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
             throw new NotImplementedException();

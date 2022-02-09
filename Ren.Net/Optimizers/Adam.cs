@@ -30,6 +30,7 @@ namespace Ren.Net.Optimizers
         public override void Init()
         {
             AdamDevice = InstenceHelper<Adam>.GetInstence(typeof(Adam), new object[] { LearningRate }).Find(p => p.Device == Device);
+            this.AdamDevice.LoadNetParameter(NetParameter);
             AdamDevice.InputNumber = this.InputNumber;
             AdamDevice.OutputNumber = this.OutputNumber;
             AdamDevice.LearningRate = this.LearningRate;

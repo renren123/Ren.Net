@@ -70,7 +70,7 @@ namespace Ren.Net.Test
 
             MnistData mnistData = new MnistData(batchSize: 10, shuffle: true);
 
-            netWork.Optimizer = new Adam(learningRate: 0.00001F);
+            netWork.Optimizer = new Adam(learningRate: 0.0001F);
             netWork.Device = Device.DeviceTpye.CUDA;
             netWork.Loss = new MSELoss();
 

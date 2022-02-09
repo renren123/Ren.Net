@@ -16,8 +16,8 @@ namespace Ren.Net.Networks
     [Serializable]
     public class Linear : NetModule
     {
-        public static Tensor SwapA { set; get; }
-        public static Tensor SwapB { set; get; }
+        //public static Tensor SwapA { set; get; }
+        //public static Tensor SwapB { set; get; }
 
         /// <summary>
         /// 输入层神经元个数
@@ -57,30 +57,33 @@ namespace Ren.Net.Networks
                 new object[] { this.InputNumber, this.OutputNumber }).
                 Find(p => p.Device == this.Device);
 
+            Optimizer.LoadNetParameter(NetParameter);
             Optimizer.InputNumber = this.InputNumber + 1;
             Optimizer.OutputNumber = this.OutputNumber;
             Optimizer.Init();
+
+            this.LinearDevice.LoadNetParameter(NetParameter);
             this.LinearDevice.Optimizer = Optimizer;
             this.LinearDevice.WIInitialize = WIInitialize;
             this.LinearDevice.MaxLinearNumber = this.MaxLinearNumber;
             this.LinearDevice.Init();
 
-            if(SwapA == null && Device == DeviceTpye.CUDA)
-            {
-                SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-            }
-            if(SwapB == null && Device == DeviceTpye.CUDA)
-            {
-                SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
-            }
+            //if(SwapA == null && Device == DeviceTpye.CUDA)
+            //{
+            //    SwapA = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //}
+            //if(SwapB == null && Device == DeviceTpye.CUDA)
+            //{
+            //    SwapB = new Tensor(MaxLinearNumber, MaxLinearNumber, 0F);
+            //}
         }
         public override Tensor Forward(Tensor @in)
         {
             int batchSize = @in.Height == 0 ? @in.Column : @in.Height;          // batch 的大小
 
-            if (batchSize <= 0)
+            if (batchSize <= 0 || InputNumber != @in.Width)
             {
-                throw new Exception($"Linear::Forward, batchSize {batchSize}");
+                throw new Exception($"Linear::Forward, batchSize is {batchSize}, or InputNumber: {InputNumber} != @in.Width: {@in.Width}");
             }
             return this.LinearDevice.Forward(@in);
         }
