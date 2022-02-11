@@ -1,5 +1,5 @@
 # Ren.Net
-模仿 pytorch 使用 .net 构造神经网络系统
+模仿 pytorch 使用 .net 构造神经网络系统 (pytorch: https://github.com/pytorch/pytorch)
 
 # CPU 加速
 https://github.com/mathnet/mathnet-numerics
