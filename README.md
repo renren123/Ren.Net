@@ -7,7 +7,7 @@ https://github.com/mathnet/mathnet-numerics
 # CUDA 加速
 https://github.com/m4rs-mt/ILGPU
 
-# ADAM 显存优化
+# 显存优化
 以 Adam 优化器为例来进行显存控制，将整个过程进行分解，然后利用中间变量消除重复申请显存的问题
 
 1、Adam 实现
