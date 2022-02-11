@@ -26,10 +26,6 @@ namespace Ren.Data
             this.BatchSize = batchSize;
             this.Shuffle = shuffle;
         }
-        public virtual void Init()
-        {
-            throw new NotImplementedException();
-        }
 
         public virtual (Tensor data, Tensor label) GetItem(int index)
         {
@@ -39,36 +35,70 @@ namespace Ren.Data
         {
             int inputNumber;
             int outputNumber;
-            Tensor datas = null;
-            Tensor labels = null;
+            // Tensor datas = null;
+            // Tensor labels = null;
+
+            float[,] datas = null;
+            float[,] labels = null;
 
             for (int i = 0; i < batchArray.Count; i++)
             {
                 (Tensor data, Tensor label) = GetItem(batchArray[i]);
 
-                inputNumber = data.Width;
-                outputNumber = label.Width;
+                var cpuData = data.ToArray();
+                var cpuLabel = label.ToArray();
 
+                inputNumber = cpuData.GetLength(1);
+                outputNumber = cpuLabel.GetLength(1);
                 if (datas == null)
                 {
-                    datas = new Tensor(inputNumber, BatchSize, 0F);
+                    datas = new float[inputNumber, BatchSize];
                 }
                 if (labels == null)
                 {
-                    labels = new Tensor(outputNumber, BatchSize, 0F);
+                    labels = new float[outputNumber, BatchSize];
                 }
-                // 列遍历是 神经元个数， 行遍历是 batch
-                // data 是先第一列遍历
                 for (int j = 0; j < inputNumber; j++)
                 {
-                    datas[j, i] = data[j];
+                    datas[j, i] = cpuData[0, j];
                 }
                 for (int j = 0; j < outputNumber; j++)
                 {
-                    labels[j, i] = label[j];
+                    labels[j, i] = cpuLabel[0, j];
                 }
+
+                //inputNumber = data.Width;
+                //outputNumber = label.Width;
+
+                //if (datas == null)
+                //{
+                //    datas = new float[inputNumber, BatchSize];
+                //}
+                //if (labels == null)
+                //{
+                //    labels = new float[outputNumber, BatchSize];
+                //}
+
+                ////if (datas == null)
+                ////{
+                ////    datas = new Tensor(inputNumber, BatchSize, 0F);
+                ////}
+                ////if (labels == null)
+                ////{
+                ////    labels = new Tensor(outputNumber, BatchSize, 0F);
+                ////}
+                //// 列遍历是 神经元个数， 行遍历是 batch
+                //// data 是先第一列遍历
+                //for (int j = 0; j < inputNumber; j++)
+                //{
+                //    datas[j, i] = data[j];
+                //}
+                //for (int j = 0; j < outputNumber; j++)
+                //{
+                //    labels[j, i] = label[j];
+                //}
             }
-            return (datas, labels);
+            return (new Tensor(datas), new Tensor(labels));
         }
         public IEnumerator GetEnumerator()
         {

@@ -7,7 +7,7 @@ using System.Text;
 namespace Ren.Net.Objects
 {
     [Serializable]
-    public class NetModule
+    public class NetModule : BaseNet
     {
         public virtual DeviceTpye Device { get; set; }
         public int MaxLinearNumber { set; get; }

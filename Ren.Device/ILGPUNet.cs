@@ -245,8 +245,19 @@ namespace Ren.Device
                 float,
                 ArrayView2D<float, Stride2D.DenseX>>(
                 SetOneRowValueAcceleratedKernel);
+        /// <summary>
+        /// 索引 set 设置值
+        /// </summary>
+        private static Action<
+            Index2D,
+            float,
+            ArrayView2D<float, Stride2D.DenseX>> SetArrayIndexKernel = Accelerator.LoadAutoGroupedStreamKernel<
+                Index2D,
+                float,
+                ArrayView2D<float, Stride2D.DenseX>>(
+                SetArrayIndexAcceleratedKernel);
 
-      
+
 
 
         static void MatrixMultiplyToSelfAcceleratedKernel(
@@ -377,6 +388,18 @@ namespace Ren.Device
            
            bView[index] = (float)Math.Sqrt(aView[index]);
         }
+
+        static void SetArrayIndexAcceleratedKernel(
+            Index2D index,
+            float value,
+            ArrayView2D<float, Stride2D.DenseX> aView)
+        {
+
+            aView[index] = value;
+        }
+
+
+        //
         #region Data Function，功能操作
         static void MatrixReluAcceleratedKernel(
             Index2D index,

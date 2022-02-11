@@ -69,10 +69,9 @@ namespace Ren.Net.Test
             });
 
             MnistData mnistData = new MnistData(batchSize: 10, shuffle: true);
-            mnistData.Init();
 
-            netWork.Optimizer = new Adam(learningRate: 0.00001F);
-            netWork.Device = Device.DeviceTpye.CPU;
+            netWork.Optimizer = new Adam(learningRate: 0.0001F);
+            netWork.Device = Device.DeviceTpye.CUDA;
             netWork.Loss = new MSELoss();
 
             Log.Information("net: \r\n" + netWork.ToString());
@@ -131,23 +130,13 @@ namespace Ren.Net.Test
             {
 
             }
-            public override void Init()
-            {
-
-            }
-            
-
             public override (Tensor data, Tensor label) GetItem(int index)
             {
-                float[,] input = new float[1, 2];
-                float[,] label = new float[1, 2];
-
+                float[,] input = new float[1, 1];
+                float[,] label = new float[1, 1];
 
                 input[0, 0] = R();
                 label[0, 0] = input[0, 0] + 1;
-
-                input[0, 1] = R();
-                label[0, 1] = input[0, 1] + 1;
 
                 return (new Tensor(input), new Tensor(label));
             }

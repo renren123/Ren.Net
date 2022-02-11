@@ -30,6 +30,7 @@ namespace Ren.Net.Optimizers
         public override void Init()
         {
             AdamDevice = InstenceHelper<Adam>.GetInstence(typeof(Adam), new object[] { LearningRate }).Find(p => p.Device == Device);
+            this.AdamDevice.LoadNetParameter(NetParameter);
             AdamDevice.InputNumber = this.InputNumber;
             AdamDevice.OutputNumber = this.OutputNumber;
             AdamDevice.LearningRate = this.LearningRate;
@@ -43,8 +44,6 @@ namespace Ren.Net.Optimizers
 
         public override void Step()
         {
-            //B1_Pow *= B1;
-            //B2_Pow *= B2;
             AdamDevice?.Step();
         }
         public override object Clone()
@@ -59,11 +58,6 @@ namespace Ren.Net.Optimizers
             {
                 adam.AdamDevice = this.AdamDevice.Clone() as AdamCPU;
             }
-            //if(VTorch != null)
-            //{
-            //    adam.VTorch = this.VTorch.Clone() as Tensor;
-            //    adam.STorch = this.STorch.Clone() as Tensor;
-            //}
             return adam;
         }
     }

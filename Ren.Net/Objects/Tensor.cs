@@ -13,11 +13,7 @@ namespace Ren.Net.Objects
     public class Tensor : ICloneable, IDisposable
     {
         public static int Interval { get; } = 2;
-        public static Tensor SwapA { set; get; }
-        public static Tensor SwapB { set; get; }
-        public static Tensor SwapC { set; get; }
         public static int MaxLinearNumber { set; get; }
-
         public static DeviceTpye Device { set; get; } = DeviceTpye.Default;
         /// <summary>
         /// 几个神经元 batch 数据，list 的长度 是一层神经元的数量，float 是 batch 的大小
@@ -264,34 +260,34 @@ namespace Ren.Net.Objects
         {
             return this.deviceData.ToString();
         }
-        public override bool Equals(object obj)
-        {
-            if (!(obj is Tensor))
-            {
-                return false;
-            }
-            Tensor torch = obj as Tensor;
+        //public override bool Equals(object obj)
+        //{
+        //    if (!(obj is Tensor))
+        //    {
+        //        return false;
+        //    }
+        //    Tensor torch = obj as Tensor;
 
-            if (torch.Row != this.Row || torch.Column != this.Column)
-            {
-                return false;
-            }
-            for (int i = 0; i < torch.Row; i++)
-            {
-                for (int j = 0; j < torch.Column; j++)
-                {
-                    if(torch[i, j] != this[i, j])
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-        public override int GetHashCode()
-        {
-            return deviceData.GetHashCode();
-        }
+        //    if (torch.Row != this.Row || torch.Column != this.Column)
+        //    {
+        //        return false;
+        //    }
+        //    for (int i = 0; i < torch.Row; i++)
+        //    {
+        //        for (int j = 0; j < torch.Column; j++)
+        //        {
+        //            if(torch[i, j] != this[i, j])
+        //            {
+        //                return false;
+        //            }
+        //        }
+        //    }
+        //    return true;
+        //}
+        //public override int GetHashCode()
+        //{
+        //    return deviceData.GetHashCode();
+        //}
 
         public float[,] ToArray()
         {
@@ -458,11 +454,7 @@ namespace Ren.Net.Objects
         {
             left.deviceData.GetType().GetMethod("ReluGPU", BindingFlags.Public | BindingFlags.Static).Invoke(null, new object[] { left.deviceData, right.deviceData, result.deviceData });
         }
-
-
         #endregion
-
-
 
         public static Tensor operator *(Tensor lhs, Tensor rhs)
         {
