@@ -107,25 +107,6 @@ namespace Ren.Device
             return new MatrixNet(data);
         }
         /// <summary>
-        /// 增加一列，加到最后
-        /// </summary>
-        /// <param name="column"></param>
-        //public void AddColumn(float[] column)
-        //{
-        //    Vector<float> vector = VBuild.Dense(column);
-        //    this.Data = this.Data.InsertColumn(Column, vector);
-        //}
-        //public void AddRow(float[] column)
-        //{
-        //    Vector<float> vector = VBuild.Dense(column);
-        //    this.Data = this.Data.InsertRow(Row, vector);
-        //}
-        //public void InsertColumn(int columnIndex, float[] column)
-        //{
-        //    Vector<float> vector = VBuild.Dense(column);
-        //    this.Data.InsertColumn(columnIndex, vector);
-        //}
-        /// <summary>
         /// 矩阵转置
         /// </summary>
         /// <returns></returns>

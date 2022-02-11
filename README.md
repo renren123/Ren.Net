@@ -1,10 +1,13 @@
 # Ren.Net
 模仿 pytorch 使用 .net 构造神经网络系统 (pytorch: https://github.com/pytorch/pytorch)
 
-# CPU 加速
+# 矩阵运算：
+CPU 加速
+
 https://github.com/mathnet/mathnet-numerics
 
-# CUDA 加速
+CUDA 加速
+
 https://github.com/m4rs-mt/ILGPU
 
 # 显存优化
@@ -17,6 +20,8 @@ https://github.com/m4rs-mt/ILGPU
 2、转化为表达式树后
 
 ![image](https://user-images.githubusercontent.com/26969703/140619034-0bb65d69-1112-4a65-90ad-cafbc76fd8a2.png)
+
+3、代码实现
 
 ```
 
