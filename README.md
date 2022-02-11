@@ -21,6 +21,8 @@ https://github.com/m4rs-mt/ILGPU
 
 ![image](https://user-images.githubusercontent.com/26969703/140619034-0bb65d69-1112-4a65-90ad-cafbc76fd8a2.png)
 
+3、代码实现
+
 ```
 
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
