@@ -23,18 +23,26 @@ namespace Ren.Device
         private MatrixNet(Matrix<float> data)
         {
             this.Data = data;
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public MatrixNet(float[,] data)
         {
             this.Data = MBuild.DenseOfArray(data);
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public MatrixNet(int m, int n, float value)
         {
             Data = MBuild.Dense(m, n, value);
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public MatrixNet(int m, int n, Func<int, int, float> init)
         {
             Data = MBuild.Dense(m, n, init);
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public object Clone()
         {
@@ -98,25 +106,6 @@ namespace Ren.Device
             var data = this.Data.RemoveRow(Row - 1);
             return new MatrixNet(data);
         }
-        /// <summary>
-        /// 增加一列，加到最后
-        /// </summary>
-        /// <param name="column"></param>
-        //public void AddColumn(float[] column)
-        //{
-        //    Vector<float> vector = VBuild.Dense(column);
-        //    this.Data = this.Data.InsertColumn(Column, vector);
-        //}
-        //public void AddRow(float[] column)
-        //{
-        //    Vector<float> vector = VBuild.Dense(column);
-        //    this.Data = this.Data.InsertRow(Row, vector);
-        //}
-        //public void InsertColumn(int columnIndex, float[] column)
-        //{
-        //    Vector<float> vector = VBuild.Dense(column);
-        //    this.Data.InsertColumn(columnIndex, vector);
-        //}
         /// <summary>
         /// 矩阵转置
         /// </summary>
