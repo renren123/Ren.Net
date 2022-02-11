@@ -27,6 +27,7 @@ https://github.com/m4rs-mt/ILGPU
 
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
+            // dw * dw => Tensor.SwapA, dw 与 dw 矩阵点乘, 结果放到 Tensor.SwapA 中
             Tensor.DotMultiply(dw, dw, Tensor.SwapA);
             Tensor.Multiply((1 - B2), Tensor.SwapA, Tensor.SwapB);
             Tensor.Multiply(B2, STorch, Tensor.SwapA);
