@@ -23,18 +23,26 @@ namespace Ren.Device
         private MatrixNet(Matrix<float> data)
         {
             this.Data = data;
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public MatrixNet(float[,] data)
         {
             this.Data = MBuild.DenseOfArray(data);
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public MatrixNet(int m, int n, float value)
         {
             Data = MBuild.Dense(m, n, value);
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public MatrixNet(int m, int n, Func<int, int, float> init)
         {
             Data = MBuild.Dense(m, n, init);
+            this.Width = this.Row;
+            this.Height = this.Column;
         }
         public object Clone()
         {
