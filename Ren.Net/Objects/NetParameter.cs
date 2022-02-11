@@ -6,13 +6,19 @@ using System.Text;
 
 namespace Ren.Net.Objects
 {
+    [Serializable]
     public class NetParameter
     {
-        private int RegisterListCount { get; } = 5;
-        private ConcurrentDictionary<Tensor, bool> RegisterDic { set; get; } = new ConcurrentDictionary<Tensor, bool>();
-
-        public void Init(int maxLinearNumber)
+        public int RegisterListCount { set; get; }
+        private readonly object registerDicLock = new object();
+        private Dictionary<Tensor, bool> RegisterDic { set; get; } = new Dictionary<Tensor, bool>();
+        public void Init(int maxLinearNumber, int registerListCount)
         {
+            if (maxLinearNumber == 0 || registerListCount == 0)
+            {
+                throw new Exception($"maxLinearNumber or registerListCount is zero, maxLinearNumber: {maxLinearNumber}, registerListCount: {registerListCount}");
+            }
+            this.RegisterListCount = registerListCount;
             for (int i = 0; i < RegisterListCount; i++)
             {
                 Tensor data = new Tensor(maxLinearNumber, maxLinearNumber, 0F);
@@ -21,28 +27,29 @@ namespace Ren.Net.Objects
         }
         public Tensor GetRegisterParameter()
         {
-            foreach (var item in RegisterDic.Reverse())
+            lock (registerDicLock)
             {
-                if (!item.Value)
+                foreach (var item in RegisterDic)
                 {
-                    RegisterDic[item.Key] = true;
-                    return item.Key;
+                    if (!item.Value)
+                    {
+                        RegisterDic[item.Key] = true;
+                        return item.Key;
+                    }
                 }
             }
             return null;
         }
         public void SetRegisterParameter(Tensor data)
         {
-            RegisterDic[data] = false;
+            lock (registerDicLock)
+            {
+                if (data == null || !RegisterDic.ContainsKey(data) || !RegisterDic[data])
+                {
+                    throw new Exception("data check error");
+                }
+                RegisterDic[data] = false;
+            } 
         }
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-    }
-    public class NetRegisterParameter
-    {
-        public Tensor Data { set; get; }
-        public bool Sign { set; get; }
     }
 }

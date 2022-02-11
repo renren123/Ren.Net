@@ -44,8 +44,6 @@ namespace Ren.Net.Optimizers
 
         public override void Step()
         {
-            //B1_Pow *= B1;
-            //B2_Pow *= B2;
             AdamDevice?.Step();
         }
         public override object Clone()
@@ -60,11 +58,6 @@ namespace Ren.Net.Optimizers
             {
                 adam.AdamDevice = this.AdamDevice.Clone() as AdamCPU;
             }
-            //if(VTorch != null)
-            //{
-            //    adam.VTorch = this.VTorch.Clone() as Tensor;
-            //    adam.STorch = this.STorch.Clone() as Tensor;
-            //}
             return adam;
         }
     }

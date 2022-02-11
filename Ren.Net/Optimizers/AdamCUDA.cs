@@ -26,25 +26,9 @@ namespace Ren.Net.Optimizers
         }
         public override Tensor GetOptimizer(Tensor dw, Tensor @out)
         {
-            //Tensor.DotMultiply(dw, dw, Tensor.SwapA);
-            //Tensor.Multiply((1 - B2), Tensor.SwapA, Tensor.SwapB);
-            //Tensor.Multiply(B2, STorch, Tensor.SwapA);
-            //Tensor.Add(Tensor.SwapA, Tensor.SwapB, STorch);     // 计算出 STorch
-
-            //Tensor.Multiply(B1, VTorch, Tensor.SwapA);
-            //Tensor.Multiply((1 - B1), dw, Tensor.SwapB);
-            //Tensor.Add(Tensor.SwapA, Tensor.SwapB, VTorch);     // 计算出 VTorch
-
-            //Tensor.DotDivide(VTorch, (1 - B1_Pow), Tensor.SwapA);
-            //Tensor.Multiply(LearningRate, Tensor.SwapA, Tensor.SwapB);  // 计算出 Tensor.SwapB = dividend
-            //Tensor.DotDivide(STorch, (1 - B2_Pow), Tensor.SwapA);
-            //Tensor.Sqrt(Tensor.SwapA);
-            //Tensor.Add(Tensor.SwapA, E, Tensor.SwapC);          // 计算出 divisor， Tensor.SwapC = divisor
-            //Tensor.DotDivide(Tensor.SwapB, Tensor.SwapC, @out);
-
-            //return @out;
-
-            LoadPublicValue();
+            SwapA = LoadPublicValue();
+            SwapB = LoadPublicValue();
+            SwapC = LoadPublicValue();
 
             Tensor.DotMultiply(dw, dw, SwapA);
             Tensor.Multiply((1 - B2), SwapA, SwapB);
@@ -69,16 +53,6 @@ namespace Ren.Net.Optimizers
         {
             B1_Pow *= B1;
             B2_Pow *= B2;
-        }
-        public void LoadPublicValue()
-        {
-            SwapA = NetParameter.GetRegisterParameter();
-            SwapB = NetParameter.GetRegisterParameter();
-            SwapC = NetParameter.GetRegisterParameter();
-            if (SwapA == null || SwapB == null || SwapC == null)
-            {
-                throw new Exception("can not find enough swap tensor");
-            }
         }
     }
 }

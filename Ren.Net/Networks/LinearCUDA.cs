@@ -49,51 +49,27 @@ namespace Ren.Net.Networks
         }
         public override Tensor Backup(Tensor @out)
         {
-            //Tensor.Transpose(WI);
-            //Tensor.Copy(@out, Tensor.SwapA);
-            //Tensor.Multiply(WI, Tensor.SwapA, SwapA);    // SwapA = sensitive_out
-            //Tensor.Transpose(WI);
-            //Tensor.Transpose(X_In);
-            //Tensor.Multiply(@out, X_In, Tensor.SwapA);          // dwTemp = Tensor.Temp1
+            SwapA = LoadPublicValue();
+            SwapB = LoadPublicValue();
+            SwapC = LoadPublicValue();
 
-            //Tensor.Copy(SwapA, @out);
-            //Tensor.Copy(Tensor.SwapA, SwapA);
-            //Tensor.RemoveLastOneRow(@out);
-
-            //Optimizer.GetOptimizer(SwapA, SwapB);
-
-            //Tensor.Minus(WI, SwapB, WI);
-            //return @out;
-
-            LoadPublicValue();
             Tensor.Transpose(WI);
             Tensor.Copy(@out, SwapC);
             Tensor.Multiply(WI, SwapC, SwapA);    // SwapA = sensitive_out
             Tensor.Transpose(WI);
             Tensor.Transpose(X_In);
             Tensor.Multiply(@out, X_In, SwapC);          // dwTemp = Tensor.Temp1
-
             Tensor.Copy(SwapA, @out);
             Tensor.Copy(SwapC, SwapA);
             Tensor.RemoveLastOneRow(@out);
 
             SetPublicValue(SwapC);
-            Optimizer.GetOptimizer(SwapA, SwapB);
 
+            Optimizer.GetOptimizer(SwapA, SwapB);
             Tensor.Minus(WI, SwapB, WI);
 
-            SetPublicValue(SwapA, SwapB, SwapC);
+            SetPublicValue(SwapA, SwapB);
             return @out;
-        }
-        public void LoadPublicValue()
-        {
-            SwapA = NetParameter.GetRegisterParameter();
-            SwapB = NetParameter.GetRegisterParameter();
-            SwapC = NetParameter.GetRegisterParameter();
-            if (SwapA == null || SwapB == null || SwapC == null)
-            {
-                throw new Exception("can not find enough swap tensor");
-            }
         }
     }
 }

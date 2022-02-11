@@ -12,6 +12,10 @@ namespace Ren.Net.Objects
         {
             this.NetParameter = netParameter;
         }
+        public Tensor LoadPublicValue()
+        {
+            return NetParameter.GetRegisterParameter();
+        }
         public virtual void SetPublicValue(params Tensor[] datas)
         {
             foreach (var item in datas)
