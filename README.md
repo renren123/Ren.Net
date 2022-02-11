@@ -9,9 +9,13 @@ https://github.com/m4rs-mt/ILGPU
 
 # ADAM 显存优化
 以 Adam 优化器为例来进行显存控制，将整个过程进行分解，然后利用中间变量消除重复申请显存的问题
+
 1、Adam 实现
+
 ![image](https://user-images.githubusercontent.com/26969703/153588676-54976992-ff3f-4eb1-8c93-f65b6732d7d2.png)
+
 2、转化为表达式树后
+
 ![image](https://user-images.githubusercontent.com/26969703/140619034-0bb65d69-1112-4a65-90ad-cafbc76fd8a2.png)
 
 ```
