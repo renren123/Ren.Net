@@ -70,9 +70,9 @@ namespace Ren.Net.Networks
         {
             return this.BatchNorm1DDevice.Forward(@in);
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
-            return this.BatchNorm1DDevice.Backup(@out);
+            return this.BatchNorm1DDevice.Backward(@out);
         }
         public override string ToString()
         {

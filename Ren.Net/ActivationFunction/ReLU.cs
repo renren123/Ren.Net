@@ -28,9 +28,9 @@ namespace Ren.Net.ActivationFunction
         {
             return ReLUDevice.Forward(@in);
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
-            return ReLUDevice.Backup(@out);
+            return ReLUDevice.Backward(@out);
         }
         public override string ToString()
         {

@@ -47,7 +47,7 @@ namespace Ren.Net.Loss
                 }
             }
         }
-        public override Tensor Backup(Tensor output)
+        public override Tensor Backward(Tensor output)
         {
             int batchSize = output.Column;
 

@@ -1,4 +1,5 @@
-﻿using Ren.Net.Objects;
+﻿using Ren.Device;
+using Ren.Net.Objects;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,15 +15,13 @@ namespace Ren.Net.Networks
     [Serializable]
     public class SoftMax : NetModule
     {
-        private Tensor XIn { set; get; }
+        private Tensor XOut { set; get; }
         public override void Init()
         {
             Log.Debug($"SoftMax inited");
         }
         public override Tensor Forward(Tensor @in)
         {
-            XIn = @in.Clone() as Tensor;
-
             for (int i = 0; i < @in.Row; i++)
             {
                 for (int j = 0; j < @in.Column; j++)
@@ -31,7 +30,7 @@ namespace Ren.Net.Networks
                 }
             }
             // 列的sum，为每个输出神经元总和求概率
-            Tensor ePower = @in.Sum(axis: 0);
+            Tensor ePower = @in.Sum(axis: AxisType.Row);
             for (int i = 0; i < @in.Row; i++)
             {
                 for (int j = 0; j < @in.Column; j++)
@@ -39,11 +38,38 @@ namespace Ren.Net.Networks
                     @in[i, j] = @in[i, j] / ePower[i, 0];
                 }
             }
+            XOut = @in.Clone() as Tensor;
             return @in;
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
-            return base.Backup(@out);
+            for (int i = 0; i < @out.Row; i++)
+            {
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    @out[i, j] = 0F;
+                }
+            }
+
+            for (int i = 0; i < @out.Row; i++)
+            {
+                for (int j = 0; j < @out.Column; j++)
+                {
+                    for (int k = 0; k < @out.Column; k++)
+                    {
+                        if (j == k)
+                        {
+                            @out[i, k] += XOut[i, k] - XOut[i, k] * XOut[i, k];
+                        }
+                        else
+                        {
+                            @out[i, k] += 0F - XOut[i, j] * XOut[i, k];
+                        }
+                    }
+                }
+            }
+
+            return @out;
         }
     }
 }

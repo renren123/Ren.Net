@@ -126,18 +126,18 @@ namespace Ren.Net.Networks
             //return @in;
 
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
             int N = @out.Column;
 
             Tensor var_plus_eps = SigmaB + E;
-            Tensor dGamma = Tensor.DotMultiply(X_Hat, @out).Sum(axis: 1);
-            Tensor dBeta = @out.Sum(axis: 1);
+            Tensor dGamma = Tensor.DotMultiply(X_Hat, @out).Sum(axis: AxisType.Row);
+            Tensor dBeta = @out.Sum(axis: AxisType.Row);
 
             Tensor ones = new Tensor(1, N, 1F);
             Tensor dx_ = Tensor.DotMultiply(Gamma * ones, @out);
 
-            Tensor dx = N * dx_ - dx_.Sum(axis: 1) - Tensor.DotMultiply(X_Hat, Tensor.DotMultiply(dx_, X_Hat).Sum(axis: 1));
+            Tensor dx = N * dx_ - dx_.Sum(axis: AxisType.Row) - Tensor.DotMultiply(X_Hat, Tensor.DotMultiply(dx_, X_Hat).Sum(axis: AxisType.Row));
             Tensor dx_out = Tensor.DotDivide(dx * (1.0F / N), var_plus_eps.Sqrt());
 
             //Console.WriteLine("dGamma");

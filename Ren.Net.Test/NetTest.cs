@@ -40,7 +40,7 @@ namespace Ren.Net.Test
             for (int i = 0; i < 2; i++)
             {
                 var output = bn.Forward(input);
-                var dout = bn.Backup(label);
+                var dout = bn.Backward(label);
 
                 PrintArray(output.ToArray());
                 PrintArray(dout.ToArray());

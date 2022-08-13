@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Ren.Device;
 using Ren.Net.ActivationFunction;
 using Ren.Net.Extensions;
 using Ren.Net.Loss;
@@ -111,9 +112,9 @@ namespace Ren.Net.UnitTest
             Assert.AreEqual(true, output.EqualsValue(one_out_label, 4));
 
             Tensor sensitive = loss.CaculateLoss(label, output);
-            Tensor backUp = loss.Backup(sensitive);
+            Tensor backUp = loss.Backward(sensitive);
 
-            linear1.Backup(backUp);
+            linear1.Backward(backUp);
             output = linear1.Forward(input);
             Assert.AreEqual(true, output.EqualsValue(two_out_label, 4));
 
@@ -216,14 +217,14 @@ namespace Ren.Net.UnitTest
             Assert.AreEqual(true, output.EqualsValue(one_out_label, 4));
 
             Tensor sensitive = loss.CaculateLoss(label, output);
-            Tensor backUp = loss.Backup(sensitive);
-            batchNorm1D.Backup(backUp);
+            Tensor backUp = loss.Backward(sensitive);
+            batchNorm1D.Backward(backUp);
             output = batchNorm1D.Forward(input);
             Assert.AreEqual(true, output.EqualsValue(tow_out_label, 4));
 
             sensitive = loss.CaculateLoss(label, output);
-            backUp = loss.Backup(sensitive);
-            batchNorm1D.Backup(backUp);
+            backUp = loss.Backward(sensitive);
+            batchNorm1D.Backward(backUp);
             output = batchNorm1D.Forward(input);
             Assert.AreEqual(true, output.EqualsValue(three_out_label, 4));
         }
@@ -264,6 +265,45 @@ namespace Ren.Net.UnitTest
             Tensor output = batchNorm1D.Forward(input);
 
             Assert.AreEqual(true, output.EqualsValue(label, 4));
+        }
+        [TestMethod]
+        public void SoftMaxTest()
+        {
+            SoftMax softMax = new SoftMax();
+            Tensor.Device = Device.DeviceTpye.CPU;
+
+            softMax.Init();
+            Tensor input = new Tensor(new float[,]
+            {
+                { 1, 2, 3 },
+                { -1, -2, -3}
+            });
+            Tensor label = new Tensor(new float[,]
+            {
+                { 0.09003057F, 0.24472847F, 0.66524096F },
+                { 0.66524096F, 0.24472847F, 0.09003057F}
+            });
+            Tensor sensitive = new Tensor(new float[,]
+            {
+                { 1, 2, -1 },
+                { -1, 1, 0.5F}
+            });
+            Tensor sensitiveLabel = new Tensor(new float[,]
+            {
+                { 0.30834F, -0.09004F, -1.17295F },
+                { -3.04362F, -3.64276F, -3.86317F}
+            });
+            // forward
+            Tensor output = softMax.Forward(input);
+            Assert.AreEqual(true, output.EqualsValue(label, 6));
+            Tensor outputSum = output.Sum(axis: AxisType.Row);
+            for (int i = 0; i < outputSum.Column; i++)
+            {
+                Assert.AreEqual(1, outputSum[0, i]);
+            }
+            // backward
+            Tensor sensitiveOutput = softMax.Backward(sensitive);
+            Assert.AreEqual(true, sensitiveOutput.EqualsValue(sensitiveLabel, 6));
         }
     }
 }

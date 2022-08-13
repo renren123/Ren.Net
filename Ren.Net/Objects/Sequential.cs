@@ -153,15 +153,15 @@ namespace Ren.Net.Objects
             }
             return @in;
         }
-        public Tensor Backup(Tensor @out)
+        public Tensor Backward(Tensor @out)
         {
             // 损失函数的反向传播
-            @out = Loss.Backup(@out);
+            @out = Loss.Backward(@out);
 
             for (int i = Nets.Count - 1; i >= 0; i--)
             {
                 var net = Nets[i];
-                @out = net.Backup(@out);
+                @out = net.Backward(@out);
             }
             return @out;
         }

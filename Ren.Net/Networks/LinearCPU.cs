@@ -49,7 +49,7 @@ namespace Ren.Net.Networks
 
             return @in;
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
             int batchSize = @out.Column;
 

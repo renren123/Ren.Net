@@ -384,6 +384,22 @@ namespace Ren.Device
 
         public float this[int i, int j] { get => Data[i, j]; set => Data[i, j] = value; }
 
+        public override string ToString()
+        {
+            StringBuilder builder = new StringBuilder();
+
+            builder.AppendLine("Data: " + Device.ToString());
+
+            for (int i = 0; i < Row; i++)
+            {
+                for (int j = 0; j < Height; j++)
+                {
+                    builder.Append(" " + Data[i, j]);
+                }
+                builder.AppendLine();
+            }
+            return builder.ToString();
+        }
 
         #region static method
         public static void Multiply(DataInterface lhs, DataInterface rhs, DataInterface result)
@@ -557,11 +573,11 @@ namespace Ren.Device
             return this.Data.ToArray();
         }
 
-        public DataInterface Sum(int axis)
+        public DataInterface Sum(AxisType axis)
         {
             switch (axis)
             {
-                case 0:
+                case AxisType.Column:
                     {
                         Matrix<float> data = MBuild.Dense(1, this.Column, 0F);
 
@@ -573,7 +589,7 @@ namespace Ren.Device
                         }
                         return new MatrixNet(data);
                     }
-                case 1:
+                case AxisType.Row:
                     {
                         Matrix<float> data = MBuild.Dense(this.Row, 1, 0F);
 

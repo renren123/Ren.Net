@@ -22,7 +22,7 @@ namespace Ren.Net.ActivationFunction
             Tensor.Relu(X_IN, X_IN, @in);
             return @in;
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
             Tensor.Relu(X_IN, @out, @out);
             return @out;

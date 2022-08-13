@@ -47,7 +47,7 @@ namespace Ren.Net.Networks
             Tensor.Multiply(WI, X_In, @in);
             return @in;
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
             SwapA = LoadPublicValue();
             SwapB = LoadPublicValue();

@@ -90,7 +90,7 @@ namespace Ren.Net.Test
 
                 Log.Information($"loss: {sensitive.GetItem()}");
 
-                netWork.Backup(sensitive);
+                netWork.Backward(sensitive);
 
                 netWork.OptimizerStep();
             }

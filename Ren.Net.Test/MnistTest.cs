@@ -114,7 +114,7 @@ namespace Ren.Net.Test
                         spendTime = Stopwatch.GetTimestamp();
                     }
 
-                    netWork.Backup(sensitive);
+                    netWork.Backward(sensitive);
                     netWork.OptimizerStep();
                     count++;
                 }

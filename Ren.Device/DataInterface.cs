@@ -67,11 +67,12 @@ namespace Ren.Device
         public DataInterface Minus(DataInterface rhs);
         public void MinusToA(DataInterface rhs);
         /// <summary>
-        /// 返回每一行/列 sum
+        /// Row: 计算每一行的和，得到一列。
+        /// Column: 计算每一列的和，得到一行。
         /// </summary>
-        /// <param name="axis">0 为 列， 1为行</param>
+        /// <param name="axis">Row: 计算每一行的和，得到一列。Column: 计算每一列的和，得到一行。</param>
         /// <returns></returns>
-        public DataInterface Sum(int axis);
+        public DataInterface Sum(AxisType axis);
         /// <summary>
         /// 返回每一行/列 sum
         /// </summary>
@@ -151,5 +152,17 @@ namespace Ren.Device
         Default,
         CPU = 1,
         CUDA = 2
+    }
+    public enum AxisType
+    {
+        Default,
+        /// <summary>
+        /// 计算每一行的和，得到一列
+        /// </summary>
+        Row,
+        /// <summary>
+        /// 计算每一列的和，得到一行
+        /// </summary>
+        Column
     }
 }

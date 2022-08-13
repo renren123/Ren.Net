@@ -14,7 +14,7 @@ namespace Ren.Device
     [Serializable]
     public class ILGPUNet : DataInterface
     {
-        public const int DeviceIndex = 0;
+        public int DeviceIndex { get; } = 0;
         public int Row { get => (int)Data.Extent.X; }
         public int Column { get => (int)Data.Extent.Y; }
 
@@ -25,7 +25,8 @@ namespace Ren.Device
         public DeviceTpye Device { get; } = DeviceTpye.CUDA;
 
         private static Context ContextDevice { get; } = Context.CreateDefault();
-        private static Accelerator Accelerator { get; } = ContextDevice.GetCudaDevice(DeviceIndex).CreateAccelerator(ContextDevice);
+        // private static Accelerator Accelerator { get; } = ContextDevice.GetCudaDevice(DeviceIndex).CreateAccelerator(ContextDevice);
+        private static Accelerator Accelerator { get; } = ContextDevice.GetPreferredDevices(true, true).First().CreateAccelerator(ContextDevice);
 
         [NonSerialized]
         private MemoryBuffer2D<float, Stride2D.DenseX> Data;
@@ -398,8 +399,6 @@ namespace Ren.Device
             aView[index] = value;
         }
 
-
-        //
         #region Data Function，功能操作
         static void MatrixReluAcceleratedKernel(
             Index2D index,
@@ -498,9 +497,6 @@ namespace Ren.Device
             //}
         }
         #endregion
-
-
-
 
         private ILGPUNet(MemoryBuffer2D<float, Stride2D.DenseX> data)
         {
@@ -945,7 +941,7 @@ namespace Ren.Device
         {
             throw new NotImplementedException();
         }
-        public DataInterface Sum(int axis)
+        public DataInterface Sum(AxisType axis)
         {
             throw new NotImplementedException();
         }

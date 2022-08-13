@@ -142,7 +142,8 @@ namespace Ren.Device
             {
                 //context.GetCudaDevice(0)
                 //using var accelerator = device.CreateAccelerator(context);
-                using var accelerator = context.GetCudaDevice(0).CreateAccelerator(context);
+                // using var accelerator = context.GetCudaDevice(0).CreateAccelerator(context);
+                var accelerator = context.GetPreferredDevices(true, true).First().CreateAccelerator(context);
                 sw.Restart();
                 var acceleratedResult = MatrixMultiplyAccelerated(accelerator, a, b);
                 sw.Stop();

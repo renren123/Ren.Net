@@ -299,11 +299,12 @@ namespace Ren.Net.Objects
             this.deviceData.Dispose();
         }
         /// <summary>
-        /// 返回每一行/列 sum
+        /// Row: 计算每一行的和，得到一列。
+        /// Column: 计算每一列的和，得到一行。
         /// </summary>
-        /// <param name="axis">0 为 列， 1为行</param>
-        /// <returns>返回一个二维数组，但只有一行或一列</returns>
-        public Tensor Sum(int axis)
+        /// <param name="axis"></param>
+        /// <returns></returns>
+        public Tensor Sum(AxisType axis)
         {
             return new Tensor(this.deviceData.Sum(axis));
         }

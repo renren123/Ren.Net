@@ -33,7 +33,7 @@ namespace Ren.Net.Objects
             throw new NotImplementedException();
         }
 
-        public virtual Tensor Backup(Tensor @out)
+        public virtual Tensor Backward(Tensor @out)
         {
             throw new NotImplementedException();
         }

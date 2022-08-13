@@ -92,14 +92,14 @@ namespace Ren.Net.Networks
         /// </summary>
         /// <param name="out">list 是当前层神经元的数量</param>
         /// <returns></returns>
-        public override Tensor Backup(Tensor @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
+        public override Tensor Backward(Tensor @out)    // wi 数量是上一层神经元的数量，假设out 里面 是 误差值
         {
             // batchSize
             if (@out.Column <= 0)
             {
                 throw new Exception($"Linear::Backup, batchSize is {@out.Column}");
             }
-            return this.LinearDevice.Backup(@out);
+            return this.LinearDevice.Backward(@out);
         }
         public override string ToString()
         {

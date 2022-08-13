@@ -34,7 +34,7 @@ namespace Ren.Net.ActivationFunction
             Tensor result = @in.Relu(X_IN);
             return result;
         }
-        public override Tensor Backup(Tensor @out)
+        public override Tensor Backward(Tensor @out)
         {
             for (int i = 0; i < @out.Row; i++)
             {

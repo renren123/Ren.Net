@@ -54,7 +54,7 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(1, 1),
+                new Linear(1, 5000),
                 // new BatchNorm1D(1),
                 new ReLU(),
                 //// layer2
@@ -64,7 +64,7 @@ namespace Ren.Net.Test
                 //new Linear(10000, 10000),
                 //new ReLU(),
                 //// layer3 
-                new Linear(1, 1)
+                new Linear(5000, 1)
             });
 
             netWork.Optimizer = new Adam(learningRate: 0.00001F);
@@ -102,11 +102,11 @@ namespace Ren.Net.Test
                 if (timeLast > 1000)
                 {
                     // Log.Information($"loss: {sensitive.GetItem()}");
-                    Log.Information($"loss: {lossQueue.Sum() / lossQueue.Count}");
+                    Log.Information($"epoch: {i}, loss: {lossQueue.Sum() / lossQueue.Count}");
                     spendTime = Stopwatch.GetTimestamp();
                 }
 
-                netWork.Backup(sensitive);
+                netWork.Backward(sensitive);
 
                 netWork.OptimizerStep();
             }

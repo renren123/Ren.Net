@@ -45,6 +45,9 @@ namespace Ren.Net.Test
 
             //var result = net1 * net2;
 
+            ILGPUDemo iLGPUDemo = new ILGPUDemo();
+            iLGPUDemo.Test();
+
 
 
             Tensor.Device = DeviceTpye.CPU;
@@ -73,7 +76,7 @@ namespace Ren.Net.Test
             batchNorm1D.Init();
 
             var batchResult = batchNorm1D.Forward(d);
-            var senOut = batchNorm1D.Backup(s);
+            var senOut = batchNorm1D.Backward(s);
 
             PrintArray(batchResult.ToArray());
             Console.WriteLine();
