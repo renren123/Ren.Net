@@ -48,8 +48,8 @@ namespace Ren.Data
                 var cpuData = data.ToArray();
                 var cpuLabel = label.ToArray();
 
-                inputNumber = cpuData.GetLength(1);
-                outputNumber = cpuLabel.GetLength(1);
+                inputNumber = cpuData.GetLength(0);
+                outputNumber = cpuLabel.GetLength(0);
                 if (datas == null)
                 {
                     datas = new float[inputNumber, BatchSize];
@@ -60,43 +60,12 @@ namespace Ren.Data
                 }
                 for (int j = 0; j < inputNumber; j++)
                 {
-                    datas[j, i] = cpuData[0, j];
+                    datas[j, i] = cpuData[j, 0];
                 }
                 for (int j = 0; j < outputNumber; j++)
                 {
-                    labels[j, i] = cpuLabel[0, j];
+                    labels[j, i] = cpuLabel[j, 0];
                 }
-
-                //inputNumber = data.Width;
-                //outputNumber = label.Width;
-
-                //if (datas == null)
-                //{
-                //    datas = new float[inputNumber, BatchSize];
-                //}
-                //if (labels == null)
-                //{
-                //    labels = new float[outputNumber, BatchSize];
-                //}
-
-                ////if (datas == null)
-                ////{
-                ////    datas = new Tensor(inputNumber, BatchSize, 0F);
-                ////}
-                ////if (labels == null)
-                ////{
-                ////    labels = new Tensor(outputNumber, BatchSize, 0F);
-                ////}
-                //// 列遍历是 神经元个数， 行遍历是 batch
-                //// data 是先第一列遍历
-                //for (int j = 0; j < inputNumber; j++)
-                //{
-                //    datas[j, i] = data[j];
-                //}
-                //for (int j = 0; j < outputNumber; j++)
-                //{
-                //    labels[j, i] = label[j];
-                //}
             }
             return (new Tensor(datas), new Tensor(labels));
         }

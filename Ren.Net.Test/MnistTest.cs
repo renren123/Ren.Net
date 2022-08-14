@@ -43,9 +43,6 @@ namespace Ren.Net.Test
                     retainedFileCountLimit: 30))
                 .WriteTo.Console(LogEventLevel.Information,
                     outputTemplate: "{Timestamp:HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
-
-                // outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {Message}{NewLine}{Exception}", theme: AnsiConsoleTheme.Literate)
-
                 .CreateLogger();
         }
         static void Main(string[] args)
@@ -53,7 +50,7 @@ namespace Ren.Net.Test
             TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
             InitNetLogging();
 
-            MnistData mnistData = new MnistData(batchSize:200, shuffle: true);
+            MnistData mnistData = new MnistData(batchSize:60, shuffle: true);
             mnistData.Init();
 
             string fileName = "file.name";
@@ -61,20 +58,18 @@ namespace Ren.Net.Test
             Sequential netWork = new Sequential(new List<NetModule>()
             {
                 // layer1
-                new Linear(784, 100),
-                new BatchNorm1D(100),
+                new Linear(784, 10),
+                new BatchNorm1D(10),
                 new ReLU(),
-                //// layer2
-                new Linear(100, 100),
-                new BatchNorm1D(100),
+                // layer2
+                new Linear(10, 10),
+                new BatchNorm1D(10),
                 new ReLU(),
-                //new Linear(10000, 10000),
-                //new ReLU(),
-                //// layer3  
-                new Linear(100, 1)
+                // layer3  
+                new Linear(10, 1)
             });
 
-            netWork.Optimizer = new Adam(learningRate: 0.01F);
+            netWork.Optimizer = new Adam(learningRate: 0.001F);
             netWork.Device = Device.DeviceTpye.CPU;
             netWork.Loss = new MSELoss();
 
@@ -88,22 +83,12 @@ namespace Ren.Net.Test
             float loss = 0F;
             int count = 1;
 
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < 20000; i++)
             {
                 foreach ((Tensor data, Tensor label) item in mnistData)
                 {
                     Tensor output = netWork.Forward(item.data);
                     Tensor sensitive = netWork.Loss.CaculateLoss(item.label, output);
-
-                    //if (i % 100 == 0)
-                    //{
-                    //    Log.Information($"loss: {sensitive.GetItem()}");
-                    //    // Sequential.Save(netWork, fileName);
-                    //}
-                    //if (count % 200 == 0)
-                    //{
-                    //    Log.Information($"loss: {sensitive.GetItem()}");
-                    //}
 
                     var timeLast = (Stopwatch.GetTimestamp() - spendTime) * 1000.0 / Stopwatch.Frequency;
 
@@ -120,28 +105,6 @@ namespace Ren.Net.Test
                 }
             }
             
-
-            //for (int i = 0; i < epoch; i++)
-            //{
-            //    if (i == epoch - 1)
-            //    {
-            //        int a = 0;
-            //    }
-            //    var (input, label) = GetTorch();
-
-            //    Tensor output = netWork.Forward(input);
-            //    Tensor sensitive = netWork.Loss.CaculateLoss(label, output);
-
-            //    if (i % 100 == 0)
-            //    {
-            //        Log.Information($"loss: {sensitive.GetItem()}");
-            //        // Sequential.Save(netWork, fileName);
-            //    }
-
-            //    netWork.Backup(sensitive);
-
-            //    netWork.OptimizerStep();
-            //}
             long endTime = Stopwatch.GetTimestamp();
 
             Log.Information("ms: " + ((endTime - startTime) * 1000.0 / Stopwatch.Frequency));
@@ -155,59 +118,6 @@ namespace Ren.Net.Test
             Console.Error.WriteLine($"Fatal error: {e.Exception}");
             Log.Error(e.ToString());
             throw new Exception("UnhandledExceptionEventHandler", e.Exception);
-        }
-        static int count = 0;
-        /// <summary>
-        /// 模拟 函数 y = x + 1，行是神经元的个数 列是 batchSize
-        /// </summary>
-        /// <returns></returns>
-        static (Tensor input, Tensor label) GetTorch()
-        {
-            //{
-            //    count++;
-            //    if(count % 2 == 0)
-            //    {
-            //        float[,] input = { { 1, 1 } };
-            //        float[,] label = { { 2, 2 } };
-
-            //        return (new Tensor(input), new Tensor(label));
-            //    }
-            //    else
-            //    {
-            //        //float[,] input = { { 5, 4, 3, 2, 1 } };
-            //        //float[,] label = { { 6, 5, 4, 3, 2 } };
-            //        float[,] input = { { 2, 2 } };
-            //        float[,] label = { { 3, 3 } };
-
-            //        return (new Tensor(input), new Tensor(label));
-            //    }
-            //}
-
-            //{
-            //    float[,] input = { { 1, 2, 3, 4, 5 } };
-            //    float[,] label = { { 2, 3, 4, 5, 6 } };
-
-            //    return (new Tensor(input), new Tensor(label));
-            //}
-
-            {
-                int length = 200;
-                float[,] input = new float[1, length];
-                float[,] label = new float[1, length];
-
-                for (int j = 0; j < length; j++)
-                {
-                    input[0, j] = R();
-                    label[0, j] = input[0, j] + 1;
-                }
-
-                return (new Tensor(input), new Tensor(label));
-            }
-        }
-        static Random random = new Random(DateTime.UtcNow.Millisecond);
-        static int R()
-        {
-            return random.Next(1, 10000);
         }
     }
 
@@ -228,23 +138,15 @@ namespace Ren.Net.Test
         }
         public override (Tensor data, Tensor label) GetItem(int index)
         {
-            float[,] dataMap = new float[InputNumber, this.BatchSize];
-            float[,] labelMap = new float[1, this.BatchSize];
-            int count = 0;
-            while (count < BatchSize)
-            {
-                for (int i = index * BatchSize; i < (index + 1) * BatchSize; i++)
-                {
-                    var item = Datas[i % Datas.Count];
+            float[,] dataMap = new float[InputNumber, 1];
+            float[,] labelMap = new float[1, 1];
 
-                    for (int j = 0; j < InputNumber; j++)
-                    {
-                        dataMap[j, count] = item.Data[j];
-                    }
-                    labelMap[0, count] = item.Label;
-                }
-                count++;
+            for (int i = 0; i < InputNumber; i++)
+            {
+                dataMap[i, 0] = Datas[index].Data[i];
             }
+            labelMap[0, 0] = Datas[index].Label;
+
             return (new Tensor(dataMap), new Tensor(labelMap));
         }
         public void Init()
